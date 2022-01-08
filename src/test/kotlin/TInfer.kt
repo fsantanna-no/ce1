@@ -23,4 +23,9 @@ class TInfer {
         val out = all("var x = ()")
         assert(out == "var x: ()\nset x = ()\n") { out }
     }
+    @Test
+    fun a02_input () {
+        val out = all("var x: _int = input std")
+        assert(out == "var x: _int\nset x = input std: _int\n") { out }
+    }
 }

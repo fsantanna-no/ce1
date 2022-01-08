@@ -1,4 +1,4 @@
-fun Expr.aux_tps (int: Type?) {
+fun Expr.aux_tps (inf: Type?) {
     AUX.tps[this] = when (this) {
         is Expr.Unit  -> Type.Unit(this.tk_).up(this)
         is Expr.Nat   -> this.type ?: Type.Nat(this.tk_).up(this)
@@ -16,7 +16,7 @@ fun Expr.aux_tps (int: Type?) {
         is Expr.TCons -> Type.Tuple(this.tk_, this.arg.map { AUX.tps[it]!! }.toTypedArray()).up(this)
         is Expr.UCons -> this.type!!
         is Expr.New   -> Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scope!!, AUX.tps[this.arg]!!).up(this)
-        is Expr.Inp   -> this.type!!
+        is Expr.Inp   -> this.type ?: inf!!.let { println(this); println(it); it }
         is Expr.Out   -> Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).up(this)
         is Expr.Call -> {
             AUX.tps[this.f].let {
@@ -98,8 +98,8 @@ fun Expr.aux_tps (int: Type?) {
 }
 
 // Need to infer:
-//  var x = ...
-//
+//  var x: ? = ...
+//  var x: _int = input std: ?
 
 fun Stmt.aux_tps (inf: Type?) {
     when (this) {
@@ -110,8 +110,8 @@ fun Stmt.aux_tps (inf: Type?) {
             }
         }
         is Stmt.Set -> {
-            this.src.aux_tps(null)
             this.dst.aux_tps(null)
+            this.src.aux_tps(AUX.tps[this.dst]!!)
         }
         is Stmt.SExpr -> this.expr.aux_tps(null)
         is Stmt.If -> {
@@ -126,7 +126,7 @@ fun Stmt.aux_tps (inf: Type?) {
             // set x = ...
             if (this.s1 is Stmt.Var && this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str) {
                 if (this.s1.type == null) {
-                    // infer var from expr
+                    // infer var (s1) from expr (s2)
                     // var x: NO
                     // set x = OK
                     this.s2.src.aux_tps(null)
@@ -135,7 +135,11 @@ fun Stmt.aux_tps (inf: Type?) {
                         this.s2.dst.aux_tps(it)
                     }
                 } else {
-                    // infer expr from var
+                    // infer expr (s2) from var (s1)
+                    // var x: OK
+                    // set x = NO
+                    this.s1.aux_tps(null)
+                    this.s2.aux_tps(this.s1.type)
                 }
             }
         }

@@ -2,6 +2,7 @@ fun Expr.tostr (): String {
     return when (this) {
         is Expr.Unit -> "()"
         is Expr.Var  -> this.tk_.str
+        is Expr.Inp  -> "input " + this.lib.str + ": " + AUX.tps[this]!!.tostr()
         else -> TODO()
     }
 }
