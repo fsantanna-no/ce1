@@ -114,7 +114,7 @@ fun Expr.aux_tps (inf: Type?) {
                 } else {
                     tp.expand()[this.tk_.num - 1]
                 }
-                is Expr.UPred -> Type.Nat(Tk.Str(TK.XNAT, this.tk.lin, this.tk.col, "int")).up(this)
+                is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).up(this)
                 else -> error("bug found")
             }
         }

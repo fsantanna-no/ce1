@@ -3,7 +3,7 @@ fun xparser_expr (all: All): Expr {
         all.accept(TK.UNIT) -> Expr.Unit(all.tk0 as Tk.Sym)
         all.accept(TK.XVAR) -> Expr.Var(all.tk0 as Tk.Str)
         all.accept(TK.XNAT) -> {
-            val tk0 = all.tk0 as Tk.Str
+            val tk0 = all.tk0 as Tk.Nat
             val tp = if (!all.accept(TK.CHAR, ':')) null else {
                 parser_type(all)
             }
@@ -152,7 +152,7 @@ fun xparser_expr (all: All): Expr {
                                 Stmt.Set(
                                     Tk.Chr(TK.XVAR, lin, col, '='),
                                     Expr.Var(Tk.Str(TK.XVAR, lin, col, "arg")),
-                                    Expr.Nat(Tk.Str(TK.XNAT, lin, col, "_arg_"), null)
+                                    Expr.Nat(Tk.Nat(TK.XNAT, lin, col, null, "_arg_"), null)
                                 ),
                                 block
                             )
@@ -227,7 +227,7 @@ fun xparser_stmt (all: All): Stmt {
         }
         all.accept(TK.NATIVE) -> {
             all.accept_err(TK.XNAT)
-            Stmt.Nat(all.tk0 as Tk.Str)
+            Stmt.Nat(all.tk0 as Tk.Nat)
         }
         all.check(TK.CALL) || all.check(TK.OUTPUT) || all.check(TK.INPUT) -> {
             val tk0 = all.tk1 as Tk.Key

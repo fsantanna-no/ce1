@@ -2,7 +2,7 @@ fun Expr.tostr (): String {
     return when (this) {
         is Expr.Unit  -> "()"
         is Expr.Var   -> this.tk_.str
-        is Expr.Nat   -> "_{" + this.tk_.str + "}"
+        is Expr.Nat   -> this.tk_.toc()
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
         is Expr.Inp   -> "input " + this.lib.str + ": " + AUX.tps[this]!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()

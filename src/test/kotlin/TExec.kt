@@ -58,6 +58,16 @@ class TExec {
         """.trimIndent())
         assert(out == "()\n[(),[(),()]]\n") { out }
     }
+    @Test
+    fun a05_nat () {
+        val out = all("""
+            var y: _(char*) = _{"hello"}
+            var n: _{int} = _10
+            var x = [n,y]
+            output std /x
+        """.trimIndent())
+        assert(out == "[10,\"hello\"]\n") { out }
+    }
 
     @Test
     fun z01 () {
