@@ -1,3 +1,5 @@
+val INF = mutableMapOf<Stmt.Var,Type>()
+
 fun Expr.aux_tps (inf: Type?) {
     AUX.tps[this] = when (this) {
         is Expr.Unit  -> Type.Unit(this.tk_).up(this)
@@ -13,7 +15,15 @@ fun Expr.aux_tps (inf: Type?) {
                 (it as Type.Ptr).pln
             }
         }
-        is Expr.TCons -> Type.Tuple(this.tk_, this.arg.map { AUX.tps[it]!! }.toTypedArray()).up(this)
+        is Expr.TCons -> {
+            if (inf == null) {
+                Type.Tuple(this.tk_, this.arg.map { AUX.tps[it]!! }.toTypedArray()).up(this)
+            } else {
+                val tp = inf as Type.Tuple
+                this.arg.forEachIndexed { i,e -> e.aux_tps(tp.vec[i]) }
+                inf
+            }
+        }
         is Expr.UCons -> this.type!!
         is Expr.New   -> Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scope!!, AUX.tps[this.arg]!!).up(this)
         is Expr.Inp   -> this.type ?: inf!!.let { println(this); println(it); it }
@@ -91,22 +101,21 @@ fun Expr.aux_tps (inf: Type?) {
                 else -> error("bug found")
             }
         }
-        is Expr.Var -> this.env()!!.let {
-            println(it)
-            it.type ?: AUX.inf[it] }!!
+        is Expr.Var -> this.env()!!.let { it.type ?: INF[it] }!!
     }
 }
 
 // Need to infer:
 //  var x: ? = ...
 //  var x: _int = input std: ?
+//  var x: <(),()> = <.1>: ?
 
 fun Stmt.aux_tps (inf: Type?) {
     when (this) {
         is Stmt.Var -> {
             if (inf != null) {
                 assert(this.type == null)
-                AUX.inf[this] = inf
+                INF[this] = inf
             }
         }
         is Stmt.Set -> {
