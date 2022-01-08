@@ -57,14 +57,6 @@ class TParser {
         lexer(all)
         val s = xparser_stmt(all)
         assert(s is Stmt.Seq && s.s1 is Stmt.Var && s.s2 is Stmt.Set)
-
-        aux_clear()
-        s.aux_upsenvs(null, null)
-        check_01_before_tps(s)
-        //Aux_tps(s)
-        s.infer()
-
-        assert(s.tostr() == "var x: ()\nset x = ()\n") { s.tostr() }
     }
     @Test
     fun c04_parser_var () {

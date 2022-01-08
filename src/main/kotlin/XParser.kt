@@ -76,3 +76,31 @@ fun xparser_stmt (all: All): Stmt {
     }
 }
 
+fun xparser_stmts (all: All, opt: Pair<TK,Char?>): Stmt {
+    fun enseq (s1: Stmt, s2: Stmt): Stmt {
+        return when {
+            (s1 is Stmt.Nop) -> s2
+            (s2 is Stmt.Nop) -> s1
+            else -> Stmt.Seq(s1.tk, s1, s2)
+        }
+    }
+    var ret: Stmt = Stmt.Nop(all.tk0)
+    while (true) {
+        all.accept(TK.CHAR, ';')
+        val tk_bef = all.tk0
+        try {
+            val s = xparser_stmt(all)
+            ret = enseq(ret,s)
+        } catch (e: Throwable) {
+            //throw e
+            assert(!all.consumed(tk_bef)) {
+                e.message!!
+            }
+            assert(all.check(opt.first, opt.second)) {
+                e.message!!
+            }
+            break
+        }
+    }
+    return ret
+}

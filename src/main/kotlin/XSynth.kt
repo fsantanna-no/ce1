@@ -8,7 +8,7 @@ fun Expr.tostr (): String {
 
 fun Stmt.tostr (): String {
     return when (this) {
-        is Stmt.Var -> "var " + this.tk_.str + ": " + this.type!!.tostr() + "\n"
+        is Stmt.Var -> "var " + this.tk_.str + ": " + (this.type ?: AUX.inf[this])!!.tostr() + "\n"
         is Stmt.Set -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Seq -> this.s1.tostr() + this.s2.tostr()
         else -> TODO()
