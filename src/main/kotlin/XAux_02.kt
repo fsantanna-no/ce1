@@ -4,20 +4,26 @@ fun Expr.aux_tps (inf: Type?) {
     AUX.tps[this] = when (this) {
         is Expr.Unit  -> Type.Unit(this.tk_).up(this)
         is Expr.Nat   -> this.type ?: Type.Nat(this.tk_).up(this)
-        is Expr.Upref -> AUX.tps[this.pln]!!.let {
-            Type.Ptr(this.tk_, Tk.Scope(TK.XSCOPE,this.tk.lin,this.tk.col,"var",null), it).up(it)
+        is Expr.Upref -> {
+            this.pln.aux_tps(null)
+            AUX.tps[this.pln]!!.let {
+                Type.Ptr(this.tk_, Tk.Scope(TK.XSCOPE,this.tk.lin,this.tk.col,"var",null), it).up(it)
+            }
         }
-        is Expr.Dnref -> AUX.tps[this.ptr].let {
-            if (it is Type.Nat) it else {
-                All_assert_tk(this.tk, it is Type.Ptr) {
-                    "invalid operand to `\\´ : not a pointer"
+        is Expr.Dnref -> {
+            this.ptr.aux_tps(null)
+            AUX.tps[this.ptr].let {
+                if (it is Type.Nat) it else {
+                    All_assert_tk(this.tk, it is Type.Ptr) {
+                        "invalid operand to `\\´ : not a pointer"
+                    }
+                    (it as Type.Ptr).pln
                 }
-                (it as Type.Ptr).pln
             }
         }
         is Expr.TCons -> {
             if (inf == null) {
-                Type.Tuple(this.tk_, this.arg.map { AUX.tps[it]!! }.toTypedArray()).up(this)
+                Type.Tuple(this.tk_, this.arg.map { it.aux_tps(null) ; AUX.tps[it]!! }.toTypedArray()).up(this)
             } else {
                 val tp = inf as Type.Tuple
                 this.arg.forEachIndexed { i,e -> e.aux_tps(tp.vec[i]) }
@@ -25,10 +31,18 @@ fun Expr.aux_tps (inf: Type?) {
             }
         }
         is Expr.UCons -> this.type!!
-        is Expr.New   -> Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scope!!, AUX.tps[this.arg]!!).up(this)
-        is Expr.Inp   -> this.type ?: inf!!.let { println(this); println(it); it }
-        is Expr.Out   -> Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).up(this)
+        is Expr.New   -> {
+            this.arg.aux_tps(null)
+            Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scp!!, AUX.tps[this.arg]!!).up(this)
+        }
+        is Expr.Inp   -> this.type ?: inf!!
+        is Expr.Out   -> {
+            this.arg.aux_tps(null)
+            Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).up(this)
+        }
         is Expr.Call -> {
+            this.f.aux_tps(null)
+            this.arg.aux_tps(null)
             AUX.tps[this.f].let {
                 when (it) {
                     is Type.Nat -> it
@@ -63,20 +77,23 @@ fun Expr.aux_tps (inf: Type?) {
             }
         }
         is Expr.Func -> this.type
-        is Expr.TDisc -> AUX.tps[this.tup].let {
-            All_assert_tk(this.tk, it is Type.Tuple) {
-                "invalid discriminator : type mismatch"
+        is Expr.TDisc -> {
+            this.tup.aux_tps(null)
+            AUX.tps[this.tup].let {
+                All_assert_tk(this.tk, it is Type.Tuple) {
+                    "invalid discriminator : type mismatch"
+                }
+                val (MIN, MAX) = Pair(1, (it as Type.Tuple).vec.size)
+                All_assert_tk(this.tk, MIN <= this.tk_.num && this.tk_.num <= MAX) {
+                    "invalid discriminator : out of bounds"
+                }
+                it.vec[this.tk_.num - 1]
             }
-            val (MIN, MAX) = Pair(1, (it as Type.Tuple).vec.size)
-            All_assert_tk(this.tk, MIN <= this.tk_.num && this.tk_.num <= MAX) {
-                "invalid discriminator : out of bounds"
-            }
-            it.vec[this.tk_.num - 1]
         }
         is Expr.UDisc, is Expr.UPred -> {
             val (tk_,uni) = when (this) {
-                is Expr.UPred -> Pair(this.tk_,this.uni)
-                is Expr.UDisc -> Pair(this.tk_,this.uni)
+                is Expr.UPred -> { this.uni.aux_tps(null) ; Pair(this.tk_,this.uni) }
+                is Expr.UDisc -> { this.uni.aux_tps(null) ; Pair(this.tk_,this.uni) }
                 else -> error("impossible case")
             }
             val tp = AUX.tps[uni]!!
@@ -110,7 +127,7 @@ fun Expr.aux_tps (inf: Type?) {
 //  var x: _int = input std: ?
 //  var x: <(),()> = <.1>: ?
 
-fun Stmt.aux_tps (inf: Type?) {
+fun Stmt.aux_tps (inf: Type? = null) {
     when (this) {
         is Stmt.Var -> {
             if (inf != null) {
@@ -122,7 +139,7 @@ fun Stmt.aux_tps (inf: Type?) {
             this.dst.aux_tps(null)
             this.src.aux_tps(AUX.tps[this.dst]!!)
         }
-        is Stmt.SExpr -> this.expr.aux_tps(null)
+        is Stmt.SExpr -> this.e.aux_tps(null)
         is Stmt.If -> {
             this.tst.aux_tps(null)
             this.true_.aux_tps(null)
@@ -150,6 +167,9 @@ fun Stmt.aux_tps (inf: Type?) {
                     this.s1.aux_tps(null)
                     this.s2.aux_tps(this.s1.type)
                 }
+            } else {
+                this.s1.aux_tps(null)
+                this.s2.aux_tps(null)
             }
         }
     }

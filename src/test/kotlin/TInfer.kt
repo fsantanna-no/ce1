@@ -36,6 +36,6 @@ class TInfer {
     @Test
     fun a04_input () {
         val out = all("var x: [_int,_int] = [_10,input std]")
-        assert(out == "var x: [_int,_int]\nset x = [_10,input std: _int]\n") { out }
+        assert(out == "var x: [_int,_int]\nset x = [_{10},input std: _int]\n") { out }
     }
 }
