@@ -79,22 +79,43 @@ class TExec {
         """.trimIndent())
         assert(out == "10\n") { out }
     }
+    @Test
+    fun a07_call_fg () {
+        val out = all("""
+            var f = func {}->{}-> ()->() {
+                var x = _10:_int
+                output std x
+            }
+            var g = func {}->{}-> ()->() {
+                return call f ()
+            }
+            call g ()
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun a08_union () {
+        val out = all("""
+            var a = <.1>:<(),()>
+            var b : <(),()> = <.2>
+            output std /a
+            output std /b
+        """.trimIndent())
+        assert(out == "<.1>\n<.2>\n") { out }
+    }
 
     @Test
     fun z01 () {
         val out = all("""
-        var inv : ({}->{}-> <(),()> -> <(),()>)
-        set inv = func ({}->{}-> <(),()> -> <(),()>) {
+        var inv = func ({}->{}-> <(),()> -> <(),()>) {
             if arg?1 {
-                return <.2>:<(),()>
+                return <.2>
             } else {
-                return <.1>:<(),()>
+                return <.1>
             }
         }
-        var a: <(),()>
-        set a = <.2>: <(),()>
-        var b: <(),()>
-        set b = call inv a
+        var a: <(),()> = <.2>
+        var b = call inv a
         output std /b
         """.trimIndent())
         assert(out == "<.1>\n") { out }

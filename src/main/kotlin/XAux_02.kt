@@ -30,7 +30,7 @@ fun Expr.aux_tps (inf: Type?) {
                 inf
             }
         }
-        is Expr.UCons -> this.type!!
+        is Expr.UCons -> this.type ?: inf!!
         is Expr.New   -> {
             this.arg.aux_tps(null)
             Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scp!!, AUX.tps[this.arg]!!).up(this)
@@ -76,7 +76,10 @@ fun Expr.aux_tps (inf: Type?) {
                 it
             }
         }
-        is Expr.Func -> this.type
+        is Expr.Func -> {
+            this.block.aux_tps(null)
+            this.type
+        }
         is Expr.TDisc -> {
             this.tup.aux_tps(null)
             AUX.tps[this.tup].let {
@@ -129,6 +132,7 @@ fun Expr.aux_tps (inf: Type?) {
 
 fun Stmt.aux_tps (inf: Type? = null) {
     when (this) {
+        is Stmt.Ret -> {}
         is Stmt.Var -> {
             if (inf != null) {
                 assert(this.type == null)
@@ -172,5 +176,6 @@ fun Stmt.aux_tps (inf: Type? = null) {
                 this.s2.aux_tps(null)
             }
         }
+        else -> TODO(this.toString())
     }
 }

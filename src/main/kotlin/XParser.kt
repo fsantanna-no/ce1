@@ -138,8 +138,7 @@ fun xparser_expr (all: All): Expr {
                 Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
             }
             all.accept_err(TK.CHAR, '>')
-            all.accept_err(TK.CHAR, ':')
-            val tp = xparser_type(all)
+            val tp = if (!all.accept(TK.CHAR, ':')) null else xparser_type(all)
             Expr.UCons(tk0, tp, cons)
         }
         all.accept(TK.NEW) -> {
