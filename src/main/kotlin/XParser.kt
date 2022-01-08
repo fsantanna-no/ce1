@@ -1,3 +1,89 @@
+fun xparser_type (all: All): Type {
+    return when {
+        all.accept(TK.UNIT) -> Type.Unit(all.tk0 as Tk.Sym)
+        all.accept(TK.XNAT) -> Type.Nat(all.tk0 as Tk.Nat)
+        all.accept(TK.XUP) -> Type.Rec(all.tk0 as Tk.Up)
+        all.accept(TK.CHAR, '/') -> {
+            val tk0 = all.tk0 as Tk.Chr
+            val pln = xparser_type(all)
+            val scp = if (all.accept(TK.XSCOPE)) (all.tk0 as Tk.Scope) else {
+                Tk.Scope(TK.XSCOPE, all.tk0.lin, all.tk0.col, "local", null)
+            }
+            Type.Ptr(tk0, scp, pln)
+        }
+        all.accept(TK.CHAR, '(') -> {
+            val tp = xparser_type(all)
+            all.accept_err(TK.CHAR, ')')
+            return tp
+        }
+        all.accept(TK.CHAR, '[') || all.accept(TK.CHAR, '<') -> {
+            val tk0 = all.tk0 as Tk.Chr
+            val tp = xparser_type(all)
+            val tps = arrayListOf(tp)
+            while (true) {
+                if (!all.accept(TK.CHAR, ',')) {
+                    break
+                }
+                val tp2 = xparser_type(all)
+                tps.add(tp2)
+            }
+            if (tk0.chr == '[') {
+                all.accept_err(TK.CHAR, ']')
+                Type.Tuple(tk0, tps.toTypedArray())
+            } else {
+                all.accept_err(TK.CHAR, '>')
+                fun f(tp: Type, n: Int): Boolean {
+                    return when (tp) {
+                        is Type.Ptr -> tp.pln.let {
+                            f(it, n) || (it is Type.Rec && n == it.tk_.up)
+                        }
+                        //is Type.Rec   -> return n <= tp.tk_.up
+                        is Type.Tuple -> tp.vec.any { f(it, n) }
+                        is Type.Union -> tp.vec.any { f(it, n + 1) }
+                        else -> false
+                    }
+                }
+
+                val vec = tps.toTypedArray()
+                val isrec = vec.any { f(it, 1) }
+                Type.Union(tk0, isrec, vec)
+            }
+        }
+        all.accept(TK.CHAR, '{') -> {
+            val tk0 = all.tk0 as Tk.Chr
+            val clo = if (all.accept(TK.XSCOPE)) {
+                all.tk0 as Tk.Scope
+            } else {
+                null
+            }
+            all.accept_err(TK.CHAR, '}')
+            all.accept_err(TK.ARROW)
+            all.accept_err(TK.CHAR, '{')
+            val scps = mutableListOf<Tk.Scope>()
+            while (all.accept(TK.XSCOPE)) {
+                val tk = all.tk0 as Tk.Scope
+                All_assert_tk(tk, tk.num != null) {
+                    "invalid pool : expected `_N´ depth"
+                }
+                scps.add(tk)
+                if (!all.accept(TK.CHAR, ',')) {
+                    break
+                }
+            }
+            all.accept_err(TK.CHAR, '}')
+            all.accept_err(TK.ARROW)
+            val inp = xparser_type(all)
+            all.accept_err(TK.ARROW)
+            val out = xparser_type(all) // right associative
+            Type.Func(tk0, clo, scps.toTypedArray(), inp, out)
+        }
+        else -> {
+            all.err_expected("type")
+            error("unreachable")
+        }
+    }
+}
+
 fun xparser_expr (all: All): Expr {
     var e = when {
         all.accept(TK.UNIT) -> Expr.Unit(all.tk0 as Tk.Sym)
@@ -5,7 +91,7 @@ fun xparser_expr (all: All): Expr {
         all.accept(TK.XNAT) -> {
             val tk0 = all.tk0 as Tk.Nat
             val tp = if (!all.accept(TK.CHAR, ':')) null else {
-                parser_type(all)
+                xparser_type(all)
             }
             Expr.Nat(tk0, tp)
         }
@@ -53,7 +139,7 @@ fun xparser_expr (all: All): Expr {
             }
             all.accept_err(TK.CHAR, '>')
             all.accept_err(TK.CHAR, ':')
-            val tp = parser_type(all)
+            val tp = xparser_type(all)
             Expr.UCons(tk0, tp, cons)
         }
         all.accept(TK.NEW) -> {
@@ -101,7 +187,7 @@ fun xparser_expr (all: All): Expr {
             val tk = all.tk0 as Tk.Key
             all.accept_err(TK.XVAR)
             val lib = (all.tk0 as Tk.Str)
-            val tp = if (!all.accept(TK.CHAR, ':')) null else parser_type(all)
+            val tp = if (!all.accept(TK.CHAR, ':')) null else xparser_type(all)
             return Expr.Inp(tk, lib, tp)
         }
         all.accept(TK.OUTPUT) -> {
@@ -127,40 +213,12 @@ fun xparser_expr (all: All): Expr {
                 ret.toTypedArray()
             }
 
-            val tp = parser_type(all)
+            val tp = xparser_type(all)
             all.assert_tk(all.tk0, tp is Type.Func) {
                 "expected function type"
             }
-            val tpf = tp as Type.Func
-
-            val block = parser_block(all)
-            val lin = block.tk.lin
-            val col = block.tk.col
-
-            val xblock = Stmt.Block(
-                block.tk_, null,
-                Stmt.Seq(
-                    block.tk,
-                    Stmt.Var(Tk.Str(TK.XVAR, lin, col, "_ret_"), tpf.out.lincol(lin, col)),
-                    Stmt.Block(
-                        block.tk_, null,
-                        Stmt.Seq(
-                            block.tk,
-                            Stmt.Var(Tk.Str(TK.XVAR, lin, col, "arg"), tpf.inp.lincol(lin, col)),
-                            Stmt.Seq(
-                                block.tk,
-                                Stmt.Set(
-                                    Tk.Chr(TK.XVAR, lin, col, '='),
-                                    Expr.Var(Tk.Str(TK.XVAR, lin, col, "arg")),
-                                    Expr.Nat(Tk.Nat(TK.XNAT, lin, col, null, "_arg_"), null)
-                                ),
-                                block
-                            )
-                        )
-                    )
-                )
-            )
-            Expr.Func(tk0, ups, tp, xblock)
+            val block = xparser_block(all)
+            Expr.Func(tk0, ups, tp as Type.Func, block)
         }
         else -> {
             all.err_expected("expression")
@@ -199,13 +257,67 @@ fun xparser_expr (all: All): Expr {
     return e
 }
 
+fun xparser_attr (all: All): Attr {
+    fun one (): Attr {
+        return when {
+            all.accept(TK.XVAR) -> Attr.Var(all.tk0 as Tk.Str)
+            all.accept(TK.XNAT) -> Attr.Nat(all.tk0 as Tk.Nat)
+            all.accept(TK.CHAR,'\\') -> {
+                val tk0 = all.tk0 as Tk.Chr
+                val e = xparser_attr(all)
+                all.assert_tk(all.tk0, e is Attr.Nat || e is Attr.Var || e is Attr.TDisc || e is Attr.UDisc || e is Attr.Dnref) {
+                    "unexpected operand to `\\´"
+                }
+                Attr.Dnref(tk0,e)
+            }
+            else -> {
+                all.err_expected("expression")
+                error("unreachable")
+            }
+        }
+    }
+
+    // one.1!\.2.1?
+    var e1 = one()
+    while (all.accept(TK.CHAR, '\\') || all.accept(TK.CHAR, '.') || all.accept(TK.CHAR, '!')) {
+        val chr = all.tk0 as Tk.Chr
+        if (chr.chr == '\\') {
+            all.assert_tk(
+                all.tk0,
+                e1 is Attr.Nat || e1 is Attr.Var || e1 is Attr.TDisc || e1 is Attr.UDisc || e1 is Attr.Dnref
+            ) {
+                "unexpected operand to `\\´"
+            }
+            e1 = Attr.Dnref(chr, e1)
+        } else {
+            all.accept_err(TK.XNUM)
+            val num = all.tk0 as Tk.Num
+            e1 = when {
+                (chr.chr == '!') -> Attr.UDisc(num, e1)
+                (chr.chr == '.') -> Attr.TDisc(num, e1)
+                else -> error("impossible case")
+            }
+        }
+    }
+    return e1
+}
+
+fun xparser_block (all: All): Stmt.Block {
+    all.accept_err(TK.CHAR,'{')
+    val tk0 = all.tk0 as Tk.Chr
+    val scp = all.accept(TK.XSCOPE).let { if (it) all.tk0 as Tk.Scope else null }
+    val ret = xparser_stmts(all, Pair(TK.CHAR,'}'))
+    all.accept_err(TK.CHAR,'}')
+    return Stmt.Block(tk0, scp, ret)
+}
+
 fun xparser_stmt (all: All): Stmt {
     return when {
         all.accept(TK.VAR) -> {
             all.accept_err(TK.XVAR)
             val tk_id = all.tk0 as Tk.Str
             val tp = if (!all.accept(TK.CHAR,':')) null else {
-                parser_type(all)
+                xparser_type(all)
             }
             if (all.accept(TK.CHAR,'=')) {
                 val tk = all.tk0 as Tk.Chr
@@ -219,7 +331,7 @@ fun xparser_stmt (all: All): Stmt {
             }
         }
         all.accept(TK.SET) -> {
-            val dst = parser_attr(all)
+            val dst = xparser_attr(all)
             all.accept_err(TK.CHAR,'=')
             val tk0 = all.tk0 as Tk.Chr
             val src = xparser_expr(all)
@@ -237,11 +349,11 @@ fun xparser_stmt (all: All): Stmt {
         all.accept(TK.IF) -> {
             val tk0 = all.tk0 as Tk.Key
             val tst = xparser_expr(all)
-            val true_ = parser_block(all)
+            val true_ = xparser_block(all)
             if (!all.accept(TK.ELSE)) {
                 return Stmt.If(tk0, tst, true_, Stmt.Block(Tk.Chr(TK.CHAR,all.tk1.lin,all.tk1.col,'{'),null,Stmt.Nop(all.tk0)))
             }
-            val false_ = parser_block(all)
+            val false_ = xparser_block(all)
             Stmt.If(tk0, tst, true_, false_)
         }
         all.accept(TK.RETURN) -> {
@@ -257,7 +369,7 @@ fun xparser_stmt (all: All): Stmt {
             Stmt.Seq (tk0,
                 Stmt.Set (
                     Tk.Chr(TK.CHAR,tk0.lin,tk0.col,'='),
-                    Expr.Var(Tk.Str(TK.XVAR,tk0.lin,tk0.col,"_ret_")),
+                    Expr.Var(Tk.Str(TK.XVAR,tk0.lin,tk0.col,"ret")),
                     e
                 ),
                 Stmt.Ret(tk0)
@@ -265,11 +377,11 @@ fun xparser_stmt (all: All): Stmt {
         }
         all.accept(TK.LOOP) -> {
             val tk0 = all.tk0 as Tk.Key
-            val block = parser_block(all)
+            val block = xparser_block(all)
             Stmt.Loop(tk0, block)
         }
         all.accept(TK.BREAK) -> return Stmt.Break(all.tk0 as Tk.Key)
-        all.check(TK.CHAR,'{') -> return parser_block(all)
+        all.check(TK.CHAR,'{') -> return xparser_block(all)
         else -> {
             all.err_expected("statement")
             error("unreachable")

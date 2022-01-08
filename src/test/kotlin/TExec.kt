@@ -68,6 +68,17 @@ class TExec {
         """.trimIndent())
         assert(out == "[10,\"hello\"]\n") { out }
     }
+    @Test
+    fun a06_call () {
+        val out = all("""
+            var f = func ({}->{}-> _int -> _int) {
+                return arg
+            }
+            var x = call f _10
+            output std x
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
 
     @Test
     fun z01 () {

@@ -10,7 +10,7 @@ fun Expr.tostr (): String {
         is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + AUX.tps[this]!!.tostr()
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.Call  -> "call " + this.f.tostr() + " " + this.arg.tostr()
-        is Expr.Func  -> "func {} -> {} -> (" + this.type.inp.tostr() + ") -> (" + this.type.out.tostr() + ") " + this.block
+        is Expr.Func  -> "func {} -> {} -> (" + this.type.inp.tostr() + ") -> (" + this.type.out.tostr() + ") " + this.block.tostr()
         else -> TODO(this.toString())
     }
 }
@@ -21,6 +21,7 @@ fun Stmt.tostr (): String {
         is Stmt.Var   -> "var " + this.tk_.str + ": " + (this.type ?: INF[this])!!.tostr() + "\n"
         is Stmt.Set   -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Break -> "break\n"
+        is Stmt.Ret   -> "return\n"
         is Stmt.Seq   -> this.s1.tostr() + this.s2.tostr()
         is Stmt.SExpr -> this.e.tostr() + "\n"
         is Stmt.If    -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"

@@ -118,7 +118,7 @@ fun Expr.aux_tps (inf: Type?) {
                 else -> error("bug found")
             }
         }
-        is Expr.Var -> this.env()!!.let { it.type ?: INF[it] }!!
+        is Expr.Var -> this.env().let { it.second ?: INF[it.first!!] }!!
     }
 }
 
