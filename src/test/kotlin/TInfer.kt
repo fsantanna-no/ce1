@@ -10,12 +10,16 @@ class TInfer {
     fun all (inp: String): String {
         val all = All_new(PushbackReader(StringReader(inp), 2))
         lexer(all)
-        val s = xparser_stmts(all, Pair(TK.EOF,null))
-        aux_clear()
-        s.aux_upsenvs(null, null)
-        check_01_before_tps(s)
-        s.aux_tps(null)
-        return s.tostr()
+        try {
+            val s = xparser_stmts(all, Pair(TK.EOF, null))
+            aux_clear()
+            s.aux_upsenvs(null, null)
+            check_01_before_tps(s)
+            s.aux_tps(null)
+            return s.tostr()
+        } catch (e: Throwable) {
+            return e.message!!
+        }
     }
 
     @Test
@@ -133,4 +137,24 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+
+    // inference error
+
+    @Test
+    fun b01 () {
+        val out = all("""
+            var x: /<(),/</^^,/^>>
+            set x = <.1>
+        """.trimIndent())
+        assert(out == "(ln 2, col 11): invalid inference : type mismatch") { out }
+    }
+    @Test
+    fun b02 () {
+        val out = all("""
+            var x: /<(),/</^^,/^>>
+            set x = new <.2 new <.1 <.1>>>
+        """.trimIndent())
+        assert(out == "(ln 2, col 27): invalid inference : type mismatch") { out }
+    }
+
 }

@@ -227,4 +227,7 @@ class TExec {
         """.trimIndent())
         assert(out == "(ln 6, col 8): invalid assignment : type mismatch\n") { out }
     }
+
+    // old disabled
+
 }

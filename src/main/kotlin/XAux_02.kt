@@ -11,8 +11,8 @@ fun Expr.aux_tps (inf: Type?) {
                     Type.Ptr(this.tk_, Tk.Scope(TK.XSCOPE,this.tk.lin,this.tk.col,"var",null), it).up(it)
                 }
             } else {
-                val tp = inf as Type.Ptr
-                this.pln.aux_tps(tp.pln)
+                All_assert_tk(this.tk, inf is Type.Ptr) { "invalid inference : type mismatch"}
+                this.pln.aux_tps((inf as Type.Ptr).pln)
                 inf
             }
         }
@@ -41,8 +41,8 @@ fun Expr.aux_tps (inf: Type?) {
             if (inf == null) {
                 Type.Tuple(this.tk_, this.arg.map { it.aux_tps(null) ; AUX.tps[it]!! }.toTypedArray()).up(this)
             } else {
-                val tp = inf as Type.Tuple
-                this.arg.forEachIndexed { i,e -> e.aux_tps(tp.vec[i]) }
+                All_assert_tk(this.tk, inf is Type.Tuple) { "invalid inference : type mismatch"}
+                this.arg.forEachIndexed { i,e -> e.aux_tps((inf as Type.Tuple).vec[i]) }
                 inf
             }
         }
@@ -50,7 +50,10 @@ fun Expr.aux_tps (inf: Type?) {
             val x = when {
                 (this.tk_.num == 0) -> Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).up(this)
                 (this.type != null) -> (this.type as Type.Union).expand()[this.tk_.num-1]
-                else -> (inf as Type.Union).expand()[this.tk_.num-1]
+                else -> {
+                    All_assert_tk(this.tk, inf is Type.Union) { "invalid inference : type mismatch"}
+                    (inf as Type.Union).expand()[this.tk_.num-1]
+                }
             }
             this.arg.aux_tps(x)
             this.type ?: inf!!
@@ -60,8 +63,8 @@ fun Expr.aux_tps (inf: Type?) {
                 this.arg.aux_tps(null)
                 Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.scp!!, AUX.tps[this.arg]!!).up(this)
             } else {
-                val tp = inf as Type.Ptr
-                this.arg.aux_tps(tp.pln)
+                All_assert_tk(this.tk, inf is Type.Ptr) { "invalid inference : type mismatch"}
+                this.arg.aux_tps((inf as Type.Ptr).pln)
                 inf
             }
         }
