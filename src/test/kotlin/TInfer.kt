@@ -122,7 +122,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             var l: /</^@local>@local
-            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>@local)
+            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>: @local)
 
         """.trimIndent()) { out }
     }
@@ -133,7 +133,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             var l: /</^@local>@local
-            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>@local)
+            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>: @local)
             
         """.trimIndent()) { out }
     }
@@ -156,5 +156,12 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 27): invalid inference : type mismatch") { out }
     }
-
+    @Test
+    fun b03 () {
+        val out = all("""
+            var x: /</<[/^^ @local,/^ @local]> @local> @local
+            set x = new <.1 <.1 [<.0>,<.0>]>>
+        """.trimIndent())
+        assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
+    }
 }

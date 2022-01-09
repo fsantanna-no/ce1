@@ -230,4 +230,74 @@ class TExec {
 
     // old disabled
 
+    @Test
+    fun b01_new () {
+        val out = all("""
+            var xxx: /<(),/</^^,/^>>
+            set xxx =
+                new <.2
+                    new <.1
+                        new <.1>
+                    >
+                >
+            output std xxx
+        """.trimIndent())
+        assert(out == "<.2 <.1 <.1>>>\n") { out }
+    }
+    @Test
+    fun b02_new () {
+        val out = all("""
+            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            set x = new <.2 new <.2 new <.2 <.0>>>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.2 <.2 <.2 <.0>>>>\n") { out }
+    }
+    @Test
+    fun b03_new () {
+        val out = all("""
+            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            set x = new <.2 new <.1 new <.1>>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.2 <.1 <.1>>>\n") { out }
+    }
+    @Test
+    fun b04_new () {
+        val out = all("""
+            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            set x = new <.2 new <.2 new <.1 new <.1>>>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.2 <.2 <.1 <.1>>>>\n") { out }
+    }
+    @Test
+    fun b05_new () {
+        val out = all("""
+            var x: /</<[/^^,/^]>>
+            set x = new <.1 new <.1 [<.0>,<.0>]>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.1 <.1 [<.0>,<.0>]>>\n") { out }
+    }
+    @Test
+    fun b06_new () {
+        val out = all("""
+            var x: /</<[/^^ @local,/^ @local]> @local> @local
+            set x = new <.1 new <.1 [<.0>,new <.1 [<.0>,<.0>]>]>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.1 <.1 [<.0>,<.1 [<.0>,<.0>]>]>>\n") { out }
+    }
+    @Test
+    fun b08_new () {
+        val out = all("""
+            var e: /<(),<(),/^^ @local>>
+            set e = new <.2 <.2 new <.1>>>
+            var s: <(),/<(),<(),/^^>>>
+            set s = <.2 e>
+            output std /s
+        """.trimIndent())
+        assert(out == "<.2 <.2 <.2 <.1>>>>\n") { out }
+    }
 }

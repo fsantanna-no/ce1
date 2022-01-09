@@ -12,7 +12,7 @@ fun Expr.tostr (): String {
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + this.scp.tostr() + ")"
+        is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.scp.tostr() + ")"
         is Expr.Call  -> "call " + this.f.tostr() + " " + this.arg.tostr()
         is Expr.Func  -> "func {} -> {} -> (" + this.type.inp.tostr() + ") -> (" + this.type.out.tostr() + ") " + this.block.tostr()
         else -> TODO(this.toString())
