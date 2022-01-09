@@ -273,6 +273,11 @@ fun xparser_attr (all: All): Attr {
                 }
                 Attr.Dnref(tk0,e)
             }
+            all.accept(TK.CHAR, '(') -> {
+                val e = xparser_attr(all)
+                all.accept_err(TK.CHAR, ')')
+                e
+            }
             else -> {
                 all.err_expected("expression")
                 error("unreachable")

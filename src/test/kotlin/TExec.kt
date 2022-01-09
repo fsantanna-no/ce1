@@ -300,4 +300,159 @@ class TExec {
         """.trimIndent())
         assert(out == "<.2 <.2 <.2 <.1>>>>\n") { out }
     }
+    @Test
+    fun b09_union () {
+        val out = all("""
+            var x: /</^ @local> @local = <.0>
+            var y: <//</^ @local> @local @local>
+            set y = <.1 /x>
+            output std /y
+            output std y!1\
+        """.trimIndent())
+        //assert(out == "(ln 3, col 7): invalid assignment of \"x\" : borrowed in line 2") { out }
+        assert(out == "<.1 _>\n<.0>\n") { out }
+    }
+    @Test
+    fun b10_new () {
+        val out = all("""
+            var x: /< [<(),//^^ @local @local>,/^ @local]> @local
+            set x = new <.1 [<.1>,<.0>]>
+            var y: /< [<(),//^^>,/^]>
+            set y = new <.1 [<.1>,x]>
+            set y\!1.2\!1.1 = <.1>
+            -- <.1 [<.1>,<.1 [<.1>,<.0>]>]>
+            output std y
+        """.trimIndent())
+        assert(out == "<.1 [<.1>,<.1 [<.1>,<.0>]>]>\n") { out }
+    }
+    @Test
+    fun b11_new_self () {
+        val out = all("""
+            var x: /< [<(),//^^ @local @local>,/^ @local]> @local
+            set x = new <.1 [<.1>,<.0>]>
+            var y: /< [<(),//^^>,/^]>
+            set y = new <.1 [<.1>, x]>
+            set y\!1.2\!1.1 = <.2 /y>
+            output std y
+        """.trimIndent())
+        assert(out == "<.1 [<.1>,<.1 [<.2 _>,<.0>]>]>\n") { out }
+    }
+    @Test
+    fun b12_new_self () {
+        val out = all("""
+            var x: /<[(),/^ @local]> @local
+            set x = new <.1 [(),<.0>]>
+            var y: [(),/<[(),/^]>]
+            set y = [(), new <.1 [(),<.0>]>]
+            var z: [(),//<[(),/^]>]
+            set z = [(), /x]
+            output std z.2\\!1.2\!0
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun b13_new_self () {
+        val out = all("""
+            var x: /< [//^ @local @local,/^ @local]> @local
+            set x = new <.1 [_,<.0>]>
+            set x\!1.1 = /x
+            output std x
+            output std x\!1.1\
+        """.trimIndent())
+        assert(out == "<.1 [_,<.0>]>\n<.1 [_,<.0>]>\n") { out }
+    }
+    @Test
+    fun b14_new_self () {
+        val out = all("""
+            var x: /< [<(),//^^>,/^]>
+            set x = new <.1 [<.1>,<.0>]>
+            set x\!1.1 = <.2 /x>  -- ok
+            output std x
+            output std x\!1.1!2\
+        """.trimIndent())
+        assert(out == "<.1 [<.2 _>,<.0>]>\n<.1 [<.2 _>,<.0>]>\n") { out }
+    }
+    @Test
+    fun b15_new_self () {
+        val out = all("""
+            var x: /< <(),//^^ @local @local>> @local
+            set x = new <.1 <.1>>
+            output std x
+        """.trimIndent())
+        assert(out == "<.1 <.1>>\n") { out }
+        //assert(out == "(ln 1, col 14): invalid type declaration : unexpected `^´") { out }
+    }
+    @Test
+    fun b16_new () {
+        val out = all("""
+            var l: /<(),/^> = new <.2 new <.1>>
+            var t1 = [l]
+            var t2 = [t1.1]
+            output std /t2
+        """.trimIndent())
+        assert(out == "[<.2 <.1>>]\n") { out }
+    }
+    @Test
+    fun b17_new () {
+        val out = all("""
+            var l: /<(),/^> = new <.2 new <.1>>
+            var t1 = [(), l]
+            var t2 = [(), t1.2]
+            output std /t2
+        """.trimIndent())
+        assert(out == "[(),<.2 <.1>>]\n") { out }
+    }
+    @Test
+    fun b18_new () {
+        val out = all("""
+            var v1: /<(),/<[/^^,/^]>> = new <.2 <.0>>
+            var v2: /<(),/<[/^^,/^]>>
+            set v2 = new <.2 new <.1 [new <.1>,<.0>]>>
+            output std v1
+            output std v2
+        """.trimIndent())
+        assert(out == "<.2 <.0>>\n<.2 <.1 [<.1>,<.0>]>>\n") { out }
+    }
+    @Test
+    fun b19_new () {
+        val out = all("""
+            var x: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,<.0>]>
+            var y: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,x]>
+            set y\!1.2\!1.1 = <.1>
+            output std y
+        """.trimIndent())
+        assert(out == "<.1 [<.1>,<.1 [<.1>,<.0>]>]>\n") { out }
+        //assert(out == "(ln 1, col 16): invalid type declaration : unexpected `^´") { out }
+    }
+    @Test
+    fun b20_new () {
+        val out = all("""
+            var x: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,new <.1 [<.1>,<.0>]>]>
+            set x\!1.2 = <.0>
+            output std x
+        """.trimIndent())
+        //assert(out == "(ln 1, col 14): invalid type declaration : unexpected `^´") { out }
+        //assert(out == "out.exe: out.c:133: main: Assertion `(*(x))._1._2 == NULL' failed.\n") { out }
+        assert(out == "<.1 [<.1>,<.0>]>\n") { out }
+    }
+    @Test
+    fun b21_new () {
+        val out = all("""
+            var x: /<(),/^ @local> @local = new <.2 new <.1>>
+            var y = x
+            output std x
+            output std y
+        """.trimIndent())
+        assert(out == "<.2 <.1>>\n<.2 <.1>>\n") { out }
+    }
+    @Test
+    fun b22_new () {
+        val out = all("""
+            var x: /<(),[(),/^]> = new <.2 [(),new <.1>]>
+            var y = [(), x\!2.2]
+            output std x
+            output std /y
+        """.trimIndent())
+        assert(out == "<.2 [(),<.1>]>\n[(),<.1>]\n") { out }
+    }
 }
