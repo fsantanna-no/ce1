@@ -12,7 +12,7 @@ sealed class Type (val tk: Tk) {
 
 sealed class Attr (val tk: Tk) {
     data class Var   (val tk_: Tk.Str): Attr(tk_)
-    data class Nat   (val tk_: Tk.Nat): Attr(tk_)
+    data class Nat   (val tk_: Tk.Nat, val type: Type?): Attr(tk_)
     data class Dnref (val tk_: Tk, val ptr: Attr): Attr(tk_)
     data class TDisc (val tk_: Tk.Num, val tup: Attr): Attr(tk_)
     data class UDisc (val tk_: Tk.Num, val uni: Attr): Attr(tk_)

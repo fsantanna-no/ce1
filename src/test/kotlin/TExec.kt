@@ -103,9 +103,8 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1>\n<.2>\n") { out }
     }
-
     @Test
-    fun z01 () {
+    fun a09_func_if () {
         val out = all("""
         var inv = func ({}->{}-> <(),()> -> <(),()>) {
             if arg?1 {
@@ -121,10 +120,10 @@ class TExec {
         assert(out == "<.1>\n") { out }
     }
     @Test
-    fun z02 () {
+    fun a10_loop () {
         val out = all("""
         var i: _int = _1
-        var n: _int = _0
+        var n = _0: _int
         loop {
             set n = _(n + i)
             set i = _(i + 1)
@@ -135,5 +134,33 @@ class TExec {
         output std n
         """.trimIndent())
         assert(out == "15\n")
+    }
+    @Test
+    fun a11_unions () {
+        val out = all("""
+            var z = <.1()>:<()>
+            var y : <<()>> = <.1 z>
+            var x = <.1 y>:<<<()>>>
+            var yy: <<()>> = x!1
+            var zz = yy!1
+            output std /zz
+        """.trimIndent())
+        assert(out == "<.1>\n") { out }
+    }
+    @Test
+    fun a12_tuple_nat () {
+        val out = all("""
+            var s: [_int,_int,_int,_int] = [_1,_2,_3,_4]
+            output std /s
+        """.trimIndent())
+        assert(out == "[1,2,3,4]\n") { out }
+    }
+    @Test
+    fun a13_union_nat () {
+        val out = all("""
+            var s: <[_int,_int,_int,_int],_int,_int> = <.1 [_1,_2,_3,_4]>
+            output std /s
+        """.trimIndent())
+        assert(out == "<.1 [1,2,3,4]>\n") { out }
     }
 }

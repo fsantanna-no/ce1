@@ -260,7 +260,11 @@ fun xparser_attr (all: All): Attr {
     fun one (): Attr {
         return when {
             all.accept(TK.XVAR) -> Attr.Var(all.tk0 as Tk.Str)
-            all.accept(TK.XNAT) -> Attr.Nat(all.tk0 as Tk.Nat)
+            all.accept(TK.XNAT) -> {
+                all.accept_err(TK.CHAR, ':')
+                val tp = xparser_type(all)
+                Attr.Nat(all.tk0 as Tk.Nat, tp)
+            }
             all.accept(TK.CHAR,'\\') -> {
                 val tk0 = all.tk0 as Tk.Chr
                 val e = xparser_attr(all)

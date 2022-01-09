@@ -3,7 +3,7 @@ val INF = mutableMapOf<Stmt.Var,Type>()
 fun Expr.aux_tps (inf: Type?) {
     AUX.tps[this] = when (this) {
         is Expr.Unit  -> Type.Unit(this.tk_).up(this)
-        is Expr.Nat   -> this.type ?: Type.Nat(this.tk_).up(this)
+        is Expr.Nat   -> this.type ?: inf!!
         is Expr.Upref -> {
             this.pln.aux_tps(null)
             AUX.tps[this.pln]!!.let {
@@ -132,7 +132,7 @@ fun Expr.aux_tps (inf: Type?) {
 
 fun Stmt.aux_tps (inf: Type? = null) {
     when (this) {
-        is Stmt.Ret -> {}
+        is Stmt.Nop, is Stmt.Break, is Stmt.Ret -> {}
         is Stmt.Var -> {
             if (inf != null) {
                 assert(this.type == null)
