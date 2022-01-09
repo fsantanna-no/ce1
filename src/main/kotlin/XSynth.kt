@@ -4,6 +4,7 @@ fun Expr.tostr (): String {
         is Expr.Var   -> this.tk_.str
         is Expr.Nat   -> "(" + this.tk_.toce() + ": " + AUX.tps[this]!!.tostr() + ")"
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
+        is Expr.Dnref -> "(" + this.ptr.tostr() + "\\)"
         is Expr.Inp   -> "input " + this.lib.str + ": " + AUX.tps[this]!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"

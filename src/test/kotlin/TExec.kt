@@ -163,4 +163,68 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 [1,2,3,4]>\n") { out }
     }
+    @Test
+    fun a14_pred () {
+        val out = all("""
+            var z = <.1>: <()>
+            output std z?1
+        """.trimIndent())
+        assert(out == "1\n") { out }
+    }
+    @Test
+    fun a15_disc () {
+        val out = all("""
+            var z: <(),()> = <.2>
+            output std z!2
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun a16_dots () {
+        val out = all("""
+            var x: <<<()>>> = <.1 <.1 <.1>>>
+            output std x!1!1!1
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun a17_if () {
+        val out = all("""
+            var x: <(),()> = <.2>
+            if x?2 { output std () } else { }
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun a18_loop () {
+        val out = all("""
+        loop {
+           break
+        }
+        output std ()
+        """.trimIndent())
+        assert(out == "()\n")
+    }
+    @Test
+    fun a19_ptr () {
+        val out = all("""
+            var y: _int = _10
+            var x = /y
+            output std x\
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun i05_ptr_block_err () {
+        val out = all("""
+            var p1: /_int
+            var p2: /_int
+            {
+                var v: _int = _10: _int
+                set p1 = /v  -- no
+            }
+            output std p1\
+        """.trimIndent())
+        assert(out == "(ln 6, col 8): invalid assignment : type mismatch\n") { out }
+    }
 }

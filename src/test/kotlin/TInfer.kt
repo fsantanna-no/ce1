@@ -36,6 +36,66 @@ class TInfer {
     @Test
     fun a04_input () {
         val out = all("var x: [_int,_int] = [_10,input std]")
-        assert(out == "var x: [_int,_int]\nset x = [_10,input std: _int]\n") { out }
+        assert(out == "var x: [_int,_int]\nset x = [(_10: _int),input std: _int]\n") { out }
+    }
+    @Test
+    fun a05_upref () {
+        val out = all("""
+            var y: _int = _10
+            var x: /_int = /_y
+            output std x\
+        """.trimIndent())
+        assert(out == """
+            var y: _int
+            set y = (_10: _int)
+            var x: /_int@local
+            set x = (/(_y: _int))
+            output std (x\)
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a06_dnref () {
+        val out = all("""
+            var y: /_int = _10
+            var x: _int = _y\
+            output std x\
+        """.trimIndent())
+        assert(out == """
+            var y: /_int@local
+            set y = (_10: /_int@local)
+            var x: _int
+            set x = ((_y: /_int@local)\)
+            output std (x\)
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a07_call () {
+        val out = all("""
+            var v = call _f ()
+        """.trimIndent())
+        assert(out == """
+            var v: _
+            set v = call (_f: _) ()
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a08_call () {
+        val out = all("""
+            var f = func {}->{}-><()>->() { set ret=arg }
+            var v = call f <.1>
+        """.trimIndent())
+        assert(out == """
+            var f: {} -> {} -> <()> -> ()
+            set f = func {} -> {} -> (<()>) -> (()) {
+            set ret = arg
+            }
+            
+            var v: ()
+            set v = call f <.1 ()>: <()>
+            
+        """.trimIndent()) { out }
     }
 }
