@@ -47,20 +47,23 @@ fun Expr.aux_tps (inf: Type?) {
             }
         }
         is Expr.UCons -> {
-            if (inf == null) {
-                this.arg.aux_tps(null)
-                this.type!!
-            } else {
-                assert(this.tk_.num > 0) { "TODO: <.0>" }
-                val tp = inf as Type.Union
-                this.arg.aux_tps(tp.vec[this.tk_.num-1])
-                inf
+            val x = when {
+                (this.tk_.num == 0) -> Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).up(this)
+                (this.type != null) -> (this.type as Type.Union).expand()[this.tk_.num-1]
+                else -> (inf as Type.Union).expand()[this.tk_.num-1]
             }
+            this.arg.aux_tps(x)
+            this.type ?: inf!!
         }
         is Expr.New   -> {
-            //TODO()
-            this.arg.aux_tps(null)
-            Type.Ptr(Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'), this.scp!!, AUX.tps[this.arg]!!).up(this)
+            if (inf == null) {
+                this.arg.aux_tps(null)
+                Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.scp!!, AUX.tps[this.arg]!!).up(this)
+            } else {
+                val tp = inf as Type.Ptr
+                this.arg.aux_tps(tp.pln)
+                inf
+            }
         }
         is Expr.Inp -> this.type ?: inf!!
         is Expr.Out -> {

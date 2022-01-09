@@ -98,4 +98,39 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun a09_union () {
+        val out = all("""
+            var x : <<()>>
+            set x = <.1 <.1>>
+        """.trimIndent())
+        assert(out == """
+            var x: <<()>>
+            set x = <.1 <.1 ()>: <()>>: <<()>>
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a10_new () {
+        val out = all("""
+            var l: /</^ @local> @local
+            set l = new <.1 <.0>>
+        """.trimIndent())
+        assert(out == """
+            var l: /</^@local>@local
+            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>@local)
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a11_new () {
+        val out = all("""
+            var l = new <.1 <.0>>:</^>
+        """.trimIndent())
+        assert(out == """
+            var l: /</^@local>@local
+            set l = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>@local)
+            
+        """.trimIndent()) { out }
+    }
 }
