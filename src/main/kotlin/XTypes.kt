@@ -1,4 +1,8 @@
-val INF = mutableMapOf<Stmt.Var,Type>()
+// Need to infer:
+//  var x: ? = ...
+//  var x: _int = input std: ?
+//  var x: <(),()> = <.1>: ?
+//  var x: _int = _v: ?
 
 fun Expr.xsetTypes (inf: Type?) {
     this.type = when (this) {
@@ -95,7 +99,7 @@ fun Expr.xsetTypes (inf: Type?) {
                                 is Type.Ptr   -> Type.Ptr(tp.tk_, f(tp.scope), map(tp.pln))
                                 is Type.Tuple -> Type.Tuple(tp.tk_, tp.vec.map { map(it) }.toTypedArray())
                                 is Type.Union -> Type.Union(tp.tk_, tp.isrec, tp.vec.map { map(it) }.toTypedArray())
-                                is Type.Func  -> Type.Func(tp.tk_, if (tp.clo==null) tp.clo else f(tp.clo), tp.scps.map { f(it) }.toTypedArray(), map(tp.inp), map(tp.out))
+                                is Type.Func  -> Type.Func(tp.tk_, if (tp.clo==null) null else f(tp.clo), tp.scps.map { f(it) }.toTypedArray(), map(tp.inp), map(tp.out))
                                 else -> tp
                             }
                         }
@@ -156,24 +160,14 @@ fun Expr.xsetTypes (inf: Type?) {
                 else -> error("bug found")
             }
         }
-        is Expr.Var -> this.env().let { it.second ?: INF[it.first!!] }!!
+        is Expr.Var -> this.env().let { it.second ?: it.first!!.type }!!
     }
 }
-
-// Need to infer:
-//  var x: ? = ...
-//  var x: _int = input std: ?
-//  var x: <(),()> = <.1>: ?
 
 fun Stmt.xsetTypes (inf: Type? = null) {
     when (this) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Ret -> {}
-        is Stmt.Var -> {
-            if (inf != null) {
-                assert(this.type == null)
-                INF[this] = inf
-            }
-        }
+        is Stmt.Var -> this.type = this.type ?: inf!!
         is Stmt.Set -> {
             this.dst.xsetTypes(null)
             this.src.xsetTypes(this.dst.type!!)

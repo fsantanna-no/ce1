@@ -38,7 +38,7 @@ sealed class Expr (val tk: Tk, var up: Any?, var type: Type?) {
 
 sealed class Stmt (val tk: Tk, var up: Any?) {
     data class Nop   (val tk_: Tk) : Stmt(tk_, null)
-    data class Var   (val tk_: Tk.Str, val type: Type?) : Stmt(tk_, null)
+    data class Var   (val tk_: Tk.Str, var type: Type?) : Stmt(tk_, null)
     data class Set   (val tk_: Tk.Chr, val dst: Expr, val src: Expr) : Stmt(tk_, null)
     data class Nat   (val tk_: Tk.Nat) : Stmt(tk_, null)
     data class SExpr (val tk_: Tk.Key, val e: Expr) : Stmt(tk_, null)

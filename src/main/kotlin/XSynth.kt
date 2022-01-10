@@ -22,7 +22,7 @@ fun Expr.tostr (): String {
 fun Stmt.tostr (): String {
     return when (this) {
         is Stmt.Nop   -> "\n"
-        is Stmt.Var   -> "var " + this.tk_.str + ": " + (this.type ?: INF[this])!!.tostr() + "\n"
+        is Stmt.Var   -> "var " + this.tk_.str + ": " + this.type!!.tostr() + "\n"
         is Stmt.Set   -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Break -> "break\n"
         is Stmt.Ret   -> "return\n"
