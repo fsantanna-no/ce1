@@ -12,12 +12,14 @@ class TInfer {
         lexer(all)
         try {
             val s = xparser_stmts(all, Pair(TK.EOF, null))
-            aux_clear()
-            s.aux_upsenvs(null, null)
+            s.setUps(null)
+            ENV.clear()
+            s.setEnvs(null)
             check_01_before_tps(s)
-            s.aux_tps(null)
+            s.xsetTypes(null)
             return s.tostr()
         } catch (e: Throwable) {
+            //throw e
             return e.message!!
         }
     }
@@ -88,11 +90,11 @@ class TInfer {
     @Test
     fun a08_call () {
         val out = all("""
-            var f = func {}->{}-><()>->() { set ret=arg }
+            var f = func <()>->() { set ret=arg }
             var v = call f <.1>
         """.trimIndent())
         assert(out == """
-            var f: {} -> {} -> <()> -> ()
+            var f: func {} -> {} -> <()> -> ()
             set f = func {} -> {} -> (<()>) -> (()) {
             set ret = arg
             }
@@ -164,4 +166,29 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
     }
+
+    // POINTER ARGUMENTS / SCOPES
+
+    @Test
+    fun c01 () {
+        val out = all("""
+        var f: func /_int -> ()
+        """.trimIndent())
+        assert(out == "var f: {} -> {@_1} -> /_int@_1 -> ()\n") { out }
+    }
+
+    @Test
+    fun c03 () {
+        val out = all("""
+        var f = func /_int@_1 -> () {
+           set arg\ = _(*arg+1)
+           return
+        }
+        var x: _int = _1
+        call f {@local} /x
+        output std x
+        """.trimIndent())
+        assert(out == "2\n") { out }
+    }
+
 }

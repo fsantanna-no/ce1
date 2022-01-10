@@ -2,19 +2,19 @@ fun Expr.tostr (): String {
     return when (this) {
         is Expr.Unit  -> "()"
         is Expr.Var   -> this.tk_.str
-        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + AUX.tps[this]!!.tostr() + ")"
+        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.type!!.tostr() + ")"
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
         is Expr.Dnref -> "(" + this.ptr.tostr() + "\\)"
-        is Expr.Inp   -> "input " + this.lib.str + ": " + AUX.tps[this]!!.tostr()
+        is Expr.Inp   -> "input " + this.lib.str + ": " + this.type!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"
-        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + AUX.tps[this]!!.tostr()
+        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.type!!.tostr()
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
         is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.scp.tostr() + ")"
         is Expr.Call  -> "call " + this.f.tostr() + " " + this.arg.tostr()
-        is Expr.Func  -> "func {} -> {} -> (" + this.type.inp.tostr() + ") -> (" + this.type.out.tostr() + ") " + this.block.tostr()
+        is Expr.Func  -> "func {} -> {} -> (" + this.type_.inp.tostr() + ") -> (" + this.type_.out.tostr() + ") " + this.block.tostr()
         else -> TODO(this.toString())
     }
 }

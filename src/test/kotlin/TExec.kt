@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer.Alphanumeric
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
@@ -13,10 +12,11 @@ class TExec {
         val all = All_new(PushbackReader(StringReader(inp), 2))
         lexer(all)
         val s = xparser_stmts(all, Pair(TK.EOF,null))
-        aux_clear()
-        s.aux_upsenvs(null, null)
+        s.setUps(null)
+        ENV.clear()
+        s.setEnvs(null)
         check_01_before_tps(s)
-        s.aux_tps(null)
+        s.xsetTypes(null)
         val ce0 = s.tostr()
         File("out.ce").writeText(ce0)
         val (ok,out) = exec("ce0 out.ce")
@@ -71,7 +71,7 @@ class TExec {
     @Test
     fun a06_call () {
         val out = all("""
-            var f = func ({}->{}-> _int -> _int) {
+            var f = func (_int -> _int) {
                 return arg
             }
             var x = call f _10
@@ -82,11 +82,11 @@ class TExec {
     @Test
     fun a07_call_fg () {
         val out = all("""
-            var f = func {}->{}-> ()->() {
+            var f = func ()->() {
                 var x = _10:_int
                 output std x
             }
-            var g = func {}->{}-> ()->() {
+            var g = func ()->() {
                 return call f ()
             }
             call g ()
@@ -106,7 +106,7 @@ class TExec {
     @Test
     fun a09_func_if () {
         val out = all("""
-        var inv = func ({}->{}-> <(),()> -> <(),()>) {
+        var inv = func (<(),()> -> <(),()>) {
             if arg?1 {
                 return <.2>
             } else {
