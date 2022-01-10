@@ -15,6 +15,7 @@ class TInfer {
             s.setUps(null)
             ENV.clear()
             s.setEnvs(null)
+            s.xsetFuncs()
             check_01_before_tps(s)
             s.xsetTypes(null)
             return s.tostr()
@@ -174,21 +175,15 @@ class TInfer {
         val out = all("""
         var f: func /_int -> ()
         """.trimIndent())
-        assert(out == "var f: {} -> {@_1} -> /_int@_1 -> ()\n") { out }
+        assert(out == "var f: func {} -> {@a_1} -> /_int@a_1 -> ()\n") { out }
     }
-
     @Test
-    fun c03 () {
+    fun c02 () {
         val out = all("""
-        var f = func /_int@_1 -> () {
-           set arg\ = _(*arg+1)
-           return
-        }
+        var f: func /_int@_1 -> ()
         var x: _int = _1
         call f {@local} /x
-        output std x
         """.trimIndent())
         assert(out == "2\n") { out }
     }
-
 }

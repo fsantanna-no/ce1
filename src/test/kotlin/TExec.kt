@@ -455,4 +455,20 @@ class TExec {
         """.trimIndent())
         assert(out == "<.2 [(),<.1>]>\n[(),<.1>]\n") { out }
     }
+
+    // FUNC / CALL
+
+    @Test
+    fun c01 () {
+        val out = all("""
+        var f = func /_int@_1 -> () {
+           set arg\ = _(*arg+1)
+           return
+        }
+        var x: _int = _1
+        call f {@local} /x
+        output std x
+        """.trimIndent())
+        assert(out == "2\n") { out }
+    }
 }
