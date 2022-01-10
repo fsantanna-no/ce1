@@ -15,6 +15,7 @@ class TExec {
         s.setUps(null)
         ENV.clear()
         s.setEnvs(null)
+        s.xsetFuncs()
         check_01_before_tps(s)
         s.xsetTypes(null)
         val ce0 = s.tostr()

@@ -96,7 +96,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             var f: func {} -> {} -> <()> -> ()
-            set f = func {} -> {} -> (<()>) -> (()) {
+            set f = func {} -> {} -> <()> -> () {
             set ret = arg
             }
             
@@ -180,10 +180,30 @@ class TInfer {
     @Test
     fun c02 () {
         val out = all("""
+        var f = func /_int -> () {}
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@a_1} -> /_int@a_1 -> ()
+            set f = func {} -> {@a_1} -> /_int@a_1 -> () {
+            
+            }
+            
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c03 () {
+        val out = all("""
         var f: func /_int@_1 -> ()
         var x: _int = _1
-        call f {@local} /x
+        call f /x
         """.trimIndent())
-        assert(out == "2\n") { out }
+        assert(out == """
+            var f: func {} -> {@a_1} -> /_int@a_1 -> ()
+            var x: _int
+            set x = (_1: _int)
+            call f {@local} (/x)
+            
+        """.trimIndent()) { out }
     }
 }

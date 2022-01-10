@@ -14,7 +14,7 @@ fun Expr.tostr (): String {
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
         is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.scp.tostr() + ")"
         is Expr.Call  -> "call " + this.f.tostr() + " " + this.arg.tostr()
-        is Expr.Func  -> "func {} -> {} -> (" + this.type_.inp.tostr() + ") -> (" + this.type_.out.tostr() + ") " + this.block.tostr()
+        is Expr.Func  -> this.type_.tostr() + " " + this.block.tostr()
         else -> TODO(this.toString())
     }
 }

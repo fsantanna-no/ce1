@@ -7,7 +7,7 @@
 fun Expr.xsetTypes (inf: Type?) {
     this.type = when (this) {
         is Expr.Unit  -> Type.Unit(this.tk_).setUp(this)
-        is Expr.Nat   -> this.type_ ?: inf!!
+        is Expr.Nat   -> this.type_ ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Expr.Upref -> {
             if (inf == null) {
                 this.pln.xsetTypes(null)
@@ -17,7 +17,7 @@ fun Expr.xsetTypes (inf: Type?) {
             } else {
                 All_assert_tk(this.tk, inf is Type.Ptr) { "invalid inference : type mismatch"}
                 this.pln.xsetTypes((inf as Type.Ptr).pln)
-                inf
+                inf.clone(this,this.tk.lin,this.tk.col)
             }
         }
         is Expr.Dnref -> {
@@ -32,13 +32,14 @@ fun Expr.xsetTypes (inf: Type?) {
                     }
                 }
             } else {
+                val ret = inf.clone(this,this.tk.lin,this.tk.col)
                 val tp = Type.Ptr (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
                     Tk.Scope(TK.XSCOPE,this.tk.lin,this.tk.col,"local",null),
-                    inf
+                    ret
                 ).setUp(this)
                 this.ptr.xsetTypes(tp)
-                inf
+                ret
             }
         }
         is Expr.TCons -> {
@@ -47,7 +48,7 @@ fun Expr.xsetTypes (inf: Type?) {
             } else {
                 All_assert_tk(this.tk, inf is Type.Tuple) { "invalid inference : type mismatch"}
                 this.arg.forEachIndexed { i,e -> e.xsetTypes((inf as Type.Tuple).vec[i]) }
-                inf
+                inf.clone(this,this.tk.lin,this.tk.col)
             }
         }
         is Expr.UCons -> {
@@ -56,11 +57,11 @@ fun Expr.xsetTypes (inf: Type?) {
                 (this.type != null) -> (this.type as Type.Union).expand()[this.tk_.num-1]
                 else -> {
                     All_assert_tk(this.tk, inf is Type.Union) { "invalid inference : type mismatch"}
-                    (inf as Type.Union).expand()[this.tk_.num-1]
+                    (inf as Type.Union).expand()[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
                 }
             }
             this.arg.xsetTypes(x)
-            this.type_ ?: inf!!
+            this.type_ ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         }
         is Expr.New   -> {
             if (inf == null) {
@@ -69,10 +70,10 @@ fun Expr.xsetTypes (inf: Type?) {
             } else {
                 All_assert_tk(this.tk, inf is Type.Ptr) { "invalid inference : type mismatch"}
                 this.arg.xsetTypes((inf as Type.Ptr).pln)
-                inf
+                inf.clone(this,this.tk.lin,this.tk.col)
             }
         }
-        is Expr.Inp -> this.type_ ?: inf!!
+        is Expr.Inp -> this.type_ ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Expr.Out -> {
             this.arg.xsetTypes(null)  // no inf b/c output always depends on the argument
             Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).setUp(this)
@@ -112,7 +113,7 @@ fun Expr.xsetTypes (inf: Type?) {
                         error("impossible case")
                     }
                 }
-            }.lincol(this.f,this.tk.lin,this.tk.col)
+            }.clone(this.f,this.tk.lin,this.tk.col)
         }
         is Expr.Func -> {
             this.block.xsetTypes(null)
@@ -167,7 +168,7 @@ fun Expr.xsetTypes (inf: Type?) {
 fun Stmt.xsetTypes (inf: Type? = null) {
     when (this) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Ret -> {}
-        is Stmt.Var -> this.type = this.type ?: inf!!
+        is Stmt.Var -> this.type = this.type ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Stmt.Set -> {
             this.dst.xsetTypes(null)
             this.src.xsetTypes(this.dst.type!!)
