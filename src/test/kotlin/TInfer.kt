@@ -15,9 +15,10 @@ class TInfer {
             s.setUps(null)
             ENV.clear()
             s.setEnvs(null)
-            s.xsetFuncs()
+            s.xinfFuncs()
             check_01_before_tps(s)
-            s.xsetTypes(null)
+            s.xinfTypes(null)
+            s.xinfCalls()
             return s.tostr()
         } catch (e: Throwable) {
             //throw e
