@@ -32,7 +32,7 @@ sealed class Expr (val tk: Tk, var up: Any?, var type: Type?) {
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null)
     data class Inp   (val tk_: Tk.Key, val type_: Type?, val lib: Tk.Str): Expr(tk_, null, type_)
     data class Out   (val tk_: Tk.Key, val lib: Tk.Str, val arg: Expr): Expr(tk_, null, null)
-    data class Call  (val tk_: Tk.Key, val sout: Tk.Scope?, val f: Expr, val sinps: Array<Tk.Scope>, val arg: Expr): Expr(tk_, null, null)
+    data class Call  (val tk_: Tk.Key, val sout: Tk.Scope?, val f: Expr, var sinps: Array<Tk.Scope>, val arg: Expr): Expr(tk_, null, null)
     data class Func  (val tk_: Tk.Key, val type_: Type.Func, val ups: Array<Tk.Str>, val block: Stmt.Block) : Expr(tk_, null, type_)
 }
 

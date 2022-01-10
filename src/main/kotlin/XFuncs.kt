@@ -1,4 +1,4 @@
-fun Stmt.xsetFuncs () {
+fun Stmt.xinfFuncs () {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Func -> {
@@ -19,4 +19,20 @@ fun Stmt.xsetFuncs () {
         }
     }
     this.visit(null, null, ::ft)
+}
+
+fun Stmt.xinfCalls () {
+    fun fe (e: Expr) {
+        when (e) {
+            is Expr.Call -> {
+                e.sinps = (e.arg.type!!.flatten() + e.type!!.flatten())
+                    .filter { it is Type.Ptr }
+                    .let    { it as List<Type.Ptr> }
+                    .map    { it.scope }
+                    .toTypedArray()
+                print(">>> "); println(e.sinps.map { it.scope(e) })
+            }
+        }
+    }
+    this.visit(null, ::fe, null)
 }
