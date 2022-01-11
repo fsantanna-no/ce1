@@ -5,7 +5,8 @@
 //  var x: _int = _v: ?
 
 fun Expr.xinfTypes (inf: Type?) {
-    this.wtype = this.wtype ?: when (this) {
+    this.wtype = when (this) {
+        is Expr.Unit  -> this.wtype!!
         is Expr.Nat   -> this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Expr.Upref -> {
             All_assert_tk(this.tk, inf==null || inf is Type.Ptr) { "invalid inference : type mismatch"}
@@ -59,9 +60,11 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : type mismatch"
             }
             this.arg.xinfTypes((inf as Type.Ptr?)?.pln)
-            Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.xtype!!).clone(this, this.tk.lin, this.tk.col)
+            Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
         }
-        is Expr.Inp -> this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+        is Expr.Inp -> {
+            this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+        }
         is Expr.Out -> {
             this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
             Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
@@ -71,8 +74,13 @@ fun Expr.xinfTypes (inf: Type?) {
             this.f.xinfTypes(nat)    // no infer for functions, default _ for nat
             this.f.wtype!!.let {
                 when (it) {
-                    is Type.Nat -> it
+                    is Type.Nat -> {
+                        this.arg.xinfTypes(nat)
+                        it
+                    }
                     is Type.Func -> {
+                        this.arg.xinfTypes(it.inp)
+
                         // calculates return of "e" call based on "e.f" function type
                         // "e" passes "e.arg" with "e.scp1s.first" scopes which may affect "e.f" return scopes
                         // we want to map these input scopes into "e.f" return scopes

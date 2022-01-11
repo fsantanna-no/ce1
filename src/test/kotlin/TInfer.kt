@@ -85,7 +85,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             var v: _
-            set v = call (_f: _) ()
+            set v = call (_f: _) {} ()
 
         """.trimIndent()) { out }
     }
@@ -102,7 +102,7 @@ class TInfer {
             }
             
             var v: ()
-            set v = call f <.1 ()>: <()>
+            set v = call f {} <.1 ()>: <()>
             
         """.trimIndent()) { out }
     }
@@ -203,7 +203,7 @@ class TInfer {
             var f: func {} -> {@a_1} -> /_int@a_1 -> ()
             var x: _int
             set x = (_1: _int)
-            call f {@local} (/x)
+            call f {@x} (/x)
             
         """.trimIndent()) { out }
     }

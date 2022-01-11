@@ -2,13 +2,13 @@ fun Expr.tostr (): String {
     return when (this) {
         is Expr.Unit  -> "()"
         is Expr.Var   -> this.tk_.str
-        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.xtype!!.tostr() + ")"
+        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.wtype!!.tostr() + ")"
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
         is Expr.Dnref -> "(" + this.ptr.tostr() + "\\)"
-        is Expr.Inp   -> "input " + this.lib.str + ": " + this.xtype!!.tostr()
+        is Expr.Inp   -> "input " + this.lib.str + ": " + this.wtype!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"
-        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.xtype!!.tostr()
+        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.wtype!!.tostr()
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"

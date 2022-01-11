@@ -28,14 +28,18 @@ fun Stmt.xinfCalls () {
     fun fe (e: Expr) {
         when (e) {
             is Expr.Call -> {
-                e.xscp1s = Pair (
-                    (e.arg.wtype!!.flatten() + e.wtype!!.flatten())
-                        .filter { it is Type.Ptr }
-                        .let    { it as List<Type.Ptr> }
-                        .map    { it.xscp1 }
-                        .toTypedArray(),
-                    null
-                )
+                if (e.f.wtype is Type.Nat) {
+                    e.xscp1s = Pair(emptyArray(), null)
+                } else {
+                    e.xscp1s = Pair(
+                        (e.arg.wtype!!.flatten() + e.wtype!!.flatten())
+                            .filter { it is Type.Ptr }
+                            .let { it as List<Type.Ptr> }
+                            .map { it.xscp1 }
+                            .toTypedArray(),
+                        null
+                    )
+                }
                 //print(">>> "); println(e.sinps.map { it.scope(e) })
             }
         }
