@@ -2,19 +2,19 @@ fun Expr.tostr (): String {
     return when (this) {
         is Expr.Unit  -> "()"
         is Expr.Var   -> this.tk_.str
-        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.type!!.tostr() + ")"
+        is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.xtype!!.tostr() + ")"
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
         is Expr.Dnref -> "(" + this.ptr.tostr() + "\\)"
-        is Expr.Inp   -> "input " + this.lib.str + ": " + this.type!!.tostr()
+        is Expr.Inp   -> "input " + this.lib.str + ": " + this.xtype!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"
-        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.type!!.tostr()
+        is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.xtype!!.tostr()
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.scp.tostr() + ")"
-        is Expr.Call  -> "call " + this.f.tostr() + " {" + this.sinps.map { it.tostr() }.joinToString(",") + "} " + this.arg.tostr()
-        is Expr.Func  -> this.type_.tostr() + " " + this.block.tostr()
+        is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.xscp1.tostr() + ")"
+        is Expr.Call  -> "call " + this.f.tostr() + " {" + this.xscp1s.first!!.map { it.tostr() }.joinToString(",") + "} " + this.arg.tostr()
+        is Expr.Func  -> this.type.tostr() + " " + this.block.tostr()
         else -> TODO(this.toString())
     }
 }
@@ -22,7 +22,7 @@ fun Expr.tostr (): String {
 fun Stmt.tostr (): String {
     return when (this) {
         is Stmt.Nop   -> "\n"
-        is Stmt.Var   -> "var " + this.tk_.str + ": " + this.type!!.tostr() + "\n"
+        is Stmt.Var   -> "var " + this.tk_.str + ": " + this.xtype!!.tostr() + "\n"
         is Stmt.Set   -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Break -> "break\n"
         is Stmt.Ret   -> "return\n"

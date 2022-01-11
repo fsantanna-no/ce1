@@ -13,10 +13,10 @@ class TInfer {
         try {
             val s = xparser_stmts(all, Pair(TK.EOF, null))
             s.setUps(null)
-            ENV.clear()
             s.setEnvs(null)
             s.xinfFuncs()
             check_01_before_tps(s)
+            s.setScopes()
             s.xinfTypes(null)
             s.xinfCalls()
             return s.tostr()
