@@ -30,7 +30,7 @@ fun Stmt.tostr (): String {
         is Stmt.SExpr -> this.e.tostr() + "\n"
         is Stmt.If    -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop  -> "loop " + this.block.tostr()
-        is Stmt.Block -> "{\n" + this.body.tostr() + "}\n"
+        is Stmt.Block -> "{" + this.xscp1.tostr().let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
         else -> TODO(this.toString())
     }
 }

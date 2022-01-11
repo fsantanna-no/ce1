@@ -203,7 +203,31 @@ class TInfer {
             var f: func {} -> {@a_1} -> /_int@a_1 -> ()
             var x: _int
             set x = (_1: _int)
-            call f {@x} (/x)
+            call f {@global} (/x)
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c04 () {
+        val out = all("""
+        var f: func /_int@_1 -> ()
+        {
+            var x: _int = _1
+            var y: _int = _1
+            call f /x
+            call f /y
+        }
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@a_1} -> /_int@a_1 -> ()
+            { @ssx
+            var x: _int
+            set x = (_1: _int)
+            var y: _int
+            set y = (_1: _int)
+            call f {@x_} (/x)
+            call f {@x_} (/y)
+            }
             
         """.trimIndent()) { out }
     }

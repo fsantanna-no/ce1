@@ -12,7 +12,18 @@ fun Expr.xinfTypes (inf: Type?) {
             All_assert_tk(this.tk, inf==null || inf is Type.Ptr) { "invalid inference : type mismatch"}
             this.pln.xinfTypes((inf as Type.Ptr?)?.pln)
             this.pln.wtype!!.let {
-                val lbl = this.toBaseVar()?.tk_?.str ?: "global"
+                val lbl = this.toBaseVar()?.let {
+                    val blk = (it.env() as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
+                    when {
+                        (blk == null) -> "global"
+                        (blk.xscp1 == null) -> {
+                            val lbl = "ss" + it.tk_.str
+                            blk.xscp1 = Tk.Scp1(TK.XSCOPE,this.tk.lin,this.tk.col,lbl,null)
+                            lbl
+                        }
+                        else -> blk.xscp1!!.lbl
+                    }
+                } ?: "global"
                 val scp1 = Tk.Scp1(TK.XSCOPE,this.tk.lin,this.tk.col,lbl,null)
                 Type.Ptr(this.tk_, scp1, scp1.toScp2(this), it).clone(this, this.tk.lin, this.tk.col)
             }
@@ -176,7 +187,6 @@ fun Expr.xinfTypes (inf: Type?) {
             }
         }
         is Expr.Var -> this.env()!!.toType()
-        else -> error("bug found")
     }
 }
 
