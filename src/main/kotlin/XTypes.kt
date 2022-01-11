@@ -186,7 +186,13 @@ fun Expr.xinfTypes (inf: Type?) {
                 else -> error("bug found")
             }
         }
-        is Expr.Var -> this.env()!!.toType()
+        is Expr.Var -> {
+            val s = this.env()!!
+            All_assert_tk(this.tk, s !is Stmt.Var || s.xtype!=null) {
+                "invalid inference : undetermined type"
+            }
+            s.toType()
+        }
     }
 }
 

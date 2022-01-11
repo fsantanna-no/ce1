@@ -231,4 +231,16 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun c05_fact () {
+        val out = all(
+            """
+            var fact = func [/_int,_int] -> () {
+                var x = _1:_int
+                call fact [/x,_]
+            }
+        """.trimIndent()
+        )
+        assert(out == "(ln 3, col 10): invalid inference : undetermined type") { out }
+    }
 }

@@ -473,4 +473,24 @@ class TExec {
         """.trimIndent())
         assert(out == "2\n") { out }
     }
+    @Test
+    fun c02_fact () {
+        val out = all(
+            """
+            var fact : func [/_int,_int] -> ()
+            set fact = func [/_int,_int] -> () {
+                var x = _1: _int
+                var n = arg.2
+                if _(n > 1) {
+                    call fact [/x,_(n-1)]
+                }
+                set arg.1\ = _(x*n)
+            }
+            var x = _0: _int
+            call fact [/x,_6]
+            output std x
+        """.trimIndent()
+        )
+        assert(out == "720\n") { out }
+    }
 }
