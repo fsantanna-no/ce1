@@ -586,7 +586,18 @@ class TExec {
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
     @Test
-    fun c06_ptr_arg_ret () {
+    fun c06_ptr_call_err () {
+        val out = all("""
+            var f = func /() -> /() {
+                set ret = arg
+            }
+            output std (call f ())
+        """.trimIndent()
+        )
+        assert(out == "(ln 3, col 9): invalid return : type mismatch\n") { out }
+    }
+    @Test
+    fun c07_ptr_arg_ret () {
         val out = all("""
             var f = func /_int@a_1 -> /_int@a_1 {
                 set ret = arg

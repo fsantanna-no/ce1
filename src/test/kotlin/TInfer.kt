@@ -212,7 +212,7 @@ class TInfer {
         call f /x
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i_1} -> /_int@i_1 -> ()
+            var f: func {} -> {@_1} -> /_int@_1 -> ()
             var x: _int
             set x = (_1: _int)
             call f {@global} (/x)
@@ -231,7 +231,7 @@ class TInfer {
         }
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i_1} -> /_int@i_1 -> ()
+            var f: func {} -> {@_1} -> /_int@_1 -> ()
             { @ssx
             var x: _int
             set x = (_1: _int)
@@ -265,21 +265,10 @@ class TInfer {
         assert(out == """
             var f: func {} -> {@i_1,@j_1} -> /</^@i_1>@j_1 -> ()
             set f = func {} -> {@i_1,@j_1} -> /</^@i_1>@j_1 -> () {
-            set ((arg\)!1) = (new <.1 <.0 ()>: /</^@i_1>@i_1>: </^@i_1>: @j_1)
+            set ((arg\)!1) = (new <.1 <.0 ()>: /</^@i_1>@i_1>: </^@i_1>: @i_1)
             }
 
 
         """.trimIndent()) { out }
-    }
-    @Test
-    fun c07_ptr_call_err () {
-        val out = all("""
-            var f = func /() -> /() {
-                set ret = arg
-            }
-            output std (call f ())
-        """.trimIndent()
-        )
-        assert(out == "(ln 3, col 9): invalid return : type mismatch\n") { out }
     }
 }

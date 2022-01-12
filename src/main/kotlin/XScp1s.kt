@@ -2,7 +2,7 @@ fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Ptr -> {
-                if (tp.xscp1 == null) {
+                if (tp.xscp1==null && tp.ups_first { it is Type.Func }==null) {
                     tp.xscp1 = Tk.Scp1(TK.XSCOPE, tp.tk.lin, tp.tk.col, "local", null)
                 }
             }
@@ -16,7 +16,7 @@ fun Stmt.xinfScp1s () {
                         .filter { it is Type.Ptr }
                         .let { it as List<Type.Ptr> }
                         .map {
-                            if (it.xscp1 != null) {
+                            if (it.xscp1 == null) {
                                 it.xscp1 = Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, c + "", i)
                                 c += 1
                                 //i += 1
