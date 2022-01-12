@@ -18,7 +18,6 @@ class TInfer {
             check_01_before_tps(s)
             s.setScp2s()
             s.xinfTypes(null)
-            s.xinfCalls()
             return s.tostr()
         } catch (e: Throwable) {
             //throw e

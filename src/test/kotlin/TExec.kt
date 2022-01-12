@@ -18,7 +18,6 @@ class TExec {
         check_01_before_tps(s)
         s.setScp2s()
         s.xinfTypes(null)
-        s.xinfCalls()
         val ce0 = s.tostr()
         File("out.ce").writeText(ce0)
         val (ok,out) = exec("ce0 out.ce")
@@ -608,6 +607,22 @@ class TExec {
         """.trimIndent()
         )
         assert(out == "10\n") { out }
+    }
+    @Test
+    fun c08_call_call () {
+        val out = all("""
+            var f = func /_int@_1 -> /()@_1 {
+                set ret = arg
+            }
+            var g = func /_int@_1 -> /()@_1 {
+                set ret = call f arg
+            }
+            var x: _int
+            var px = call f /x
+            output std _(px == &x):_int
+        """.trimIndent()
+        )
+        assert(out == "1\n") { out }
     }
 
     // CLOSURE

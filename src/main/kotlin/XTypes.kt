@@ -91,14 +91,60 @@ fun Expr.xinfTypes (inf: Type?) {
         is Expr.Call -> {
             val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"")).clone(this, this.tk.lin, this.tk.col)
             this.f.xinfTypes(nat)    // no infer for functions, default _ for nat
-            this.f.wtype!!.let {
-                when (it) {
+
+            this.f.wtype!!.let { ft ->
+                when (ft) {
                     is Type.Nat -> {
                         this.arg.xinfTypes(nat)
-                        it
+                        ft
                     }
                     is Type.Func -> {
-                        this.arg.xinfTypes(it.inp)
+                        this.arg.xinfTypes(ft.inp)
+
+                        // Calculates type scopes {...}:
+                        //  call f {...} arg
+
+                        this.xscp1s = let {
+                            // var ret = call f arg  ==>  { arg, ret }
+                            val arg_ret_1s = let {
+                                val ret1s = if (inf == null) {
+                                    // no attribution expected, save to @local as shortest scope possible
+                                    ft.out.flatten()
+                                        .filter { it is Type.Ptr }
+                                        .let { it as List<Type.Ptr> }
+                                        .map { Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, "local", null) }
+                                        .toTypedArray()
+                                } else {
+                                    inf.flatten()
+                                        .filter { it is Type.Ptr }
+                                        .let { it as List<Type.Ptr> }
+                                        .map { it.xscp1!! }
+                                        .toTypedArray()
+                                }
+                                val arg1s = this.arg.wtype!!.flatten()
+                                    .filter { it is Type.Ptr }
+                                    .let { it as List<Type.Ptr> }
+                                    .map { it.xscp1!! }
+                                    .toTypedArray()
+                                arg1s + ret1s
+                            }
+
+                            // func inp -> out  ==>  { inp, out }
+                            val inp_out_1s = (ft.inp.flatten() + ft.out.flatten())
+                                .filter { it is Type.Ptr }
+                                .let { it as List<Type.Ptr> }
+                                .map { it.xscp1!! }
+                                .toTypedArray()
+
+                            // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
+                            // TODO: what if out/ret are not the same for the removed reps?
+                            val scp1s = inp_out_1s.zip(arg_ret_1s)
+                                .distinctBy { Pair(it.first.lbl,it.first.col) }
+                                .map { it.second }
+                                .toTypedArray()
+                            Pair(scp1s, null)   // TODO: null should be return scope
+                        }
+                        this.xscp2s = Pair(this.xscp1s.first!!.map { it.toScp2(this) }.toTypedArray(), null)
 
                         // calculates return of "e" call based on "e.f" function type
                         // "e" passes "e.arg" with "e.scp1s.first" scopes which may affect "e.f" return scopes
@@ -109,12 +155,13 @@ fun Expr.xinfTypes (inf: Type?) {
                         //  f passes two scopes, first goes to @a_1, second goes to @b_1 which is the return
                         //  so @scp2 maps to @b_1
                         // zip [[{@scp1a,@scp1b},{@scp2a,@scp2b}],{@a_1,@b_1}]
-                        if (it.xscp1s.second!!.size != this.xscp1s.first!!.size) {
+
+                        if (ft.xscp1s.second!!.size != this.xscp1s.first!!.size) {
                             // TODO: may fail before check2, return anything
-                            Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this,this.tk.lin,this.tk.col)
+                            Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR")).clone(this,this.tk.lin,this.tk.col)
                         } else {
                             val MAP: List<Pair<Tk.Scp1, Pair<Tk.Scp1, Scp2>>> =
-                                it.xscp1s.second!!.zip(this.xscp1s.first!!.zip(this.xscp2s!!.first))
+                                ft.xscp1s.second!!.zip(this.xscp1s.first!!.zip(this.xscp2s!!.first))
 
                             fun Tk.Scp1.get(scp2: Scp2): Pair<Tk.Scp1, Scp2> {
                                 return MAP.find { it.first.let { it.lbl == this.lbl && it.num == this.num } }?.second
@@ -147,7 +194,7 @@ fun Expr.xinfTypes (inf: Type?) {
                                     else -> tp
                                 }
                             }
-                            map(it.out)
+                            map(ft.out)
                         }
                     }
                     else -> {

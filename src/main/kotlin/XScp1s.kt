@@ -31,21 +31,3 @@ fun Stmt.xinfScp1s () {
     }
     this.visit(false, null, null, ::ft)
 }
-
-fun Stmt.xinfCalls () {
-    fun fe (e: Expr) {
-        when (e) {
-            is Expr.Call -> {
-                e.xscp1s = Pair(
-                    (e.arg.wtype!!.flatten() + e.wtype!!.flatten())
-                        .filter { it is Type.Ptr }
-                        .let { it as List<Type.Ptr> }
-                        .map { it.xscp1!! }
-                        .toTypedArray(),
-                    null
-                )
-            }
-        }
-    }
-    this.visit(false, null, ::fe, null)
-}
