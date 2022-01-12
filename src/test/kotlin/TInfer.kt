@@ -14,9 +14,9 @@ class TInfer {
             val s = xparser_stmts(all, Pair(TK.EOF, null))
             s.setUps(null)
             s.setEnvs(null)
-            s.xinfFuncs()
+            s.xinfScp1s()
             check_01_before_tps(s)
-            s.setScopes()
+            s.setScp2s()
             s.xinfTypes(null)
             s.xinfCalls()
             return s.tostr()
@@ -264,7 +264,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             var f: func {} -> {@i_1,@j_1} -> /</^@i_1>@j_1 -> ()
-            set f = func {} -> {@i_1,@jb_1} -> /</^@i_1>@j_1 -> () {
+            set f = func {} -> {@i_1,@j_1} -> /</^@i_1>@j_1 -> () {
             set ((arg\)!1) = (new <.1 <.0 ()>: /</^@i_1>@i_1>: </^@i_1>: @j_1)
             }
 

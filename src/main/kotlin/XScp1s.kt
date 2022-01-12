@@ -1,6 +1,11 @@
-fun Stmt.xinfFuncs () {
+fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
+            is Type.Ptr -> {
+                if (tp.xscp1 == null) {
+                    tp.xscp1 = Tk.Scp1(TK.XSCOPE, tp.tk.lin, tp.tk.col, "local", null)
+                }
+            }
             is Type.Func -> {
                 // set increasing @a_X to each pointer
                 var c = 'i'
