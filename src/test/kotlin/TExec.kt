@@ -556,7 +556,7 @@ class TExec {
         assert(out == "<.1 <.0>>\n") { out }
     }
     @Test
-    fun c04 () {
+    fun c04_ptr_arg () {
         val out = all("""
             var f = func /</^>->() {
                 set arg\!1 = new <.1 <.0>>
@@ -569,6 +569,34 @@ class TExec {
             }
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+    @Test
+    fun c05_ptr_arg_two () {
+        val out = all("""
+            var f = func [/</^>,/</^>]->() {
+                set arg.1\!1 = new <.1 <.0>>
+                set arg.2\!1 = new <.1 <.0>>
+            }
+            {
+                var x: /</^> = new <.1 <.0>>
+                call f [x,x]
+                output std x
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+    @Test
+    fun c06_ptr_arg_ret () {
+        val out = all("""
+            var f = func /_int@a_1 -> /_int@a_1 {
+                set ret = arg
+            }
+            var x: _int = _10
+            var y: /_int = call f /x
+            output std y\
+        """.trimIndent()
+        )
+        assert(out == "()\n") { out }
     }
 
     // CLOSURE
