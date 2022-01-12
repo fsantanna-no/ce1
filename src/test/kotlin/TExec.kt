@@ -624,16 +624,47 @@ class TExec {
         )
         assert(out == "1\n") { out }
     }
+    @Test
+    fun c09_func_arg () {
+        val out = all(
+            """
+            var f = func () -> () {
+                set ret = arg
+            }
+            var g = func [(func ()->()), ()] -> () {
+                set ret = call arg.1 arg.2
+            }
+            output std call g [f,()]
+        """.trimIndent()
+        )
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun c10_func_ret () {
+        val out = all(
+            """
+            var g = func () -> (func ()->()) {
+                var f = func () -> () {
+                    output std ()
+                }
+               set ret = f
+            }
+            var f = call g ()
+            call f ()
+        """.trimIndent()
+        )
+        assert(out == "()\n") { out }
+    }
 
     // CLOSURE
 
     @Test
-    fun c03_closure () {
+    fun d01_clo () {
         val out = all("""
-            { @a
+            {
                 var pa: /</^> = new <.1 <.0>>
-                var f = func{@a}-> {}-> ()->() [pa] {
-                    var pf: /</^ @a> @a = new <.1 <.0>>
+                var f = func ()->() [pa] {
+                    var pf: /</^> = new <.1 <.0>>
                     set pa\!1 = pf
                 }
                 call f ()

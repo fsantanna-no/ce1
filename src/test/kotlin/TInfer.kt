@@ -270,4 +270,31 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+
+    // CLOSURE
+
+    @Test
+    fun d01_clo () {
+        val out = all("""
+            {
+                var pa: /</^> = new <.1 <.0>>
+                var f = func () -> () [pa] {
+                }
+                call f ()
+            }
+        """.trimIndent())
+        assert(out == """
+            { @a
+            var pa: /</^@local>@local
+            set pa = (new <.1 <.0 ()>: /</^@local>@local>: </^@local>: @local)
+            var f: func {@a} -> {} -> () -> ()
+            set f = func {@a} -> {} -> () -> () [pa] {
+
+            }
+            
+            call f {} ()
+            }
+            
+        """.trimIndent()) { out }
+    }
 }

@@ -29,5 +29,33 @@ fun Stmt.xinfScp1s () {
             }
         }
     }
-    this.visit(false, null, null, ::ft)
+    fun fe (e: Expr) {
+        when (e) {
+            is Expr.Func -> {
+                if (e.type.xscp1s.first==null && e.ups.size>0) {
+                    // take the largest scope among ups
+                    val ups = e.ups
+                        // (var v, blk of v)
+                        .map { Pair(it.str, (e.env(it.str) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?) }
+                        .let { it as List<Pair<String,Stmt.Block?>> }
+                        // blk with deepest scope (min number of up blocks)
+                        .minByOrNull { it.second?.ups_tolist()?.count { it is Stmt.Block } ?: 0 }!!
+                        .let {
+                            if (it.second == null) {
+                                Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "global", null)
+                            } else {
+                                if (it.second != null && it.second!!.xscp1 == null) {
+                                    val lbl = "ss" + it.first
+                                    it.second!!.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, lbl, null)
+                                    println(it.second)
+                                }
+                                it.second?.xscp1
+                            }
+                        }
+                    e.type.xscp1s = Pair(ups, e.type.xscp1s.second)
+                }
+            }
+        }
+    }
+    this.visit(false, null, ::fe, ::ft)
 }
