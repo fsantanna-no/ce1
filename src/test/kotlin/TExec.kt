@@ -607,7 +607,7 @@ class TExec {
             output std y\
         """.trimIndent()
         )
-        assert(out == "()\n") { out }
+        assert(out == "10\n") { out }
     }
 
     // CLOSURE

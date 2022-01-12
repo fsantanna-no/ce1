@@ -23,6 +23,7 @@ fun Stmt.xinfScp1s () {
                             }
                             it.xscp1!!
                         }
+                        .distinctBy { Pair(it.lbl,it.num) }
                         .toTypedArray()
                 )
             }
