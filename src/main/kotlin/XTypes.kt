@@ -71,6 +71,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : type mismatch"
             }
             this.arg.xinfTypes((inf as Type.Ptr?)?.pln)
+            if (this.xscp1 == null) {
+                if (inf is Type.Ptr) {
+                    this.xscp1 = inf.xscp1
+                } else {
+                    this.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "local", null)
+                }
+                this.xscp2 = this.xscp1!!.toScp2(this)
+            }
             Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
         }
         is Expr.Inp -> {

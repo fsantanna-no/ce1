@@ -13,7 +13,7 @@ fun Stmt.xinfFuncs () {
                         .map {
                             it.xscp1 = Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, c+"", i)
                             c += 1
-                            i += 1
+                            //i += 1
                             it.xscp1
                         }
                         .toTypedArray()

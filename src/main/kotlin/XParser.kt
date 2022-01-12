@@ -133,7 +133,7 @@ fun xparser_expr (all: All): Expr {
                 all.accept_err(TK.XSCOPE)
                 all.tk0 as Tk.Scp1
             } else {
-                Tk.Scp1(TK.XSCOPE, all.tk0.lin, all.tk0.col, "local", null)
+                null
             }
             Expr.New(tk0 as Tk.Key, scp, null, e as Expr.UCons)
         }

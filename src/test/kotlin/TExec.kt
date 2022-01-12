@@ -457,6 +457,53 @@ class TExec {
         """.trimIndent())
         assert(out == "<.2 [(),<.1>]>\n[(),<.1>]\n") { out }
     }
+    @Test
+    fun b23_new () {
+        val out = all("""
+            var z: /</^> = <.0>
+            var one: /</^> = new <.1 z>
+            var l: /</^> = new <.1 one>
+            var p: //</^>
+            {
+                set p = /l --!1
+            }
+            output std p\
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+    @Test
+    fun b24_double () {
+        val out = all("""
+            var n = <.0>: /<</^^>>
+            output std n
+        """.trimIndent())
+        assert(out == "<.0>\n") { out }
+    }
+    @Test
+    fun b25_new () {
+        val out = all("""
+            var l1: /</^>  = new <.1 <.0>>
+            var l2 = new <.1 l1>:</^>
+            var t3 = [(), new <.1 l2\!1>:</^>]
+            output std l1
+            output std /t3
+        """.trimIndent())
+        assert(out == "<.1 <.0>>\n[(),<.1 <.1 <.0>>>]\n") { out }
+    }
+    @Test
+    fun b27_self () {
+        val out = all("""
+            var x: /< [<(),/^^>,_int,/^]>
+            var z: /< [<(),/^^>,_int,/^]> = <.0>
+            var o: <(),/< [<(),/^^>,_int,/^]>> = <.1>
+            set x = new <.1 [o,_1,new <.1 [o,_2,z]>]>
+            set x\!1.3\!1.1 = <.2 x>
+            set x\!1.1 = <.2 x\!1.3>
+            output std x\!1.3\!1.2
+            output std x\!1.2
+        """.trimIndent())
+        assert(out == "2\n1\n") { out }
+    }
 
     // FUNC / CALL
 
@@ -492,5 +539,53 @@ class TExec {
         """.trimIndent()
         )
         assert(out == "720\n") { out }
+    }
+    @Test
+    fun c03 () {
+        val out = all("""
+            var f = func /</^>->() {
+                var pf = arg
+                output std pf
+            }
+            {
+                var x: /</^>
+                set x = new <.1 <.0>>
+                call f x
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.0>>\n") { out }
+    }
+    @Test
+    fun c04 () {
+        val out = all("""
+            var f = func /</^>->() {
+                set arg\!1 = new <.1 <.0>>
+            }
+            {
+                var x: /</^>
+                set x = new <.1 <.0>>
+                call f x
+                output std x
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+
+    // CLOSURE
+
+    @Test
+    fun c03_closure () {
+        val out = all("""
+            { @a
+                var pa: /</^> = new <.1 <.0>>
+                var f = func{@a}-> {}-> ()->() [pa] {
+                    var pf: /</^ @a> @a = new <.1 <.0>>
+                    set pa\!1 = pf
+                }
+                call f ()
+                output std pa
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
 }

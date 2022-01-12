@@ -168,6 +168,18 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
     }
+    @Test
+    fun b04_self () {
+        val out = all("""
+            var z: /< [<(),//^^>,_int,/^]> = <.0>
+            var x: /< [<(),//^^>,_int,/^]> = new <.1 [z,_1,new <.1 [z,_2,z]>]>
+            set x!1.3!1.1 = <.1 /x>
+            set x!1.1 = <.1 /x!1.3>
+            output std x!1.3!1.2
+            output std x!1.1!1\!1.1!1\!1.2
+        """.trimIndent())
+        assert(out == "(ln 4, col 17): invalid operand to `/´ : union discriminator") { out }
+    }
 
     // POINTER ARGUMENTS / SCOPES
 
@@ -225,8 +237,8 @@ class TInfer {
             set x = (_1: _int)
             var y: _int
             set y = (_1: _int)
-            call f {@x_} (/x)
-            call f {@x_} (/y)
+            call f {@ssx} (/x)
+            call f {@ssx} (/y)
             }
             
         """.trimIndent()) { out }
@@ -242,5 +254,21 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == "(ln 3, col 10): invalid inference : undetermined type") { out }
+    }
+    @Test
+    fun c06_new_return () {
+        val out = all("""
+            var f = func /</^>->() {
+                set arg\!1 = new <.1 <.0>>
+            }
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@a_1,@b_1} -> /</^@a_1>@b_1 -> ()
+            set f = func {} -> {@a_1,@b_1} -> /</^@a_1>@b_1 -> () {
+            set ((arg\)!1) = (new <.1 <.0 ()>: /</^@a_1>@a_1>: </^@a_1>: @a_1)
+            }
+
+
+        """.trimIndent()) { out }
     }
 }
