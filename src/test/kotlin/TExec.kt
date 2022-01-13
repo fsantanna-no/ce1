@@ -248,7 +248,7 @@ class TExec {
     @Test
     fun b02_new () {
         val out = all("""
-            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
             set x = new <.2 new <.2 new <.2 <.0>>>>
             output std x
         """.trimIndent())
@@ -257,7 +257,7 @@ class TExec {
     @Test
     fun b03_new () {
         val out = all("""
-            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
             set x = new <.2 new <.1 new <.1>>>
             output std x
         """.trimIndent())
@@ -266,7 +266,7 @@ class TExec {
     @Test
     fun b04_new () {
         val out = all("""
-            var x: /<(),/</^^ @local,/^ @local> @local> @local
+            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
             set x = new <.2 new <.2 new <.1 new <.1>>>>
             output std x
         """.trimIndent())
@@ -284,7 +284,7 @@ class TExec {
     @Test
     fun b06_new () {
         val out = all("""
-            var x: /</<[/^^ @local,/^ @local]> @local> @local
+            var x: /</<[/^^ @LOCAL,/^ @LOCAL]> @LOCAL> @LOCAL
             set x = new <.1 new <.1 [<.0>,new <.1 [<.0>,<.0>]>]>>
             output std x
         """.trimIndent())
@@ -293,7 +293,7 @@ class TExec {
     @Test
     fun b08_new () {
         val out = all("""
-            var e: /<(),<(),/^^ @local>>
+            var e: /<(),<(),/^^ @LOCAL>>
             set e = new <.2 <.2 new <.1>>>
             var s: <(),/<(),<(),/^^>>>
             set s = <.2 e>
@@ -304,8 +304,8 @@ class TExec {
     @Test
     fun b09_union () {
         val out = all("""
-            var x: /</^ @local> @local = <.0>
-            var y: <//</^ @local> @local @local>
+            var x: /</^ @LOCAL> @LOCAL = <.0>
+            var y: <//</^ @LOCAL> @LOCAL @LOCAL>
             set y = <.1 /x>
             output std /y
             output std y!1\
@@ -316,7 +316,7 @@ class TExec {
     @Test
     fun b10_new () {
         val out = all("""
-            var x: /< [<(),//^^ @local @local>,/^ @local]> @local
+            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL
             set x = new <.1 [<.1>,<.0>]>
             var y: /< [<(),//^^>,/^]>
             set y = new <.1 [<.1>,x]>
@@ -329,7 +329,7 @@ class TExec {
     @Test
     fun b11_new_self () {
         val out = all("""
-            var x: /< [<(),//^^ @local @local>,/^ @local]> @local
+            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL
             set x = new <.1 [<.1>,<.0>]>
             var y: /< [<(),//^^>,/^]>
             set y = new <.1 [<.1>, x]>
@@ -341,7 +341,7 @@ class TExec {
     @Test
     fun b12_new_self () {
         val out = all("""
-            var x: /<[(),/^ @local]> @local
+            var x: /<[(),/^ @LOCAL]> @LOCAL
             set x = new <.1 [(),<.0>]>
             var y: [(),/<[(),/^]>]
             set y = [(), new <.1 [(),<.0>]>]
@@ -354,7 +354,7 @@ class TExec {
     @Test
     fun b13_new_self () {
         val out = all("""
-            var x: /< [//^ @local @local,/^ @local]> @local
+            var x: /< [//^ @LOCAL @LOCAL,/^ @LOCAL]> @LOCAL
             set x = new <.1 [_,<.0>]>
             set x\!1.1 = /x
             output std x
@@ -376,7 +376,7 @@ class TExec {
     @Test
     fun b15_new_self () {
         val out = all("""
-            var x: /< <(),//^^ @local @local>> @local
+            var x: /< <(),//^^ @LOCAL @LOCAL>> @LOCAL
             set x = new <.1 <.1>>
             output std x
         """.trimIndent())
@@ -417,8 +417,8 @@ class TExec {
     @Test
     fun b19_new () {
         val out = all("""
-            var x: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,<.0>]>
-            var y: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,x]>
+            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,<.0>]>
+            var y: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,x]>
             set y\!1.2\!1.1 = <.1>
             output std y
         """.trimIndent())
@@ -428,7 +428,7 @@ class TExec {
     @Test
     fun b20_new () {
         val out = all("""
-            var x: /< [<(),//^^ @local @local>,/^ @local]> @local = new <.1 [<.1>,new <.1 [<.1>,<.0>]>]>
+            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,new <.1 [<.1>,<.0>]>]>
             set x\!1.2 = <.0>
             output std x
         """.trimIndent())
@@ -439,7 +439,7 @@ class TExec {
     @Test
     fun b21_new () {
         val out = all("""
-            var x: /<(),/^ @local> @local = new <.2 new <.1>>
+            var x: /<(),/^ @LOCAL> @LOCAL = new <.2 new <.1>>
             var y = x
             output std x
             output std y
@@ -509,7 +509,7 @@ class TExec {
     @Test
     fun c01 () {
         val out = all("""
-        var f = func /_int@_1 -> () {
+        var f = func /_int@k1 -> () {
            set arg\ = _(*arg+1)
            return
         }
@@ -598,7 +598,7 @@ class TExec {
     @Test
     fun c07_ptr_arg_ret () {
         val out = all("""
-            var f = func /_int@a_1 -> /_int@a_1 {
+            var f = func /_int@a1 -> /_int@a1 {
                 return arg
             }
             var x: _int = _10
@@ -611,10 +611,10 @@ class TExec {
     @Test
     fun c08_call_call () {
         val out = all("""
-            var f = func /_int@_1 -> /()@_1 {
+            var f = func /_int@k1 -> /()@k1 {
                 return arg
             }
-            var g = func /_int@_1 -> /()@_1 {
+            var g = func /_int@k1 -> /()@k1 {
                 return call f arg
             }
             var x: _int
@@ -661,10 +661,10 @@ class TExec {
     @Test
     fun d01_clo () {
         val out = all("""
-            { @a
+            { @A
                 var pa: /</^> = new <.1 <.0>>
                 var f = func ()->() [pa] {
-                    var pf: /</^@a>@a = new <.1 <.0>>
+                    var pf: /</^@A>@A = new <.1 <.0>>
                     set pa\!1 = pf
                 }
                 call f ()
@@ -677,13 +677,13 @@ class TExec {
     fun d02_clo () {
         val out = all(
             """
-            var g = func {@a_1} -> () -> (func @a_1->()->()) {
-                var x: /</^@a_1>@a_1 = new <.1 <.0>>
-                return func @a_1->()->() [x] {
+            var g = func {@a1} -> () -> (func @a1->()->()) {
+                var x: /</^@a1>@a1 = new <.1 <.0>>
+                return func @a1->()->() [x] {
                     output std x
                 }
             }
-            var f: (func @local->()->()) = call g ()
+            var f: (func @LOCAL->()->()) = call g ()
             call f ()
         """.trimIndent()
         )
@@ -693,16 +693,15 @@ class TExec {
     fun d03_clo () {
         val out = all(
             """
-            var cnst = func {@a_1}->/_int@a_1 -> (func @a_1->()->/_int@a_1) {
-                var x: /_int@a_1 = arg
-                return func @a_1->()->/_int@a_1 [x] {
+            var cnst = func {@a1}->/_int@a1 -> (func @a1->()->/_int@a1) {
+                var x: /_int@a1 = arg
+                return func @a1->()->/_int@a1 [x] {
                     return x
                 }
             }
             {
                 var five = _5: _int
-                var f: func @local -> () -> /_int@local
-                set f = call cnst /five
+                var f: func @LOCAL -> () -> /_int@LOCAL = call cnst /five
                 var v: /_int = call f ()
                 output std v\
             }

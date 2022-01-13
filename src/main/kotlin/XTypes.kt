@@ -15,22 +15,22 @@ fun Expr.xinfTypes (inf: Type?) {
                 val lbl = this.toBaseVar()?.let {
                     val blk = (it.env() as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
                     when {
-                        (blk == null) -> "global"
+                        (blk == null) -> "GLOBAL"
                         (blk.xscp1 == null) -> {
-                            val lbl = "ss" + it.tk_.str
-                            blk.xscp1 = Tk.Scp1(TK.XSCOPE,this.tk.lin,this.tk.col,lbl,null)
+                            val lbl = "SS" + it.tk_.str.toUpperCase()
+                            blk.xscp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,lbl,null)
                             lbl
                         }
                         else -> blk.xscp1!!.lbl
                     }
-                } ?: "global"
-                val scp1 = Tk.Scp1(TK.XSCOPE,this.tk.lin,this.tk.col,lbl,null)
+                } ?: "GLOBAL"
+                val scp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,lbl,null)
                 Type.Ptr(this.tk_, scp1, scp1.toScp2(this), it).clone(this, this.tk.lin, this.tk.col)
             }
         }
         is Expr.Dnref -> {
             this.ptr.xinfTypes(inf?.let {
-                val scp1 = Tk.Scp1(TK.XSCOPE,this.tk.lin,this.tk.col,"local",null)
+                val scp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,"LOCAL",null)
                 Type.Ptr (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
                     scp1,
@@ -75,7 +75,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 if (inf is Type.Ptr) {
                     this.xscp1 = inf.xscp1
                 } else {
-                    this.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "local", null)
+                    this.xscp1 = Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col, "LOCAL", null)
                 }
                 this.xscp2 = this.xscp1!!.toScp2(this)
             }
@@ -159,8 +159,8 @@ fun Expr.xinfTypes (inf: Type?) {
 
                         this.xscp1s = let {
                             // scope of expected closure environment
-                            //      var f: func {@local} -> ...     // f will hold env in @local
-                            //      set f = call g {@local} ()      // pass it for the builder function
+                            //      var f: func {@LOCAL} -> ...     // f will hold env in @LOCAL
+                            //      set f = call g {@LOCAL} ()      // pass it for the builder function
                             val clo1s = if (inf is Type.Func && inf.xscp1s.first!=null) {
                                 arrayOf(inf.xscp1s.first!!)
                             } else {
@@ -170,11 +170,11 @@ fun Expr.xinfTypes (inf: Type?) {
                             // var ret = call f arg  ==>  { arg, ret }
                             val arg_ret_1s = let {
                                 val ret1s = if (inf == null) {
-                                    // no attribution expected, save to @local as shortest scope possible
+                                    // no attribution expected, save to @LOCAL as shortest scope possible
                                     ft.out.flatten()
                                         .filter { it is Type.Ptr }
                                         .let { it as List<Type.Ptr> }
-                                        .map { Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, "local", null) }
+                                        .map { Tk.Scp1(TK.XSCPCST, it.tk.lin, it.tk.col, "LOCAL", null) }
                                         .toTypedArray()
                                 } else {
                                     inf.flatten()
@@ -212,12 +212,12 @@ fun Expr.xinfTypes (inf: Type?) {
                         // calculates return of "e" call based on "e.f" function type
                         // "e" passes "e.arg" with "e.scp1s.first" scopes which may affect "e.f" return scopes
                         // we want to map these input scopes into "e.f" return scopes
-                        //  var f: func /@a_1 -> /@b_1
+                        //  var f: func /@a1 -> /@b_1
                         //              /     /---/
                         //  call f {@scp1,@scp2}  -->  /@scp2
-                        //  f passes two scopes, first goes to @a_1, second goes to @b_1 which is the return
+                        //  f passes two scopes, first goes to @a1, second goes to @b_1 which is the return
                         //  so @scp2 maps to @b_1
-                        // zip [[{@scp1a,@scp1b},{@scp2a,@scp2b}],{@a_1,@b_1}]
+                        // zip [[{@scp1a,@scp1b},{@scp2a,@scp2b}],{@a1,@b_1}]
 
                         if (ft.xscp1s.second!!.size != this.xscp1s.first!!.size) {
                             // TODO: may fail before check2, return anything

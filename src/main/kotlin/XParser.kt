@@ -6,7 +6,11 @@ fun xparser_type (all: All): Type {
         all.accept(TK.CHAR, '/') -> {
             val tk0 = all.tk0 as Tk.Chr
             val pln = xparser_type(all)
-            val scp = if (all.accept(TK.XSCOPE)) (all.tk0 as Tk.Scp1) else null
+            val scp = if (all.accept(TK.XSCPCST) || all.accept(TK.XSCPVAR)) {
+                all.tk0 as Tk.Scp1
+            } else {
+                null
+            }
             Type.Ptr(tk0, scp, null, pln)
         }
         all.accept(TK.CHAR, '(') -> {
@@ -52,21 +56,19 @@ fun xparser_type (all: All): Type {
             val par = all.accept(TK.CHAR, '(')
 
             // closure
-            val clo = if (!all.accept(TK.XSCOPE)) null else {
+            val clo = if (all.accept(TK.XSCPCST) || all.accept(TK.XSCPVAR)) {
                 val tk = all.tk0 as Tk.Scp1
                 all.accept_err(TK.ARROW)
                 tk
+            } else {
+                null
             }
 
             // scopes
             val scp1s = if (!all.accept(TK.CHAR, '{')) null else {
                 val ret = mutableListOf<Tk.Scp1>()
-                while (all.accept(TK.XSCOPE)) {
-                    var tk = all.tk0 as Tk.Scp1
-                    All_assert_tk(tk, tk.num != null) {
-                        "invalid pool : expected `_N´ depth"
-                    }
-                    ret.add(tk)
+                while (all.accept(TK.XSCPVAR)) {
+                    ret.add(all.tk0 as Tk.Scp1)
                     if (!all.accept(TK.CHAR, ',')) {
                         break
                     }
@@ -156,7 +158,7 @@ fun xparser_expr (all: All): Expr {
                 "invalid `new` : expected constructor"
             }
             val scp = if (all.accept(TK.CHAR, ':')) {
-                all.accept_err(TK.XSCOPE)
+                all.accept(TK.XSCPCST) || all.accept_err(TK.XSCPVAR)
                 all.tk0 as Tk.Scp1
             } else {
                 null
@@ -169,7 +171,7 @@ fun xparser_expr (all: All): Expr {
 
             val scps = mutableListOf<Tk.Scp1>()
             if (all.accept(TK.CHAR, '{')) {
-                while (all.accept(TK.XSCOPE)) {
+                while (all.accept(TK.XSCPCST) || all.accept(TK.XSCPVAR)) {
                     val tk = all.tk0 as Tk.Scp1
                     scps.add(tk)
                     if (!all.accept(TK.CHAR, ',')) {
@@ -182,10 +184,10 @@ fun xparser_expr (all: All): Expr {
             val arg = xparser_expr(all)
 
             val scp = if (all.accept(TK.CHAR, ':')) {
-                all.accept_err(TK.XSCOPE)
+                all.accept(TK.XSCPCST) || all.accept_err(TK.XSCPVAR)
                 all.tk0 as Tk.Scp1
             } else {
-                Tk.Scp1(TK.XSCOPE, all.tk0.lin, all.tk0.col, "local", null)
+                Tk.Scp1(TK.XSCPCST, all.tk0.lin, all.tk0.col, "LOCAL", null)
             }
             Expr.Call(tk_pre, f, arg, Pair(scps.toTypedArray(),scp), null)
         }
@@ -313,7 +315,7 @@ fun xparser_attr (all: All): Attr {
 fun xparser_block (all: All): Stmt.Block {
     all.accept_err(TK.CHAR,'{')
     val tk0 = all.tk0 as Tk.Chr
-    val scp = all.accept(TK.XSCOPE).let { if (it) all.tk0 as Tk.Scp1 else null }
+    val scp = all.accept(TK.XSCPCST).let { if (it) all.tk0 as Tk.Scp1 else null }
     val ret = xparser_stmts(all, Pair(TK.CHAR,'}'))
     all.accept_err(TK.CHAR,'}')
     return Stmt.Block(tk0, scp, ret)

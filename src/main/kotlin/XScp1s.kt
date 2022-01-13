@@ -3,13 +3,13 @@ fun Stmt.xinfScp1s () {
         when (tp) {
             is Type.Ptr -> {
                 if (tp.xscp1==null && tp.ups_first { it is Type.Func }==null) {
-                    tp.xscp1 = Tk.Scp1(TK.XSCOPE, tp.tk.lin, tp.tk.col, "local", null)
+                    tp.xscp1 = Tk.Scp1(TK.XSCPCST, tp.tk.lin, tp.tk.col, "LOCAL", null)
                 }
             }
             is Type.Func -> {
                 // if returns closure, label must go to input scope
-                //      var f: func () -> (func @a_1->()->())
-                //      var f: func {@a_1} -> () -> (func @a_1->()->())
+                //      var f: func () -> (func @a1->()->())
+                //      var f: func {@a1} -> () -> (func @a1->()->())
                 val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null) {
                     arrayOf(tp.out.xscp1s.first!!)
                 } else {
@@ -25,21 +25,26 @@ fun Stmt.xinfScp1s () {
                         .filter { it is Type.Ptr }
                         .let { it as List<Type.Ptr> }
                         .map {
-                            if (it.xscp1 == null) {
-                                it.xscp1 = Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, c + "", i)
-                                c += 1
-                                //i += 1
-                                it.xscp1!!
-                            } else {
-                                // do not add if already in outer Func
-                                //      var outer = func {@a_1}->... {          // receives env
-                                //          return func @a_1->()->/_int@a_1 {   // holds/uses outer env
-                                val outers = tp.ups_tolist().filter { it is Expr.Func } as List<Expr.Func>
-                                val me = it.xscp1!!
-                                if (outers.any { it.type.xscp1s.second?.any { it.lbl==me.lbl && it.num==me.num } != null }) {
-                                    null
-                                } else {
+                            // TODO: map only XSCPVAR?
+                            when {
+                                (it.xscp1 == null) -> {                 // add implicit
+                                    it.xscp1 = Tk.Scp1(TK.XSCPVAR, it.tk.lin, it.tk.col, c + "", i)
+                                    c += 1
+                                    //i += 1        // TODO: i
                                     it.xscp1!!
+                                }
+                                (it.xscp1!!.enu == TK.XSCPCST) -> null  // do not add constant scopes
+                                else -> {
+                                    // do not add if already in outer Func
+                                    //      var outer = func {@a1}->... {          // receives env
+                                    //          return func @a1->()->/_int@a1 {   // holds/uses outer env
+                                    val outers = tp.ups_tolist().filter { it is Expr.Func } as List<Expr.Func>
+                                    val me = it.xscp1!!
+                                    if (outers.any { it.type.xscp1s.second?.any { it.lbl == me.lbl && it.num == me.num } != null }) {
+                                        null
+                                    } else {
+                                        it.xscp1!!
+                                    }
                                 }
                             }
                         }
@@ -64,13 +69,13 @@ fun Stmt.xinfScp1s () {
                         .map { (e.env(it.str)!!.toType() as Type.Ptr?) }
                         .filterNotNull()
                         .minByOrNull { it.toScp2().depth }.let {
-                            if (it?.xscp1?.lbl == "local") {
+                            if (it?.xscp1?.lbl == "LOCAL") {
                                 val blk =  it.ups_first { it is Stmt.Block } as Stmt.Block?
                                 if (blk?.xscp1 == null) {
                                     // if necessary, add label to enclosing block
-                                    blk?.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "ss", null)
+                                    blk?.xscp1 = Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col, "SS", null)
                                 }
-                                blk?.xscp1 ?: Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "global", null)
+                                blk?.xscp1 ?: Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col, "GLOBAL", null)
                             } else {
                                 it?.xscp1
                             }
