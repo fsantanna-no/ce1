@@ -16,24 +16,11 @@ fun Stmt.xinfScp1s () {
                     emptyArray()
                 }
 
-                var c = 'i'
-                var i = 1
-
-                // if it is a closure, must receive a label with the implicit environment
-                //      var f: func @a_1->()->()
-                //      var f: func @a_1->{@b_1}->()->()
-                // holds @a_1, when called @a_1 is passed as @b_1
-                val env = if (tp.xscp1s.first != null) {
-                    val scp = Tk.Scp1(TK.XSCOPE, tp.tk.lin, tp.tk.col, c + "", i)
-                    c += 1
-                    // i += 1
-                    arrayOf(scp)
-                } else {
-                    emptyArray()
-                }
-
                 // set increasing @a_X to each pointer in [inp]->[out]
                 val inp_out = let {
+                    var c = 'i'
+                    var i = 1
+
                     (tp.inp.flatten() + tp.out.flatten())
                         .filter { it is Type.Ptr }
                         .let { it as List<Type.Ptr> }
@@ -48,7 +35,7 @@ fun Stmt.xinfScp1s () {
                 }
 
                 // {closure} + {explicit scopes} + implicit inp_out
-                val scp1s = (clo + env + (tp.xscp1s.second ?: emptyArray()) + inp_out)
+                val scp1s = (clo + (tp.xscp1s.second ?: emptyArray()) + inp_out)
                     .distinctBy { Pair(it.lbl,it.num) }
                     .toTypedArray()
                 tp.xscp1s = Pair(tp.xscp1s.first, scp1s)

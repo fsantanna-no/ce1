@@ -304,7 +304,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
+            var f: func {} -> {@a_1} -> () -> func {@a_1} -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -315,7 +315,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func {@local} -> {@i_1} -> () -> ()
+            var f: func {@local} -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -327,8 +327,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
-            var f: func {@local} -> {@i_1} -> () -> ()
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {} -> () -> ()
+            var f: func {@local} -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -341,8 +341,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
-            var f: func {@local} -> {@i_1} -> () -> ()
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {} -> () -> ()
+            var f: func {@local} -> {} -> () -> ()
             set f = call g {@local} ()
             
         """.trimIndent()) { out }
@@ -357,8 +357,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
-            var f: func {@local} -> {@i_1} -> () -> ()
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {} -> () -> ()
+            var f: func {@local} -> {} -> () -> ()
             set f = call g {@local} ()
             call f {} ()
             
