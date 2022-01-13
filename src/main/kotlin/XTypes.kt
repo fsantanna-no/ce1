@@ -88,6 +88,59 @@ fun Expr.xinfTypes (inf: Type?) {
             this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
             Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
         }
+        is Expr.Func -> {
+            this.block.xinfTypes(null)
+            this.type
+        }
+        is Expr.TDisc -> {
+            this.tup.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
+            this.tup.wtype!!.let {
+                All_assert_tk(this.tk, it is Type.Tuple) {
+                    "invalid discriminator : type mismatch"
+                }
+                val (MIN, MAX) = Pair(1, (it as Type.Tuple).vec.size)
+                All_assert_tk(this.tk, MIN <= this.tk_.num && this.tk_.num <= MAX) {
+                    "invalid discriminator : out of bounds"
+                }
+                it.vec[this.tk_.num - 1]
+            }
+        }
+        is Expr.UDisc, is Expr.UPred -> {
+            // not possible to infer big (union) from small (disc/pred)
+            val (tk_,uni) = when (this) {
+                is Expr.UPred -> { this.uni.xinfTypes(null) ; Pair(this.tk_,this.uni) }
+                is Expr.UDisc -> { this.uni.xinfTypes(null) ; Pair(this.tk_,this.uni) }
+                else -> error("impossible case")
+            }
+            val tp = uni.wtype!!
+
+            All_assert_tk(this.tk, tp is Type.Union) {
+                "invalid discriminator : not an union"
+            }
+            assert(tk_.num!=0 || tp.isrec()) { "bug found" }
+
+            val (MIN, MAX) = Pair(if (tp.isrec()) 0 else 1, (tp as Type.Union).vec.size)
+            All_assert_tk(this.tk, MIN <= tk_.num && tk_.num <= MAX) {
+                "invalid discriminator : out of bounds"
+            }
+
+            when (this) {
+                is Expr.UDisc -> if (this.tk_.num == 0) {
+                    Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
+                } else {
+                    tp.expand()[this.tk_.num - 1]
+                }
+                is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col)
+                else -> error("bug found")
+            }
+        }
+        is Expr.Var -> {
+            val s = this.env()!!
+            All_assert_tk(this.tk, s !is Stmt.Var || s.xtype!=null) {
+                "invalid inference : undetermined type"
+            }
+            s.toType()
+        }
         is Expr.Call -> {
             val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"")).clone(this, this.tk.lin, this.tk.col)
             this.f.xinfTypes(nat)    // no infer for functions, default _ for nat
@@ -205,59 +258,6 @@ fun Expr.xinfTypes (inf: Type?) {
                     }
                 }
             }.clone(this.f,this.tk.lin,this.tk.col)
-        }
-        is Expr.Func -> {
-            this.block.xinfTypes(null)
-            this.type
-        }
-        is Expr.TDisc -> {
-            this.tup.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
-            this.tup.wtype!!.let {
-                All_assert_tk(this.tk, it is Type.Tuple) {
-                    "invalid discriminator : type mismatch"
-                }
-                val (MIN, MAX) = Pair(1, (it as Type.Tuple).vec.size)
-                All_assert_tk(this.tk, MIN <= this.tk_.num && this.tk_.num <= MAX) {
-                    "invalid discriminator : out of bounds"
-                }
-                it.vec[this.tk_.num - 1]
-            }
-        }
-        is Expr.UDisc, is Expr.UPred -> {
-            // not possible to infer big (union) from small (disc/pred)
-            val (tk_,uni) = when (this) {
-                is Expr.UPred -> { this.uni.xinfTypes(null) ; Pair(this.tk_,this.uni) }
-                is Expr.UDisc -> { this.uni.xinfTypes(null) ; Pair(this.tk_,this.uni) }
-                else -> error("impossible case")
-            }
-            val tp = uni.wtype!!
-
-            All_assert_tk(this.tk, tp is Type.Union) {
-                "invalid discriminator : not an union"
-            }
-            assert(tk_.num!=0 || tp.isrec()) { "bug found" }
-
-            val (MIN, MAX) = Pair(if (tp.isrec()) 0 else 1, (tp as Type.Union).vec.size)
-            All_assert_tk(this.tk, MIN <= tk_.num && tk_.num <= MAX) {
-                "invalid discriminator : out of bounds"
-            }
-
-            when (this) {
-                is Expr.UDisc -> if (this.tk_.num == 0) {
-                    Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
-                } else {
-                    tp.expand()[this.tk_.num - 1]
-                }
-                is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col)
-                else -> error("bug found")
-            }
-        }
-        is Expr.Var -> {
-            val s = this.env()!!
-            All_assert_tk(this.tk, s !is Stmt.Var || s.xtype!=null) {
-                "invalid inference : undetermined type"
-            }
-            s.toType()
         }
     }
 }
