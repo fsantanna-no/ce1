@@ -514,7 +514,7 @@ class TExec {
            return
         }
         var x: _int = _1
-        call f {@local} /x
+        call f /x
         output std x
         """.trimIndent())
         assert(out == "2\n") { out }
@@ -684,7 +684,7 @@ class TExec {
                 }
                 return f
             }
-            var f: (func @local->()->()) = call g {@local} ()
+            var f: (func @local->()->()) = call g ()
             call f ()
         """.trimIndent()
         )
