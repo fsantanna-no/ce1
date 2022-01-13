@@ -319,4 +319,49 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun d04_clo () {
+        val out = all("""
+            var g: func () -> (func @a_1->()->())
+            var f: func @local -> () -> ()
+        """.trimIndent()
+        )
+        assert(out == """
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
+            var f: func {@local} -> {@i_1} -> () -> ()
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun d05_clo () {
+        val out = all("""
+            var g: func () -> (func @a_1->()->())
+            var f: func @local -> () -> ()
+            set f = call g ()
+        """.trimIndent()
+        )
+        assert(out == """
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
+            var f: func {@local} -> {@i_1} -> () -> ()
+            set f = call g {@local} ()
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun d06_clo () {
+        val out = all("""
+            var g: func () -> (func @a_1->()->())
+            var f: func @local -> () -> ()
+            set f = call g ()
+            call f ()
+        """.trimIndent()
+        )
+        assert(out == """
+            var g: func {} -> {@a_1} -> () -> func {@a_1} -> {@i_1} -> () -> ()
+            var f: func {@local} -> {@i_1} -> () -> ()
+            set f = call g {@local} ()
+            call f {} ()
+            
+        """.trimIndent()) { out }
+    }
 }

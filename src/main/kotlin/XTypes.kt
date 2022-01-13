@@ -158,6 +158,15 @@ fun Expr.xinfTypes (inf: Type?) {
                         //  call f {...} arg
 
                         this.xscp1s = let {
+                            // scope of expected closure environment
+                            //      var f: func {@local} -> ...     // f will hold env in @local
+                            //      set f = call g {@local} ()      // pass it for the builder function
+                            val clo1s = if (inf is Type.Func && inf.xscp1s.first!=null) {
+                                arrayOf(inf.xscp1s.first!!)
+                            } else {
+                                emptyArray()
+                            }
+
                             // var ret = call f arg  ==>  { arg, ret }
                             val arg_ret_1s = let {
                                 val ret1s = if (inf == null) {
@@ -191,10 +200,11 @@ fun Expr.xinfTypes (inf: Type?) {
 
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
-                            val scp1s = inp_out_1s.zip(arg_ret_1s)
-                                .distinctBy { Pair(it.first.lbl,it.first.col) }
-                                .map { it.second }
-                                .toTypedArray()
+                            val scp1s = clo1s +
+                                (inp_out_1s.zip(arg_ret_1s)
+                                    .distinctBy { Pair(it.first.lbl,it.first.col) }
+                                    .map { it.second })
+
                             Pair(scp1s, null)   // TODO: null should be return scope
                         }
                         this.xscp2s = Pair(this.xscp1s.first!!.map { it.toScp2(this) }.toTypedArray(), null)
