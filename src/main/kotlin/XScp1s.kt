@@ -7,11 +7,33 @@ fun Stmt.xinfScp1s () {
                 }
             }
             is Type.Func -> {
-                // set increasing @a_X to each pointer
+                // if returns closure, label must go to input scope
+                //      var f: func () -> (func @a_1->()->())
+                //      var f: func {@a_1} -> () -> (func @a_1->()->())
+                val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null) {
+                    arrayOf(tp.out.xscp1s.first!!)
+                } else {
+                    emptyArray()
+                }
+
                 var c = 'i'
                 var i = 1
-                tp.xscp1s = Pair (
-                    null,
+
+                // if it is a closure, must receive a label with the implicit environment
+                //      var f: func @a_1->()->()
+                //      var f: func @a_1->{@b_1}->()->()
+                // holds @a_1, when called @a_1 is passed as @b_1
+                val env = if (tp.xscp1s.first != null) {
+                    val scp = Tk.Scp1(TK.XSCOPE, tp.tk.lin, tp.tk.col, c + "", i)
+                    c += 1
+                    // i += 1
+                    arrayOf(scp)
+                } else {
+                    emptyArray()
+                }
+
+                // set increasing @a_X to each pointer in [inp]->[out]
+                val inp_out = let {
                     (tp.inp.flatten() + tp.out.flatten())
                         .filter { it is Type.Ptr }
                         .let { it as List<Type.Ptr> }
@@ -23,9 +45,13 @@ fun Stmt.xinfScp1s () {
                             }
                             it.xscp1!!
                         }
-                        .distinctBy { Pair(it.lbl,it.num) }
-                        .toTypedArray()
-                )
+                }
+
+                // {closure} + {explicit scopes} + implicit inp_out
+                val scp1s = (clo + env + (tp.xscp1s.second ?: emptyArray()) + inp_out)
+                    .distinctBy { Pair(it.lbl,it.num) }
+                    .toTypedArray()
+                tp.xscp1s = Pair(tp.xscp1s.first, scp1s)
             }
         }
     }
@@ -35,21 +61,19 @@ fun Stmt.xinfScp1s () {
                 if (e.type.xscp1s.first==null && e.ups.size>0) {
                     // take the largest scope among ups
                     val ups = e.ups
-                        // (var v, blk of v)
-                        .map { Pair(it.str, (e.env(it.str) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?) }
-                        .let { it as List<Pair<String,Stmt.Block?>> }
-                        // blk with deepest scope (min number of up blocks)
-                        .minByOrNull { it.second?.ups_tolist()?.count { it is Stmt.Block } ?: 0 }!!
-                        .let {
-                            if (it.second == null) {
-                                Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "global", null)
-                            } else {
-                                if (it.second != null && it.second!!.xscp1 == null) {
-                                    val lbl = "ss" + it.first
-                                    it.second!!.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, lbl, null)
-                                    println(it.second)
+                        // Type.Ptr of all ups, find the one with deepest scope, return its scp1
+                        .map { (e.env(it.str)!!.toType() as Type.Ptr?) }
+                        .filterNotNull()
+                        .minByOrNull { it.toScp2().depth }.let {
+                            if (it?.xscp1?.lbl == "local") {
+                                val blk =  it.ups_first { it is Stmt.Block } as Stmt.Block?
+                                if (blk?.xscp1 == null) {
+                                    // if necessary, add label to enclosing block
+                                    blk?.xscp1 = Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "ss", null)
                                 }
-                                it.second?.xscp1
+                                blk?.xscp1 ?: Tk.Scp1(TK.XSCOPE, this.tk.lin, this.tk.col, "global", null)
+                            } else {
+                                it?.xscp1
                             }
                         }
                     e.type.xscp1s = Pair(ups, e.type.xscp1s.second)

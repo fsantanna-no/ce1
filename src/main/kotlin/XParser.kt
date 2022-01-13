@@ -52,9 +52,28 @@ fun xparser_type (all: All): Type {
             val par = all.accept(TK.CHAR, '(')
 
             // closure
-            val clo = if (!all.accept(TK.CHAR, '{')) null else {
-                all.accept_err(TK.XSCOPE)
-                all.tk0 as Tk.Scp1
+            val clo = if (!all.accept(TK.XSCOPE)) null else {
+                val tk = all.tk0 as Tk.Scp1
+                all.accept_err(TK.ARROW)
+                tk
+            }
+
+            // scopes
+            val scp1s = if (!all.accept(TK.CHAR, '{')) null else {
+                val ret = mutableListOf<Tk.Scp1>()
+                while (all.accept(TK.XSCOPE)) {
+                    var tk = all.tk0 as Tk.Scp1
+                    All_assert_tk(tk, tk.num != null) {
+                        "invalid pool : expected `_N´ depth"
+                    }
+                    ret.add(tk)
+                    if (!all.accept(TK.CHAR, ',')) {
+                        break
+                    }
+                }
+                all.accept_err(TK.CHAR, '}')
+                all.accept_err(TK.ARROW)
+                ret.toTypedArray()
             }
 
             // input & output
@@ -63,7 +82,7 @@ fun xparser_type (all: All): Type {
             val out = xparser_type(all) // right associative
 
             if (par) all.accept_err(TK.CHAR, ')')
-            Type.Func(tk0, Pair(clo,null), null, inp, out)
+            Type.Func(tk0, Pair(clo,scp1s), null, inp, out)
         }
         else -> {
             all.err_expected("type")

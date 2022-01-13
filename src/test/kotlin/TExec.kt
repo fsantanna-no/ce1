@@ -588,7 +588,7 @@ class TExec {
     fun c06_ptr_call_err () {
         val out = all("""
             var f = func /() -> /() {
-                set ret = arg
+                return arg
             }
             output std (call f ())
         """.trimIndent()
@@ -599,7 +599,7 @@ class TExec {
     fun c07_ptr_arg_ret () {
         val out = all("""
             var f = func /_int@a_1 -> /_int@a_1 {
-                set ret = arg
+                return arg
             }
             var x: _int = _10
             var y: /_int = call f /x
@@ -612,10 +612,10 @@ class TExec {
     fun c08_call_call () {
         val out = all("""
             var f = func /_int@_1 -> /()@_1 {
-                set ret = arg
+                return arg
             }
             var g = func /_int@_1 -> /()@_1 {
-                set ret = call f arg
+                return call f arg
             }
             var x: _int
             var px = call f /x
@@ -629,10 +629,10 @@ class TExec {
         val out = all(
             """
             var f = func () -> () {
-                set ret = arg
+                return arg
             }
             var g = func [(func ()->()), ()] -> () {
-                set ret = call arg.1 arg.2
+                return call arg.1 arg.2
             }
             output std call g [f,()]
         """.trimIndent()
@@ -647,7 +647,7 @@ class TExec {
                 var f = func () -> () {
                     output std ()
                 }
-               set ret = f
+               return f
             }
             var f = call g ()
             call f ()
@@ -661,10 +661,10 @@ class TExec {
     @Test
     fun d01_clo () {
         val out = all("""
-            {
+            { @a
                 var pa: /</^> = new <.1 <.0>>
                 var f = func ()->() [pa] {
-                    var pf: /</^> = new <.1 <.0>>
+                    var pf: /</^@a>@a = new <.1 <.0>>
                     set pa\!1 = pf
                 }
                 call f ()
@@ -672,5 +672,22 @@ class TExec {
             }
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+    @Test
+    fun d02_clo () {
+        val out = all(
+            """
+            var g = func {@a_1} -> () -> (func @a_1->()->()) {
+                var x: /</^@a_1>@a_1 = new <.1 <.0>>
+                var f = func ()->() [x] {
+                    output std x
+                }
+                return f
+            }
+            var f: (func @local->()->()) = call g {@local} ()
+            call f ()
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.0>>\n") { out }
     }
 }
