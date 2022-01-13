@@ -364,4 +364,18 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun d07_clo () {
+        val out = all("""
+            var cnst = func {@a_1}->/_int@a_1 -> (func @a_1->()->/_int@a_1) {
+                var x: /_int@a_1 = arg
+                return func @a_1->()->/_int@a_1 [x] {
+                    return x
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            
+        """.trimIndent()) { out }
+    }
 }

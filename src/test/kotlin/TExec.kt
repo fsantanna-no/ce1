@@ -679,15 +679,35 @@ class TExec {
             """
             var g = func {@a_1} -> () -> (func @a_1->()->()) {
                 var x: /</^@a_1>@a_1 = new <.1 <.0>>
-                var f = func ()->() [x] {
+                return func @a_1->()->() [x] {
                     output std x
                 }
-                return f
             }
             var f: (func @local->()->()) = call g ()
             call f ()
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n") { out }
+    }
+    @Test
+    fun d03_clo () {
+        val out = all(
+            """
+            var cnst = func {@a_1}->/_int@a_1 -> (func @a_1->()->/_int@a_1) {
+                var x: /_int@a_1 = arg
+                return func @a_1->()->/_int@a_1 [x] {
+                    return x
+                }
+            }
+            {
+                var five = _5: _int
+                var f: func @local -> () -> /_int@local
+                set f = call cnst /five
+                var v: /_int = call f ()
+                output std v\
+            }
+        """.trimIndent()
+        )
+        assert(out == "5\n") { out }
     }
 }

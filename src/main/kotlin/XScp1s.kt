@@ -29,9 +29,21 @@ fun Stmt.xinfScp1s () {
                                 it.xscp1 = Tk.Scp1(TK.XSCOPE, it.tk.lin, it.tk.col, c + "", i)
                                 c += 1
                                 //i += 1
+                                it.xscp1!!
+                            } else {
+                                // do not add if already in outer Func
+                                //      var outer = func {@a_1}->... {          // receives env
+                                //          return func @a_1->()->/_int@a_1 {   // holds/uses outer env
+                                val outers = tp.ups_tolist().filter { it is Expr.Func } as List<Expr.Func>
+                                val me = it.xscp1!!
+                                if (outers.any { it.type.xscp1s.second?.any { it.lbl==me.lbl && it.num==me.num } != null }) {
+                                    null
+                                } else {
+                                    it.xscp1!!
+                                }
                             }
-                            it.xscp1!!
                         }
+                        .filterNotNull()
                 }
 
                 // {closure} + {explicit scopes} + implicit inp_out
