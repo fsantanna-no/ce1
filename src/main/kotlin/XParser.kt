@@ -183,11 +183,9 @@ fun xparser_expr (all: All): Expr {
 
             val arg = xparser_expr(all)
 
-            val scp = if (all.accept(TK.CHAR, ':')) {
+            val scp = if (!all.accept(TK.CHAR, ':')) null else {
                 all.accept(TK.XSCPCST) || all.accept_err(TK.XSCPVAR)
                 all.tk0 as Tk.Scp1
-            } else {
-                Tk.Scp1(TK.XSCPCST, all.tk0.lin, all.tk0.col, "LOCAL", null)
             }
             Expr.Call(tk_pre, f, arg, Pair(scps.toTypedArray(),scp), null)
         }

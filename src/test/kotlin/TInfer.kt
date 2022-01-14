@@ -390,4 +390,44 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun d08_clo () {
+        val out = all("""
+            var g: func {@a}->/_int@a -> (func @a->()->/_int@a)
+            var five: _int
+            var f: func @LOCAL->()->/_int@LOCAL = call g /five
+            var v: /_int = call f ()
+        """.trimIndent())
+        assert(out == """
+            var g: func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {@a1} -> () -> /_int@a1
+            var five: _int
+            var f: func {@LOCAL} -> {} -> () -> /_int@LOCAL
+            set f = call g {@LOCAL} (/five)
+            var v: /_int@LOCAL
+            set v = call f {} (): @LOCAL
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun d09_clo () {
+        val out = all("""
+            var g: func {@a}->/_int@a -> (func @a->()->/_int@a)
+            {
+                var five: _int
+                var f: func @LOCAL->()->/_int@LOCAL = call g /five
+                var v: /_int = call f ()
+            }
+        """.trimIndent())
+        assert(out == """
+            var g: func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {@a1} -> () -> /_int@a1
+            { @SSFIVE
+            var five: _int
+            var f: func {@LOCAL} -> {} -> () -> /_int@LOCAL
+            set f = call g {@LOCAL} (/five)
+            var v: /_int@LOCAL
+            set v = call f {} (): @LOCAL
+            }
+
+        """.trimIndent()) { out }
+    }
 }

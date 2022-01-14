@@ -161,53 +161,58 @@ fun Expr.xinfTypes (inf: Type?) {
                             // scope of expected closure environment
                             //      var f: func {@LOCAL} -> ...     // f will hold env in @LOCAL
                             //      set f = call g {@LOCAL} ()      // pass it for the builder function
-                            val clo1s = if (inf is Type.Func && inf.xscp1s.first!=null) {
-                                arrayOf(inf.xscp1s.first!!)
+                            val clo: List<Pair<Tk.Scp1,Tk.Scp1>> = if (inf is Type.Func && inf.xscp1s.first!=null) {
+                                listOf(Pair((ft.out as Type.Func).xscp1s.first!!,inf.xscp1s.first!!))
                             } else {
-                                emptyArray()
+                                emptyList()
                             }
 
-                            // var ret = call f arg  ==>  { arg, ret }
-                            val arg_ret_1s = let {
-                                val ret1s = if (inf == null) {
-                                    // no attribution expected, save to @LOCAL as shortest scope possible
-                                    ft.out.flatten()
-                                        .filter { it is Type.Ptr }
-                                        .let { it as List<Type.Ptr> }
-                                        .map { Tk.Scp1(TK.XSCPCST, it.tk.lin, it.tk.col, "LOCAL", null) }
-                                        .toTypedArray()
-                                } else {
-                                    inf.flatten()
-                                        .filter { it is Type.Ptr }
-                                        .let { it as List<Type.Ptr> }
-                                        .map { it.xscp1!! }
-                                        .toTypedArray()
-                                }
-                                val arg1s = this.arg.wtype!!.flatten()
+                            /////////
+
+                            val ret1s = if (inf == null) {
+                                // no attribution expected, save to @LOCAL as shortest scope possible
+                                ft.out.flatten()
+                                    .filter { it is Type.Ptr }
+                                    .let { it as List<Type.Ptr> }
+                                    .map { Tk.Scp1(TK.XSCPCST, it.tk.lin, it.tk.col, "LOCAL", null) }
+                            } else {
+                                inf.flatten()
                                     .filter { it is Type.Ptr }
                                     .let { it as List<Type.Ptr> }
                                     .map { it.xscp1!! }
-                                    .toTypedArray()
-                                arg1s + ret1s
                             }
-
-                            // func inp -> out  ==>  { inp, out }
-                            val inp_out_1s = (ft.inp.flatten() + ft.out.flatten())
+                            assert(ret1s.size <= 1) { "TODO: multiple pointer returns" }
+                            val arg1s = this.arg.wtype!!.flatten()
                                 .filter { it is Type.Ptr }
                                 .let { it as List<Type.Ptr> }
                                 .map { it.xscp1!! }
-                                .toTypedArray()
+
+                            // var ret = call f arg  ==>  { arg, ret }
+                            val arg_ret: List<Tk.Scp1> = arg1s + ret1s
+
+                            /////////
+
+                            // func inp -> out  ==>  { inp, out }
+                            val inp_out: List<Tk.Scp1> = (ft.inp.flatten() + ft.out.flatten())
+                                .filter { it is Type.Ptr }
+                                .let { it as List<Type.Ptr> }
+                                .map { it.xscp1!! }
+
+                            val xxx: List<Pair<Tk.Scp1, Tk.Scp1>> = inp_out.zip(arg_ret)
 
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
-                            val scp1s = clo1s +
-                                (inp_out_1s.zip(arg_ret_1s)
-                                    .distinctBy { Pair(it.first.lbl,it.first.col) }
-                                    .map { it.second })
+                            val scp1s: List<Tk.Scp1> = (clo + xxx)
+                                .filter { it.first.enu == TK.XSCPVAR }  // ignore constant labels (they not args)
+                                .distinctBy { Pair(it.first.lbl,it.first.num) }
+                                .map { it.second }
 
-                            Pair(scp1s, null)   // TODO: null should be return scope
+                            Pair(scp1s.toTypedArray(), if (ret1s.size==0) null else ret1s[0])
                         }
-                        this.xscp2s = Pair(this.xscp1s.first!!.map { it.toScp2(this) }.toTypedArray(), null)
+                        this.xscp2s = Pair (
+                            this.xscp1s.first!!.map { it.toScp2(this) }.toTypedArray(),
+                            this.xscp1s.second?.toScp2(this)
+                        )
 
                         // calculates return of "e" call based on "e.f" function type
                         // "e" passes "e.arg" with "e.scp1s.first" scopes which may affect "e.f" return scopes
