@@ -10,7 +10,7 @@ fun Stmt.xinfScp1s () {
                 // if returns closure, label must go to input scope
                 //      var f: func () -> (func @a1->()->())
                 //      var f: func {@a1} -> () -> (func @a1->()->())
-                val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null) {
+                val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null && tp.out.xscp1s.first?.enu==TK.XSCPVAR) {
                     arrayOf(tp.out.xscp1s.first!!)
                 } else {
                     emptyArray()
@@ -25,7 +25,6 @@ fun Stmt.xinfScp1s () {
                         .filter { it is Type.Ptr }
                         .let { it as List<Type.Ptr> }
                         .map {
-                            // TODO: map only XSCPVAR?
                             when {
                                 (it.xscp1 == null) -> {                 // add implicit
                                     it.xscp1 = Tk.Scp1(TK.XSCPVAR, it.tk.lin, it.tk.col, c + "", i)

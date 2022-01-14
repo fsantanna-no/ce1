@@ -72,7 +72,7 @@ class TExec {
     @Test
     fun a06_call () {
         val out = all("""
-            var f = func (_int -> _int) {
+            var f = func _int -> _int {
                 return arg
             }
             var x = call f _10
@@ -107,7 +107,7 @@ class TExec {
     @Test
     fun a09_func_if () {
         val out = all("""
-        var inv = func (<(),()> -> <(),()>) {
+        var inv = func <(),()> -> <(),()> {
             if arg?1 {
                 return <.2>
             } else {
@@ -709,4 +709,24 @@ class TExec {
         )
         assert(out == "5\n") { out }
     }
+    @Test
+    fun d04_clo () {
+        val out = all(
+            """
+            var f = func (func ()->()) -> (func @GLOBAL->()->()) {
+                var ff = arg
+                set ret = func @GLOBAL->()->() [ff] {
+                    call ff ()
+                }
+            }
+            var u = func ()->() {
+                output std ()
+            }
+            var ff = call f u
+            call ff ()
+        """.trimIndent()
+        )
+        assert(out == "()\n") { out }
+    }
+
 }
