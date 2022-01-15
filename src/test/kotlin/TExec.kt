@@ -715,7 +715,7 @@ class TExec {
             """
             var f = func (func ()->()) -> (func @GLOBAL->()->()) {
                 var ff = arg
-                set ret = func @GLOBAL->()->() [ff] {
+                return func @GLOBAL->()->() [ff] {
                     call ff ()
                 }
             }

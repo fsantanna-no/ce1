@@ -60,7 +60,7 @@ fun Stmt.xinfScp1s () {
                                 //          return func @a1->()->/_int@a1 {   // holds/uses outer env
                                 val outers = tp.ups_tolist().filter { it is Expr.Func } as List<Expr.Func>
                                 val me = ptr.xscp1!!
-                                if (outers.any { it.type.xscp1s.second?.any { it.lbl == me.lbl && it.num == me.num } != null }) {
+                                if (outers.any { it.type.xscp1s.second?.any { it.lbl==me.lbl && it.num==me.num } ?: false }) {
                                     null
                                 } else {
                                     me

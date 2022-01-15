@@ -91,13 +91,14 @@ class TInfer {
     @Test
     fun a08_call () {
         val out = all("""
-            var f = func <()>->() { set ret=arg }
+            var f = func <()>->() { return arg }
             var v = call f <.1>
         """.trimIndent())
         assert(out == """
             var f: func {} -> {} -> <()> -> ()
             set f = func {} -> {} -> <()> -> () {
             set ret = arg
+            return
             }
             
             var v: ()

@@ -312,7 +312,7 @@ class TBook {
             """
             $nums
             var f_three = func $Num -> $Num {
-                set ret = three
+                return three
             }
             output std call f_three one
         """.trimIndent()
@@ -367,9 +367,9 @@ class TBook {
             $nums
             $lt
             -- 19
-            var smallerc = func $NumA1 -> (func @a1 -> $NumR1->$NumR1) {
+            var smallerc = func $NumR1 -> (func @r1 -> $NumR1->$NumR1) {
                 var x = arg
-                set ret = func @a1 -> $NumR1 -> $NumR1 [x] {
+                return func @r1 -> $NumR1 -> $NumR1 [x] {
                     if (call lt [x,arg]) {
                         return x
                     } else {
@@ -395,7 +395,7 @@ class TBook {
             $add
             $mul
             var square = func $Num -> $Num {
-                set ret = call mul [arg,arg]
+                return call mul [arg,arg]
             }
             var twice = func [func $Num->$Num, $Num] -> $Num {
                 return call arg.1 (call arg.1 arg.2)
@@ -407,19 +407,18 @@ class TBook {
     }
     @Test
     fun ch_01_04_addc_pg12() {
-        val out = all(
-            """
+        val out = all("""
             $nums
             $clone
             $add
+            -- 25
             var plusc = func $NumA1 -> (func @a1->$Num->$Num) {
                 var x = arg
-                set ret = func @a1->$Num->$Num [x] {
-                    set ret = call add [x,arg]
+                return func @a1->$Num->$Num [x] {
+                    return call add [x,arg]
                 }
             }
-            var f: func @LOCAL->$Num->$Num
-            set f = call pluscone
+            var f = call plusc one
             output std call f two
             output std call f one
             output std call (call plusc one) zero
@@ -437,16 +436,15 @@ class TBook {
             $mul
             var square: func $Num -> $Num
             set square = func $Num -> $Num {
-                set ret = call mul [arg,arg]
+                return call mul [arg,arg]
             }
             var twicec = func (func $Num->$Num) -> (func @GLOBAL->$Num->$Num) {
                 var f = arg
                 return func @GLOBAL->$Num->$Num [f] {
-                    set ret = call f (call f arg)
+                    return call f (call f arg)
                 }
             }
-            var quad: func @GLOBAL->$Num->$Num
-            set quad = call twicec square
+            var quad = call twicec square
             output std call quad two
         """.trimIndent()
         )
@@ -454,62 +452,56 @@ class TBook {
     }
     @Test
     fun ch_01_04_curry_pg13() {
-        val fadd = "func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1"
-        val ret2 = "func {@a1}->{@r1,@b1}->$NumB1->$NumR1"
-        val ret1 = "func {@GLOBAL} -> {@a1} -> $NumA1 -> $ret2"
+        val fadd = "func [$Num,$Num] -> $Num"
+        val ret2 = "func @a1->$Num->$Num"
+        val ret1 = "func @GLOBAL -> $NumA1 -> $ret2"
         val out = all(
             """
             $nums
             $clone
             $add
-            var curry: func {} -> {} -> $fadd -> $ret1
-            set curry = func {} -> {} -> $fadd -> $ret1 {
-                var f: $fadd
-                set f = arg
-                set ret = $ret1 [f] {
-                    var x: $NumA1
-                    set x = arg
-                    var ff: $fadd
-                    set ff = f
-                    set ret = $ret2 [ff,x] {
-                        var y: $NumB1
-                        set y = arg
-                        set ret = call ff {@r1,@a1,@b1} [x,y]: @r1
+            var curry: func $fadd -> $ret1
+            set curry = func $fadd -> $ret1 {
+                var f = arg
+                return $ret1 [f] {
+                    var x = arg
+                    var ff = f
+                    return $ret2 [ff,x] {
+                        var y = arg
+                        return call ff [x,y]
                     }
                 }
             }
-            var addc: $ret1
-            set addc = call curry add
-            output std call (call addc {@LOCAL} one) {@LOCAL,@LOCAL} two
+            var addc = call curry add
+            output std call (call addc  one) two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
     }
     @Test
     fun ch_01_04_uncurry_pg13() {
-        val fadd  = "func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1"
-        val fadd2 = "func {@GLOBAL} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1"
-        val ret2  = "func {@a1}->{@r1,@b1}->$NumB1->$NumR1"
-        val ret1  = "func {@GLOBAL} -> {@a1} -> $NumA1 -> $ret2"
+        val fadd  = "func [$NumA1,$NumB1] -> $NumR1"
+        val fadd2 = "func @GLOBAL -> [$NumA1,$NumB1] -> $NumR1"
+        val ret2  = "func @a1 -> $NumB1 -> $NumR1"
+        val ret1  = "func @GLOBAL -> $NumA1 -> $ret2"
         val out = all(
             """
             $nums
             $clone
             $add
 
-            var curry: func {} -> {} -> $fadd -> $ret1
-            set curry = func {} -> {} -> $fadd -> $ret1 {
-                var f: $fadd
-                set f = arg
-                set ret = $ret1 [f] {
+            var curry: func $fadd -> $ret1
+            set curry = func $fadd -> $ret1 {
+                var f = arg
+                return $ret1 [f] {
                     var x: $NumA1
                     set x = arg
                     var ff: $fadd
                     set ff = f
-                    set ret = $ret2 [ff,x] {
+                    return $ret2 [ff,x] {
                         var y: $NumB1
                         set y = arg
-                        set ret = call ff {@r1,@a1,@b1} [x,y]: @r1
+                        return call ff {@r1,@a1,@b1} [x,y]: @r1
                     }
                 }
             }
@@ -518,8 +510,8 @@ class TBook {
             set uncurry = func {} -> {} -> $ret1 -> $fadd2 {
                 var f: $ret1
                 set f = arg
-                set ret = $fadd2 [f] {
-                    set ret = call (call f {@a1} arg.1) {@r1,@b1} arg.2
+                return $fadd2 [f] {
+                    return call (call f {@a1} arg.1) {@r1,@b1} arg.2
                 }
             }
             
@@ -546,7 +538,7 @@ class TBook {
             
             var inc: $T
             set inc = func {}->{@r1,@a1}-> $NumA1 -> $NumR1 {
-                set ret = call add {@r1,@GLOBAL,@a1} [one,arg]: @r1
+                return call add {@r1,@GLOBAL,@a1} [one,arg]: @r1
             }
             output std call inc {@LOCAL,@LOCAL} two
             
@@ -556,10 +548,10 @@ class TBook {
                 set f = arg.1
                 var g: $T
                 set g = arg.2
-                set ret = $S [f,g] {
+                return $S [f,g] {
                     var v: $NumTL
                     set v = call f {@LOCAL,@a1} arg: @LOCAL
-                    set ret = call g {@r1,@LOCAL} v: @r1
+                    return call g {@r1,@LOCAL} v: @r1
                 }
             }
             output std call (call compose [inc,inc]) {@LOCAL,@LOCAL} one
@@ -790,7 +782,7 @@ class TBook {
                 var mod4 = call mod [arg,four]
                 var mod100 = call mod [arg,n100]
                 var mod400 = call mod [arg,n400]
-                set ret = call or [call ntob mod4\?0, call and [call ntob mod100\?1, call ntob mod400\?0]]
+                return call or [call ntob mod4\?0, call and [call ntob mod100\?1, call ntob mod400\?0]]
             }
             
             var n2000 = call mul [n400,five]
