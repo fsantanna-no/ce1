@@ -68,79 +68,72 @@ val mul = """
 """.trimIndent()
 
 val lt = """
-    var lt : func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int
-    set lt = func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int {
+    var lt : func [$Num,$Num] -> _int
+    set lt = func [$Num,$Num] -> _int {
         if arg.2\?0 {
-            set ret = _0:_int
+            return _0
         } else {
             if arg.1\?0 {
-                set ret = _1:_int
+                return _1
             } else {
-                set ret = call lt {@a1,@b1} [arg.1\!1,arg.2\!1]
+                return call lt [arg.1\!1,arg.2\!1]
             }
         }
     }
 """.trimIndent()
 
 val sub = """
-    var sub : func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1
-    set sub = func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1 {
-        var x: $NumA1
-        set x = arg.1
-        var y: $NumB1
-        set y = arg.2
+    var sub : func [$Num,$Num] -> $Num
+    set sub = func [$Num,$Num] -> $Num {
+        var x = arg.1
+        var y = arg.2
         if x\?0 {
-            set ret = <.0>: $NumR1
+            return <.0>
         } else {
             if y\?0 {
-                set ret = call clone {@r1,@a1} x
+                return call clone x
             } else {
-                set ret = call sub {@r1,@a1,@b1} [x\!1,y\!1]: @r1
+                return call sub [x\!1,y\!1]
             }
         }
     }
 """.trimIndent()
 
 val mod = """
-    var mod : func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1
-    set mod = func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1 {
-        if call lt {@a1,@b1} arg {
-            set ret = call clone {@r1,@a1} arg.1: @r1
+    var mod : func [$Num,$Num] -> $Num
+    set mod = func [$Num,$Num] -> $Num {
+        if call lt arg {
+            return call clone arg.1
         } else {
-            var v: $NumTL
-            set v = call sub {@LOCAL,@a1,@b1} arg
-            set ret = call mod {@r1,@LOCAL,@b1} [v,arg.2]: @r1
+            var v = call sub arg
+            return call mod [v,arg.2]
         }
     }    
 """.trimIndent()
 
 val eq = """
-    var eq : func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int
-    set eq = func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int {
-        var x: $NumA1
-        set x = arg.1
-        var y: $NumB1
-        set y = arg.2
+    var eq : func [$Num,$Num] -> _int
+    set eq = func [$Num,$Num] -> _int {
+        var x = arg.1
+        var y = arg.2
         if x\?0 {
-            set ret = y\?0
+            return y\?0
         } else {
             if y\?0 {
-                set ret = _0:_int
+                return _0
             } else {
-                set ret = call eq {@a1,@b1} [x\!1,y\!1]
+                return call eq [x\!1,y\!1]
             }
         }
     }
 """.trimIndent()
 
 val lte = """
-    var lte : func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int
-    set lte = func {}->{@a1,@b1}-> [$NumA1,$NumB1] -> _int {
-        var islt: _int
-        set islt = call lt {@a1,@b1} [arg.1\!1,arg.2\!1]
-        var iseq: _int
-        set iseq = call eq {@a1,@b1} [arg.1\!1,arg.2\!1]
-        set ret = _(islt || iseq): _int
+    var lte : func  [$Num,$Num] -> _int
+    set lte = func  [$Num,$Num] -> _int {
+        var islt = call lt [arg.1\!1,arg.2\!1]
+        var iseq = call eq [arg.1\!1,arg.2\!1]
+        return _(islt || iseq)
     }
 """.trimIndent()
 
@@ -234,8 +227,8 @@ class TBook {
             """
             $nums
             $lt
-            output std call lt {@LOCAL,@LOCAL} [two, one]
-            output std call lt {@LOCAL,@LOCAL} [one, two]
+            output std call lt [two, one]
+            output std call lt [one, two]
         """.trimIndent()
         )
         assert(out == "0\n1\n") { out }
@@ -248,7 +241,7 @@ class TBook {
             $clone
             $add
             $sub
-            output std call sub {@LOCAL,@LOCAL,@LOCAL} [three, two]
+            output std call sub [three, two]
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n") { out }
@@ -259,8 +252,8 @@ class TBook {
             """
             $nums
             $eq
-            output std call eq {@LOCAL,@LOCAL} [three, two]
-            output std call eq {@LOCAL,@LOCAL} [one, one]
+            output std call eq [three, two]
+            output std call eq [one, one]
         """.trimIndent()
         )
         assert(out == "0\n1\n") { out }
@@ -276,11 +269,10 @@ class TBook {
             $clone
             $add
             $mul
-            var square: func {}->{@r1,@a1}-> $NumA1 -> $NumR1
-            set square = func {}->{@r1,@a1}-> $NumA1 -> $NumR1 {
-                set ret = call mul {@r1,@a1,@a1} [arg,arg]: @r1
+            var square = func $Num -> $Num {
+                return call mul [arg,arg]
             }
-            output std call square {@LOCAL,@LOCAL} two
+            output std call square two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.0>>>>>\n") { out }
@@ -292,16 +284,16 @@ class TBook {
             """
             $nums
             $lt
-            var smaller: func {}->{@a1,@a2}-> [$NumA1,$NumA2] -> $NumA2
-            set smaller = func {}->{@a1,@a2}-> [$NumA1,$NumA2] -> $NumA2 {
-                if call lt {@a1,@a2} arg {
-                    set ret = arg.1
+            -- returns narrower scope, guarantees both alive
+            var smaller = func [$NumA1,$NumA2] -> $NumA2 {
+                if call lt arg {
+                    return arg.1
                 } else {
-                    set ret = arg.2
+                    return arg.2
                 }
             }
-            output std call smaller {@LOCAL,@LOCAL} [one,two]: @LOCAL
-            output std call smaller {@LOCAL,@LOCAL} [two,one]: @LOCAL
+            output std call smaller [one,two]
+            output std call smaller [two,one]
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n<.1 <.0>>\n") { out }
@@ -319,11 +311,10 @@ class TBook {
         val out = all(
             """
             $nums
-            var f_three: func {}->{@r1}-> $NumR1 -> $NumR1
-            set f_three = func {}->{@r1}-> $NumR1 -> $NumR1 {
+            var f_three = func $Num -> $Num {
                 set ret = three
             }
-            output std call f_three {@LOCAL} one
+            output std call f_three one
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -333,12 +324,12 @@ class TBook {
     fun ch_01_02_infinity_pg05() {
         val out = all(
             """
-            var infinity: func {}->{@r1}-> () -> $NumR1
-            set infinity = func {}->{@r1}-> () -> $NumR1 {
+            var infinity : func () -> $Num
+            set infinity = func () -> $Num {
                 output std _10:_int
-                set ret = new <.1 infinity() @r1>:$_NumR1 @r1
+                return new <.1 call infinity ()>
             }
-            output std call infinity {@LOCAL} ()
+            output std call infinity ()
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -354,15 +345,14 @@ class TBook {
             $clone
             $add
             $mul
-            var multiply: func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1
-            set multiply = func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1 {
+            var multiply = func [$Num,$Num] -> $Num {
                 if arg.1\?0 {
-                    set ret = <.0>:${NumR1}
+                    return <.0>
                 } else {
-                    set ret = call mul {@r1,@a1,@b1} [arg.1,arg.2]: @r1
+                    return call mul [arg.1,arg.2]
                 }
             }
-            output std call multiply {@LOCAL,@LOCAL,@LOCAL} [two,three]
+            output std call multiply [two,three]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
@@ -376,21 +366,20 @@ class TBook {
             """
             $nums
             $lt
-            var smallerc:  func {}->{@r1}-> $NumR1 -> (func {@r1}->{}-> $NumR1->$NumR1)
-            set smallerc = func {}->{@r1}-> $NumR1 -> (func {@r1}->{}-> $NumR1->$NumR1) {
-                var x: $NumR1
-                set x = arg
-                set ret = func {@r1}->{}-> $NumR1->$NumR1 [x] {
-                    if (call lt {@r1,@r1} [x,arg]) {
-                        set ret = x
+            -- 19
+            var smallerc = func $NumA1 -> (func @a1 -> $NumR1->$NumR1) {
+                var x = arg
+                set ret = func @a1 -> $NumR1 -> $NumR1 [x] {
+                    if (call lt [x,arg]) {
+                        return x
                     } else {
-                        set ret = arg
+                        return arg
                     }
                 }
             }
-            var f: func {@LOCAL}->{}-> $NumTL -> $NumTL
-            --var f: ({@r1}->{}-> $NumR1->$NumR1)
-            set f = call smallerc {@LOCAL} two: @LOCAL   -- smallerc could keep two in memory as long as smallerc does not live longer than two
+            -- 30
+            var f: func @LOCAL -> $NumR1 -> $NumR1
+            set f = call smallerc two
             output std call f one
             output std call f three
         """.trimIndent()
@@ -405,15 +394,13 @@ class TBook {
             $clone
             $add
             $mul
-            var square: func {}->{@r1,@a1}-> $NumA1 -> $NumR1
-            set square = func {}->{@r1,@a1}-> $NumA1 -> $NumR1 {
-                set ret = call mul {@r1,@a1,@a1} [arg,arg]: @r1
+            var square = func $Num -> $Num {
+                set ret = call mul [arg,arg]
             }
-            var twice: func {}->{@r1,@a1}-> [func {}->{@r1,@a1}-> $NumA1->$NumR1, $NumA1] -> $NumR1
-            set twice = func {}->{@r1,@a1}-> [func {}->{@r1,@a1}-> $NumA1->$NumR1, $NumA1] -> $NumR1 {
-                set ret = call arg.1 {@r1,@r1} (call arg.1 {@r1,@a1} arg.2: @r1): @r1
+            var twice = func [func $Num->$Num, $Num] -> $Num {
+                return call arg.1 (call arg.1 arg.2)
             }
-            output std call twice {@LOCAL,@LOCAL} [square,two]: @LOCAL
+            output std call twice [square,two]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
@@ -425,19 +412,17 @@ class TBook {
             $nums
             $clone
             $add
-            var plusc: func {}->{@a1}-> $NumA1 -> (func {@a1}->{@r1,@b1}->$NumB1->$NumR1)
-            set plusc = func {}->{@a1}-> $NumA1 -> (func {@a1}->{@r1,@b1}->$NumB1->$NumR1) {
-                var x: $NumA1
-                set x = arg
-                set ret = func {@a1}->{@r1,@b1}->$NumB1->$NumR1 [x] {
-                    set ret = call add {@r1,@a1,@b1} [x,arg]: @r1
+            var plusc = func $NumA1 -> (func @a1->$Num->$Num) {
+                var x = arg
+                set ret = func @a1->$Num->$Num [x] {
+                    set ret = call add [x,arg]
                 }
             }
-            var f: func {@LOCAL}->{@r1,@b1}->$NumB1->$NumR1
-            set f = call plusc {@LOCAL} one
-            output std call f {@LOCAL,@LOCAL} two: @LOCAL
-            output std call f {@LOCAL,@LOCAL} one: @LOCAL
-            output std call (call plusc {@LOCAL} one) {@LOCAL,@LOCAL} zero: @LOCAL
+            var f: func @LOCAL->$Num->$Num
+            set f = call pluscone
+            output std call f two
+            output std call f one
+            output std call (call plusc one) zero
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.0>>>\n<.1 <.0>>\n") { out }
@@ -450,21 +435,19 @@ class TBook {
             $clone
             $add
             $mul
-            var square: func {}->{@r1,@a1}-> $NumA1 -> $NumR1
-            set square = func {}->{@r1,@a1}-> $NumA1 -> $NumR1 {
-                set ret = call mul {@r1,@a1,@a1} [arg,arg]: @r1
+            var square: func $Num -> $Num
+            set square = func $Num -> $Num {
+                set ret = call mul [arg,arg]
             }
-            var twicec:  func {} -> {} -> (func {}->{@r1,@a1}->$NumA1->$NumR1) -> (func {@GLOBAL}->{@s1,@b1}->$NumB1->$NumS1)
-            set twicec = func {} -> {} -> (func {}->{@r1,@a1}->$NumA1->$NumR1) -> (func {@GLOBAL}->{@s1,@b1}->$NumB1->$NumS1) {
-                var f: func {}->{@r1,@a1}->$NumA1->$NumR1
-                set f = arg
-                set ret = func {@GLOBAL}->{@s1,@b1}->$NumB1->$NumS1 [f] {
-                    set ret = call f {@s1,@s1} (call f {@s1,@b1} arg)
+            var twicec = func (func $Num->$Num) -> (func @GLOBAL->$Num->$Num) {
+                var f = arg
+                return func @GLOBAL->$Num->$Num [f] {
+                    set ret = call f (call f arg)
                 }
             }
-            var quad: func {@GLOBAL}->{@s1,@b1}->$NumB1->$NumS1
+            var quad: func @GLOBAL->$Num->$Num
             set quad = call twicec square
-            output std call quad {@LOCAL,@LOCAL} two
+            output std call quad two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
@@ -596,18 +579,17 @@ class TBook {
             $add
             $mul
             
-            var fact: func {}->{@r1,@a1}->$NumA1->$NumR1
-            set fact = func {}->{@r1,@a1}->$NumA1->$NumR1 {
+            var fact : func $Num->$Num
+            set fact = func $Num->$Num {
                 if arg\?0 {
-                    set ret = new <.1 <.0>:$NumR1>:$_NumR1: @r1
+                    return new <.1 <.0>>
                 } else {
-                    var x: $NumTL
-                    set x = call fact {@LOCAL,@a1} arg\!1
-                    set ret = call mul {@r1,@a1,@LOCAL} [arg,x]: @r1
+                    var x = call fact arg\!1
+                    return call mul [arg,x]
                 }
             }
             
-            output std call fact {@LOCAL,@LOCAL} three
+            output std call fact three
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
@@ -620,65 +602,58 @@ class TBook {
 
     val B = "<(),()>"
     val and = """
-        var and: func {} -> {} -> [$B,$B] -> $B
-        set and = func {} -> {} -> [$B,$B] -> $B {
+        var and = func [$B,$B] -> $B {
             if arg.1?1 {
-                set ret = <.1>:<(),()>
+                return <.1>:<(),()>
             } else {
-                set ret = arg.2
+                return arg.2
             }
         }        
     """.trimIndent()
     val or = """
-        var or: func {} -> {} -> [$B,$B] -> $B
-        set or = func {} -> {} -> [$B,$B] -> $B {
+        var or = func [$B,$B] -> $B {
             if arg.1?2 {
-                set ret = <.2>:<(),()>
+                return <.2>:<(),()>
             } else {
-                set ret = arg.2
+                return arg.2
             }
         }        
     """.trimIndent()
     val not = """
-        var not: func {} -> {} -> <(),()> -> <(),()>
-        set not = func {} -> {} -> <(),()> -> <(),()> {
+        var not = func <(),()> -> <(),()> {
             if arg?1 {
-                set ret = <.2>:<(),()>
+                return <.2>:<(),()>
             } else {
-                set ret = <.1>:<(),()>
+                return <.1>:<(),()>
             }
         }        
     """.trimIndent()
 
     val beq = """
-        var beq: func {} -> {} -> [$B,$B] -> $B
-        set beq = func {} -> {} -> [$B,$B] -> $B {
-            set ret = call or [call and arg, call and [call not arg.1, call not arg.2]] 
+        var beq = func [$B,$B] -> $B {
+            return call or [call and arg, call and [call not arg.1, call not arg.2]] 
         }
-        var bneq: func {} -> {} -> [$B,$B] -> $B
-        set bneq = func {} -> {} -> [$B,$B] -> $B {
-            set ret = call not call beq arg 
+        var bneq = func [$B,$B] -> $B {
+            return call not call beq arg 
         }        
     """.trimIndent()
 
     val ntob = """
-        var ntob: func {} -> {} -> _int -> $B
-        set ntob = func {} -> {} -> _int -> $B {
+        var ntob = func _int -> $B {
             if arg {
-                set ret = <.2>:$B
+                return <.2>:$B
             } else {
-                set ret = <.1>:$B
+                return <.1>:$B
             } 
         }
     """.trimIndent()
 
     val bton = """
-        var bton: func {} -> {} -> $B -> _int
-        set bton = func {} -> {} -> $B -> _int {
+        var bton = func $B -> _int {
             if arg?2 {
-                set ret = _1: _int
+                return _1: _int
             } else {
-                set ret = _0: _int
+                return _0: _int
             } 
         }
     """.trimIndent()
@@ -687,16 +662,14 @@ class TBook {
     fun ch_02_01_not_pg30 () {
         val out = all(
             """
-            var not: func {} -> {} -> <(),()> -> <(),()>
-            set not = func {} -> {} -> <(),()> -> <(),()> {
+            var not = func <(),()> -> <(),()> {
                 if arg?1 {
-                    set ret = <.2>:<(),()>
+                    return <.2>
                 } else {
-                    set ret = <.1>:<(),()>
+                    return <.1>
                 }
             }
-            var xxx: <(),()>
-            set xxx = call not <.1>:<(),()>
+            var xxx = call not <.1>
             output std /xxx
         """.trimIndent()
         )
@@ -707,18 +680,16 @@ class TBook {
     fun ch_02_01_and_pg30 () {
         val out = all(
             """
-            var and: func {} -> {} -> [$B,$B] -> $B
-            set and = func {} -> {} -> [$B,$B] -> $B {
+            var and = func [$B,$B] -> $B {
                 if arg.1?1 {
-                    set ret = <.1>:<(),()>
+                    return <.1>
                 } else {
-                    set ret = arg.2
+                    return arg.2
                 }
             }
-            var xxx: <(),()>
-            set xxx = call and [<.1>:<(),()>,<.2>:<(),()>]
+            var xxx = call and [<.1>,<.2>]
             output std /xxx
-            set xxx = call and [<.2>:<(),()>,<.2>:<(),()>]
+            set xxx = call and [<.2>,<.2>]
             output std /xxx
         """.trimIndent()
         )
@@ -728,20 +699,18 @@ class TBook {
     fun ch_02_01_or_pg30 () {
         val out = all(
             """
-            var or: func {} -> {} -> [$B,$B] -> $B
-            set or = func {} -> {} -> [$B,$B] -> $B {
+            var or = func [$B,$B] -> $B {
                 if arg.1?2 {
-                    set ret = <.2>:<(),()>
+                    return <.2>
                 } else {
-                    set ret = arg.2
+                    return arg.2
                 }
             }
-            var xxx: <(),()>
-            set xxx = call or [<.1>:<(),()>,<.2>:<(),()>]
+            var xxx = call or [<.1>,<.2>]
             output std /xxx
-            set xxx = call or [<.2>:<(),()>,<.1>:<(),()>]
+            set xxx = call or [<.2>,<.1>]
             output std /xxx
-            set xxx = call or [<.1>:<(),()>,<.1>:<(),()>]
+            set xxx = call or [<.1>,<.1>]
             output std /xxx
         """.trimIndent()
         )
@@ -754,20 +723,17 @@ class TBook {
             $not
             $and
             $or
-            var eq: func {} -> {} -> [$B,$B] -> $B
-            set eq = func {} -> {} -> [$B,$B] -> $B {
-                set ret = call or [call and arg, call and [call not arg.1, call not arg.2]] 
+            var eq = func [$B,$B] -> $B {
+                return call or [call and arg, call and [call not arg.1, call not arg.2]]
             }
-            var neq: func {} -> {} -> [$B,$B] -> $B
-            set neq = func {} -> {} -> [$B,$B] -> $B {
-                set ret = call not call eq arg 
+            var neq = func [$B,$B] -> $B {
+                return call not call eq arg 
             }
-            var xxx: <(),()>
-            set xxx = call eq [<.1>:<(),()>,<.2>:<(),()>]
+            var xxx = call eq [<.1>,<.2>]
             output std /xxx
-            set xxx = call neq [<.2>:<(),()>,<.1>:<(),()>]
+            set xxx = call neq [<.2>,<.1>]
             output std /xxx
-            set xxx = call eq [<.1>:<(),()>,<.1>:<(),()>]
+            set xxx = call eq [<.1>,<.1>]
             output std /xxx
         """.trimIndent()
         )
@@ -783,18 +749,17 @@ class TBook {
             $add
             $lt
             $sub
-            var mod: func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1
-            set mod = func {} -> {@r1,@a1,@b1} -> [$NumA1,$NumB1] -> $NumR1 {
-                if call lt {@a1,@b1} arg {
-                    set ret = call clone {@r1,@a1} arg.1: @r1
+            -- 51
+            var mod : func [$Num,$Num] -> $Num
+            set mod = func [$Num,$Num] -> $Num {
+                if call lt arg {
+                    return call clone arg.1
                 } else {
-                    var v: $NumTL
-                    set v = call sub {@LOCAL,@a1,@b1} arg
-                    set ret = call mod {@r1,@LOCAL,@b1} [v,arg.2]: @r1
+                    var v = call sub arg
+                    return call mod [v,arg.2]
                 }
             }
-            var v: $NumTL
-            set v = call mod {@LOCAL,@LOCAL,@LOCAL} [three,two]
+            var v = call mod [three,two]
             output std v
         """.trimIndent()
         )
@@ -817,36 +782,24 @@ class TBook {
             $and
             $ntob
 
-            var n10: $NumTL
-            set n10 = call mul {@LOCAL,@LOCAL,@LOCAL} [five,two]
-            var n100: $NumTL
-            set n100 = call mul {@LOCAL,@LOCAL,@LOCAL} [n10,n10]
-            var n400: $NumTL
-            set n400 = call mul {@LOCAL,@LOCAL,@LOCAL} [four,n100]
+            var n10 = call mul [five,two]
+            var n100 = call mul [n10,n10]
+            var n400 = call mul [four,n100]
             
-            var leap: func {} -> {@a1} -> $NumA1 -> $B
-            set leap = func {} -> {@a1} -> $NumA1 -> $B {
-                var mod4: $NumTL
-                set mod4 = call mod {@LOCAL,@a1,@GLOBAL} [arg,four]
-                var mod100: ${NumTL}
-                set mod100 = call mod {@LOCAL,@a1,@GLOBAL} [arg,n100]
-                var mod400: ${NumTL}
-                set mod400 = call mod {@LOCAL,@a1,@GLOBAL} [arg,n400]
+            var leap = func $Num -> $B {
+                var mod4 = call mod [arg,four]
+                var mod100 = call mod [arg,n100]
+                var mod400 = call mod [arg,n400]
                 set ret = call or [call ntob mod4\?0, call and [call ntob mod100\?1, call ntob mod400\?0]]
             }
             
-            var n2000: $NumTL
-            set n2000 = call mul {@LOCAL,@LOCAL,@LOCAL} [n400,five]
-            var n20: $NumTL
-            set n20 = call add {@LOCAL,@LOCAL,@LOCAL} [n10,n10]
-            var n1980: $NumTL
-            set n1980 = call sub {@LOCAL,@LOCAL,@LOCAL} [n2000,n20]
-            var n1979: $NumTL
-            set n1979 = call sub {@LOCAL,@LOCAL,@LOCAL} [n1980,one]
-            var x: $B
-            set x = call leap {@LOCAL} n1980
+            var n2000 = call mul [n400,five]
+            var n20 = call add [n10,n10]
+            var n1980 = call sub [n2000,n20]
+            var n1979 = call sub [n1980,one]
+            var x = call leap n1980
             output std /x
-            set x = call leap {@LOCAL} n1979
+            set x = call leap n1979
             output std /x
         """.trimIndent()
         )
@@ -870,37 +823,30 @@ class TBook {
             $ntob
             $or
             -- 119
-            var analyse: func {} -> {@a1,@b1,@c1} -> [$NumA1,$NumB1,$NumC1] -> $Tri
-            set analyse = func {} -> {@a1,@b1,@c1} -> [$NumA1,$NumB1,$NumC1] -> $Tri {
-                var xy: $NumTL
-                set xy = call add {@LOCAL,@a1,@b1} [arg.1,arg.2]
-                if call lte {@LOCAL,@c1} [xy,arg.3] {
-                    set ret = <.1>:$Tri
-                    return
+            var analyse = func [$Num,$Num,$Num] -> $Tri {
+                var xy = call add [arg.1,arg.2]
+                if call lte[xy,arg.3] {
+                    return <.1>
                 }
-                if call eq {@a1,@c1} [arg.1,arg.3] {
-                    set ret = <.2>:$Tri
-                    return
+                if call eq [arg.1,arg.3] {
+                    return <.2>:$Tri
                 }
                 if call bton (call or [
-                    call ntob (call eq {@a1,@b1} [arg.1,arg.2]),
-                    call ntob (call eq {@b1,@c1} [arg.2,arg.3])
+                    call ntob (call eq [arg.1,arg.2]),
+                    call ntob (call eq [arg.2,arg.3])
                 ]) {
-                    set ret = <.3>:$Tri
-                    return
+                    return <.3>
                 }
-                set ret = <.4>:$Tri
+                return <.4>
             }
-            var n10: $NumTL
-            set n10 = call mul {@LOCAL,@LOCAL,@LOCAL} [five,two]
-            var v: $Tri
-            set v = call analyse {@LOCAL,@LOCAL,@LOCAL} [n10,n10,n10]
+            var n10 = call mul [five,two]
+            var v = call analyse [n10,n10,n10]
             output std /v
-            set v = call analyse {@LOCAL,@LOCAL,@LOCAL} [one,five,five]
+            set v = call analyse [one,five,five]
             output std /v
-            set v = call analyse {@LOCAL,@LOCAL,@LOCAL} [one,one,five]
+            set v = call analyse [one,one,five]
             output std /v
-            set v = call analyse {@LOCAL,@LOCAL,@LOCAL} [two,four,five]
+            set v = call analyse [two,four,five]
             output std /v
         """.trimIndent()
         )
