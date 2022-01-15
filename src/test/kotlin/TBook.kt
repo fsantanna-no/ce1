@@ -365,20 +365,21 @@ class TBook {
         val out = all(
             """
             $nums
+            $clone
             $lt
             -- 19
-            var smallerc = func $NumR1 -> (func @r1 -> $NumR1->$NumR1) {
+            var smallerc = func $NumA1 -> (func @a1 -> $Num->$Num) {
                 var x = arg
-                return func @r1 -> $NumR1 -> $NumR1 [x] {
+                return func @a1 -> $Num -> $Num [x] {
                     if (call lt [x,arg]) {
-                        return x
+                        return call clone x     -- TODO: remove clone
                     } else {
-                        return arg
+                        return call clone arg   -- TODO: remove clone
                     }
                 }
             }
             -- 30
-            var f: func @LOCAL -> $NumR1 -> $NumR1
+            var f: func @LOCAL -> $Num -> $Num
             set f = call smallerc two
             output std call f one
             output std call f three
@@ -476,16 +477,16 @@ class TBook {
     }
     @Test
     fun ch_01_04_uncurry_pg13() {
-        val fadd  = "func [$NumA1,$NumB1] -> $NumR1"
-        val fadd2 = "func @GLOBAL -> [$NumA1,$NumB1] -> $NumR1"
-        val ret2  = "func @a1 -> $NumB1 -> $NumR1"
+        val fadd  = "func [$NumA1,$Num] -> $Num"
+        val fadd2 = "func @GLOBAL -> [$Num,$Num] -> $Num"
+        val ret2  = "func @a1 -> $Num -> $Num"
         val ret1  = "func @GLOBAL -> $NumA1 -> $ret2"
         val out = all(
             """
             $nums
             $clone
             $add
-            // 25
+            -- 25
             var curry: func $fadd -> $ret1
             set curry = func $fadd -> $ret1 {
                 var f = arg

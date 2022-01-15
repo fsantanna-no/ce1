@@ -158,7 +158,7 @@ fun Expr.xinfTypes (inf: Type?) {
                         val e = this
                         this.arg.xinfTypes(ft.inp.let {
                             // map @i1,@j1 -> @LOCAL,@LOCAL
-                            fun Type.map (up: Any, lin: Int, col: Int): Type {
+                            fun Type.map (up: Any): Type {
                                 fun Type.aux (): Type {
                                     return when (this) {
                                         is Type.Unit, is Type.Nat, is Type.Rec -> this
@@ -171,9 +171,9 @@ fun Expr.xinfTypes (inf: Type?) {
                                         }
                                     }
                                 }
-                                return this.aux().clone(up, lin, col)
+                                return this.aux().clone(up, this.tk.lin, this.tk.col)
                             }
-                            it.map(this,this.tk.lin,this.tk.col)
+                            it.map(this)
                         })
 
                         // Calculates type scopes {...}:
