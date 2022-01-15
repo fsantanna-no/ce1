@@ -64,6 +64,9 @@ fun Expr.xinfTypes (inf: Type?) {
                 }
             }
             this.arg.xinfTypes(x)
+            All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
+                "invalid inference : undetermined type"
+            }
             this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         }
         is Expr.New   -> {
@@ -152,7 +155,26 @@ fun Expr.xinfTypes (inf: Type?) {
                         ft
                     }
                     is Type.Func -> {
-                        this.arg.xinfTypes(ft.inp)
+                        val e = this
+                        this.arg.xinfTypes(ft.inp.let {
+                            // map @i1,@j1 -> @LOCAL,@LOCAL
+                            fun Type.map (up: Any, lin: Int, col: Int): Type {
+                                fun Type.aux (): Type {
+                                    return when (this) {
+                                        is Type.Unit, is Type.Nat, is Type.Rec -> this
+                                        is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
+                                        is Type.Union -> Type.Union(this.tk_, this.isrec, this.vec.map { it.aux() }.toTypedArray())
+                                        is Type.Func  -> this
+                                        is Type.Ptr   -> {
+                                            val scp1 = Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col,"LOCAL",null)
+                                            Type.Ptr(this.tk_, scp1, scp1.toScp2(e), this.pln.aux())
+                                        }
+                                    }
+                                }
+                                return this.aux().clone(up, lin, col)
+                            }
+                            it.map(this,this.tk.lin,this.tk.col)
+                        })
 
                         // Calculates type scopes {...}:
                         //  call f {...} arg

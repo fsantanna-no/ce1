@@ -270,6 +270,51 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun c07_null () {
+        val out = all("""
+            var v = <.0>
+        """.trimIndent())
+        assert(out == "(ln 1, col 11): invalid inference : undetermined type") { out }
+    }
+    @Test
+    fun c08_null () {
+        val out = all("""
+            var v: /</^> = <.0>
+        """.trimIndent())
+        assert(out == """
+            var v: /</^@LOCAL>@LOCAL
+            set v = <.0 ()>: /</^@LOCAL>@LOCAL
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c09_null () {
+        val out = all("""
+            var f : func /</^> -> ()
+            call f <.0>
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@i1} -> /</^@i1>@i1 -> ()
+            call f {@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c10_ff () {
+        val out = all("""
+            var f : func /</^> -> /</^>
+            var v = call f <.0>
+            output std call f v
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            var v: /</^@LOCAL>@LOCAL
+            set v = call f {@LOCAL,@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL: @LOCAL
+            output std call f {@LOCAL,@LOCAL} v: @LOCAL
+
+        """.trimIndent()) { out }
+    }
 
     // CLOSURE
 
@@ -461,6 +506,18 @@ class TInfer {
             }
             }
 
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun e02_ff () {
+        val out = all("""
+            var f : func /</^> -> /</^>
+            output std call f (call f <.0>)
+        """.trimIndent())
+        assert(out == """
+            var f: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            output std call f {@LOCAL,@LOCAL} call f {@LOCAL,@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL: @LOCAL: @LOCAL
 
         """.trimIndent()) { out }
     }

@@ -30,54 +30,39 @@ val _NumR1 = Num(false, "@r1")
 val NumS1  = Num(true,  "@s1")
 
 val clone = """
-    var clone = func $Num -> $Num {
+    var clone : func $Num -> $Num
+    set clone = func $Num -> $Num {
         if arg\?0 {
             return <.0>
         } else {
-            --return new <.1 call clone arg\!1>
-            set ret = new <.1 call clone {@a1,@b1} arg\!1: @b1>
+            return new <.1 call clone arg\!1>
         }
     }
 """.trimIndent()
 
-val cloneX = """
-    var clone : func $NumA1 -> $NumR1
-    set clone = func $NumA1 -> $NumR1 {
-        if arg\?0 {
-            set ret = <.0>
-        } else {
-            set ret = new <.1 call clone arg\!1>
-        }
-    }
-""".trimIndent()
 val add = """
-    var add : func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1
-    set add = func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1 {
-        var x: $NumA1
-        set x = arg.1
-        var y: $NumB1
-        set y = arg.2
+    var add : func [$Num,$Num] -> $Num
+    set add = func [$Num,$Num] -> $Num {
+        var x = arg.1
+        var y = arg.2
         if y\?0 {
-            set ret = call clone {@r1,@a1} x: @r1
+            return call clone x
         } else {
-            set ret = new <.1 call add {@r1,@a1,@b1} [x,y\!1]: @r1>:$_NumR1: @r1
+            return new <.1 call add [x,y\!1]>
         }
     }
 """.trimIndent()
 
 val mul = """
-    var mul : func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1
-    set mul = func {}->{@r1,@a1,@b1}-> [$NumA1,$NumB1] -> $NumR1 {
-        var x: $NumA1
-        set x = arg.1
-        var y: $NumB1
-        set y = arg.2
+    var mul : func [$Num,$Num] -> $Num
+    set mul = func [$Num,$Num] -> $Num {
+        var x = arg.1
+        var y = arg.2
         if y\?0 {
-            set ret = <.0>: $NumR1
+            return <.0>
         } else {
-            var z: $NumTL
-            set z = call mul {@r1,@a1,@b1} [x, y\!1]
-            set ret = call add {@r1,@a1,@LOCAL} [x,z]: @r1
+            var z = call mul [x, y\!1]
+            return call add [x,z]
         }
     }
 """.trimIndent()
@@ -212,7 +197,7 @@ class TBook {
             $nums
             $clone
             $add
-            output std call add {@LOCAL,@LOCAL,@LOCAL} [two,one]: @LOCAL
+            output std call add [two,one]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -223,7 +208,7 @@ class TBook {
             """
             $nums
             $clone
-            output std call clone two: @LOCAL
+            output std call clone two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.0>>>\n") { out }
@@ -236,7 +221,9 @@ class TBook {
             $clone
             $add
             $mul
-            output std call mul {@LOCAL,@LOCAL,@LOCAL} [two, call add {@LOCAL,@LOCAL,@LOCAL} [two,one]]
+            var x = call add [two,one]
+            output std call mul [two, x]
+            --output std call mul [two, call add [two,one]]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
