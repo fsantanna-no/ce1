@@ -452,21 +452,17 @@ class TBook {
     }
     @Test
     fun ch_01_04_curry_pg13() {
-        val fadd = "func [$Num,$Num] -> $Num"
-        val ret2 = "func @a1->$Num->$Num"
-        val ret1 = "func @GLOBAL -> $NumA1 -> $ret2"
         val out = all(
             """
             $nums
             $clone
             $add
-            var curry: func $fadd -> $ret1
-            set curry = func $fadd -> $ret1 {
+            var curry = func (func [$Num,$Num] -> $Num) -> (func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num)) {
                 var f = arg
-                return $ret1 [f] {
+                return func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num) [f] {
                     var x = arg
                     var ff = f
-                    return $ret2 [ff,x] {
+                    return func @a1->$Num->$Num [ff,x] {
                         var y = arg
                         return call ff [x,y]
                     }
@@ -489,72 +485,57 @@ class TBook {
             $nums
             $clone
             $add
-
+            // 25
             var curry: func $fadd -> $ret1
             set curry = func $fadd -> $ret1 {
                 var f = arg
                 return $ret1 [f] {
-                    var x: $NumA1
-                    set x = arg
-                    var ff: $fadd
-                    set ff = f
+                    var x = arg
+                    var ff = f
                     return $ret2 [ff,x] {
-                        var y: $NumB1
-                        set y = arg
-                        return call ff {@r1,@a1,@b1} [x,y]: @r1
+                        var y = arg
+                        return call ff [x,y]
                     }
                 }
             }
 
-            var uncurry: func {} -> {} -> $ret1 -> $fadd2
-            set uncurry = func {} -> {} -> $ret1 -> $fadd2 {
-                var f: $ret1
-                set f = arg
+            var uncurry: func $ret1 -> $fadd2
+            set uncurry = func $ret1 -> $fadd2 {
+                var f = arg
                 return $fadd2 [f] {
-                    return call (call f {@a1} arg.1) {@r1,@b1} arg.2
+                    return call (call f arg.1) arg.2
                 }
             }
             
-            var addc: $ret1
-            set addc = call curry add
-            
-            var addu: $fadd2
-            set addu = call uncurry addc
-            
-            output std call addu {@LOCAL,@LOCAL,@LOCAL} [one,two]
+            var addc = call curry add
+            var addu = call uncurry addc
+            output std call addu [one,two]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
     }
     @Test
     fun ch_01_04_composition_pg15() {
-        val T = "func {} -> {@r1,@a1} -> $NumA1 -> $NumR1"
-        val S = "func {@GLOBAL} -> {@r1,@a1} -> $NumA1 -> $NumR1"
         val out = all(
             """
             $nums
             $clone
             $add
             
-            var inc: $T
-            set inc = func {}->{@r1,@a1}-> $NumA1 -> $NumR1 {
-                return call add {@r1,@GLOBAL,@a1} [one,arg]: @r1
+            var inc = func $Num -> $Num {
+                return call add [one,arg]
             }
-            output std call inc {@LOCAL,@LOCAL} two
+            output std call inc two
             
-            var compose: func {}->{}->[$T,$T]->$S
-            set compose = func {}->{}->[$T,$T]->$S {
-                var f: $T
-                set f = arg.1
-                var g: $T
-                set g = arg.2
-                return $S [f,g] {
-                    var v: $NumTL
-                    set v = call f {@LOCAL,@a1} arg: @LOCAL
-                    return call g {@r1,@LOCAL} v: @r1
+            var compose = func [func $Num->$Num,func $Num->$Num] -> (func @GLOBAL->$Num->$Num) {
+                var f = arg.1
+                var g = arg.2
+                return func @GLOBAL->$Num->$Num [f,g] {
+                    var v = call f arg
+                    return call g v
                 }
             }
-            output std call (call compose [inc,inc]) {@LOCAL,@LOCAL} one
+            output std call (call compose [inc,inc]) one
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.1 <.0>>>>\n") { out }
