@@ -262,8 +262,8 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1,@j1} -> /</^@i1>@j1 -> ()
-            set f = func {} -> {@i1,@j1} -> /</^@i1>@j1 -> () {
+            var f: func {} -> {@i1} -> /</^@i1>@i1 -> ()
+            set f = func {} -> {@i1} -> /</^@i1>@i1 -> () {
             set ((arg\)!1) = (new <.1 <.0 ()>: /</^@i1>@i1>: </^@i1>: @i1)
             }
 
@@ -427,6 +427,40 @@ class TInfer {
             var v: /_int@LOCAL
             set v = call f {} (): @LOCAL
             }
+
+        """.trimIndent()) { out }
+    }
+
+    // NUMS
+
+    @Test
+    fun e01_clone () {
+        val out = all("""
+            var clone : func /</^> -> /</^>
+            set clone = func /</^> -> /</^> {
+                if arg\?0 {
+                    return <.0>
+                } else {
+                    return new <.1 call clone arg\!1>
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            var clone: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            set clone = func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1 {
+            if ((arg\)?0){
+            {
+            set ret = <.0 ()>: /</^@j1>@j1
+            return
+            }
+            } else {
+            {
+            set ret = (new <.1 call clone {@i1,@j1} ((arg\)!1): @j1>: </^@j1>: @j1)
+            return
+            }
+            }
+            }
+
 
         """.trimIndent()) { out }
     }

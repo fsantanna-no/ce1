@@ -171,18 +171,18 @@ fun Expr.xinfTypes (inf: Type?) {
 
                             val ret1s = if (inf == null) {
                                 // no attribution expected, save to @LOCAL as shortest scope possible
-                                ft.out.flatten()
+                                ft.out.flattenLeft()
                                     .filter { it is Type.Ptr }
                                     .let { it as List<Type.Ptr> }
                                     .map { Tk.Scp1(TK.XSCPCST, it.tk.lin, it.tk.col, "LOCAL", null) }
                             } else {
-                                inf.flatten()
+                                inf.flattenLeft()
                                     .filter { it is Type.Ptr }
                                     .let { it as List<Type.Ptr> }
                                     .map { it.xscp1!! }
                             }
-                            assert(ret1s.size <= 1) { "TODO: multiple pointer returns" }
-                            val arg1s = this.arg.wtype!!.flatten()
+                            assert(ret1s.distinctBy { Pair(it.lbl,it.num) }.size <= 1) { "TODO: multiple pointer returns" }
+                            val arg1s = this.arg.wtype!!.flattenLeft()
                                 .filter { it is Type.Ptr }
                                 .let { it as List<Type.Ptr> }
                                 .map { it.xscp1!! }
@@ -193,7 +193,7 @@ fun Expr.xinfTypes (inf: Type?) {
                             /////////
 
                             // func inp -> out  ==>  { inp, out }
-                            val inp_out: List<Tk.Scp1> = (ft.inp.flatten() + ft.out.flatten())
+                            val inp_out: List<Tk.Scp1> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
                                 .filter { it is Type.Ptr }
                                 .let { it as List<Type.Ptr> }
                                 .map { it.xscp1!! }
