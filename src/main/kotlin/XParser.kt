@@ -136,17 +136,29 @@ fun xparser_expr (all: All): Expr {
             all.accept_err(TK.CHAR, '.')
             all.accept_err(TK.XNUM)
             val tk0 = all.tk0 as Tk.Num
-            val cons = try {
-                xparser_expr(all)
-            } catch (e: Throwable) {
-                assert(!all.consumed(tk0)) {
-                    e.message!!
+            val cons = if (tk0.num == 0) null else {
+                try {
+                    xparser_expr(all)
+                } catch (e: Throwable) {
+                    assert(!all.consumed(tk0)) {
+                        e.message!!
+                    }
+                    Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
                 }
-                Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
             }
             all.accept_err(TK.CHAR, '>')
             val tp = if (!all.accept(TK.CHAR, ':')) null else xparser_type(all)
-            Expr.UCons(tk0, tp, cons)
+            if (tk0.num == 0) {
+                if (tp != null) {
+                    All_assert_tk(tp.tk, (tp is Type.Ptr && tp.pln is Type.Union)) { "invalid type : expected pointer to union"}
+                }
+                Expr.UNull(tk0, tp)
+            } else {
+                if (tp != null) {
+                    All_assert_tk(tp.tk, tp is Type.Union) { "invalid type : expected union" }
+                }
+                Expr.UCons(tk0, tp, cons!!)
+            }
         }
         all.accept(TK.NEW) -> {
             val tk0 = all.tk0

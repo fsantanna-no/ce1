@@ -9,6 +9,7 @@ fun Expr.tostr (): String {
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"
         is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.wtype!!.tostr()
+        is Expr.UNull -> "<.0>: " + this.wtype!!.tostr()
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"

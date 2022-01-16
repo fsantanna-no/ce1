@@ -55,15 +55,19 @@ fun Expr.xinfTypes (inf: Type?) {
             Type.Tuple(this.tk_, this.arg.map { it.wtype!! }.toTypedArray()).clone(this, this.tk.lin, this.tk.col)
         }
         is Expr.UCons -> {
-            val x = when {
-                (this.tk_.num == 0) -> Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
-                (this.xtype != null) -> (this.xtype as Type.Union).expand()[this.tk_.num-1]
-                else -> {
-                    All_assert_tk(this.tk, inf is Type.Union) { "invalid inference : type mismatch"}
-                    (inf as Type.Union).expand()[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
-                }
+            val x = if (this.xtype != null) {
+                (this.xtype as Type.Union).expand()[this.tk_.num - 1]
+            } else {
+                All_assert_tk(this.tk, inf is Type.Union) { "invalid inference : type mismatch"}
+                (inf as Type.Union).expand()[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
             }
             this.arg.xinfTypes(x)
+            All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
+                "invalid inference : undetermined type"
+            }
+            this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+        }
+        is Expr.UNull -> {
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
                 "invalid inference : undetermined type"
             }
