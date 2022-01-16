@@ -95,8 +95,8 @@ class TInfer {
             var v = call f <.1>
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {} -> <()> -> ()
-            set f = func {} -> {} -> <()> -> () {
+            var f: func {} -> <()> -> ()
+            set f = func {} -> <()> -> () {
             set ret = arg
             return
             }
@@ -188,7 +188,7 @@ class TInfer {
         val out = all("""
         var f: func /_int -> ()
         """.trimIndent())
-        assert(out == "var f: func {} -> {@i1} -> /_int@i1 -> ()\n") { out }
+        assert(out == "var f: func {@i1} -> /_int@i1 -> ()\n") { out }
     }
     @Test
     fun c02 () {
@@ -196,8 +196,8 @@ class TInfer {
         var f = func /_int -> () {}
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1} -> /_int@i1 -> ()
-            set f = func {} -> {@i1} -> /_int@i1 -> () {
+            var f: func {@i1} -> /_int@i1 -> ()
+            set f = func {@i1} -> /_int@i1 -> () {
             
             }
             
@@ -212,7 +212,7 @@ class TInfer {
         call f /x
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@k1} -> /_int@k1 -> ()
+            var f: func {@k1} -> /_int@k1 -> ()
             var x: _int
             set x = (_1: _int)
             call f {@GLOBAL} (/x)
@@ -231,7 +231,7 @@ class TInfer {
         }
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@k1} -> /_int@k1 -> ()
+            var f: func {@k1} -> /_int@k1 -> ()
             { @SSX
             var x: _int
             set x = (_1: _int)
@@ -263,8 +263,8 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1} -> /</^@i1>@i1 -> ()
-            set f = func {} -> {@i1} -> /</^@i1>@i1 -> () {
+            var f: func {@i1} -> /</^@i1>@i1 -> ()
+            set f = func {@i1} -> /</^@i1>@i1 -> () {
             set ((arg\)!1) = (new <.1 <.0 ()>: /</^@i1>@i1>: </^@i1>: @i1)
             }
 
@@ -296,7 +296,7 @@ class TInfer {
             call f <.0>
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1} -> /</^@i1>@i1 -> ()
+            var f: func {@i1} -> /</^@i1>@i1 -> ()
             call f {@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL
 
         """.trimIndent()) { out }
@@ -309,7 +309,7 @@ class TInfer {
             output std call f v
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            var f: func {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
             var v: /</^@LOCAL>@LOCAL
             set v = call f {@LOCAL,@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL: @LOCAL
             output std call f {@LOCAL,@LOCAL} v: @LOCAL
@@ -333,8 +333,8 @@ class TInfer {
             { @SS
             var pa: /</^@LOCAL>@LOCAL
             set pa = (new <.1 <.0 ()>: /</^@LOCAL>@LOCAL>: </^@LOCAL>: @LOCAL)
-            var f: func {@SS} -> {} -> () -> ()
-            set f = func {@SS} -> {} -> () -> () [pa] {
+            var f: func @SS -> {} -> () -> ()
+            set f = func @SS -> {} -> () -> () [pa] {
 
             }
             
@@ -350,7 +350,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func {} -> {@a1} -> () -> func {@a1} -> {} -> () -> ()
+            var f: func {@a1} -> () -> func @a1 -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -361,7 +361,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func {@LOCAL} -> {} -> () -> ()
+            var f: func @LOCAL -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -373,8 +373,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a1} -> () -> func {@a1} -> {} -> () -> ()
-            var f: func {@LOCAL} -> {} -> () -> ()
+            var g: func {@a1} -> () -> func @a1 -> {} -> () -> ()
+            var f: func @LOCAL -> {} -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -387,8 +387,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a1} -> () -> func {@a1} -> {} -> () -> ()
-            var f: func {@LOCAL} -> {} -> () -> ()
+            var g: func {@a1} -> () -> func @a1 -> {} -> () -> ()
+            var f: func @LOCAL -> {} -> () -> ()
             set f = call g {@LOCAL} ()
             
         """.trimIndent()) { out }
@@ -403,8 +403,8 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func {} -> {@a1} -> () -> func {@a1} -> {} -> () -> ()
-            var f: func {@LOCAL} -> {} -> () -> ()
+            var g: func {@a1} -> () -> func @a1 -> {} -> () -> ()
+            var f: func @LOCAL -> {} -> () -> ()
             set f = call g {@LOCAL} ()
             call f {} ()
             
@@ -421,11 +421,11 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var cnst: func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {} -> () -> /_int@a1
-            set cnst = func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {} -> () -> /_int@a1 {
+            var cnst: func {@a1} -> /_int@a1 -> func @a1 -> {} -> () -> /_int@a1
+            set cnst = func {@a1} -> /_int@a1 -> func @a1 -> {} -> () -> /_int@a1 {
             var x: /_int@a1
             set x = arg
-            set ret = func {@a1} -> {} -> () -> /_int@a1 [x] {
+            set ret = func @a1 -> {} -> () -> /_int@a1 [x] {
             set ret = x
             return
             }
@@ -445,9 +445,9 @@ class TInfer {
             var v: /_int = call f ()
         """.trimIndent())
         assert(out == """
-            var g: func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {@a1} -> () -> /_int@a1
+            var g: func {@a1} -> /_int@a1 -> func @a1 -> {@a1} -> () -> /_int@a1
             var five: _int
-            var f: func {@LOCAL} -> {} -> () -> /_int@LOCAL
+            var f: func @LOCAL -> {} -> () -> /_int@LOCAL
             set f = call g {@LOCAL} (/five)
             var v: /_int@LOCAL
             set v = call f {} (): @LOCAL
@@ -465,10 +465,10 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var g: func {} -> {@a1} -> /_int@a1 -> func {@a1} -> {@a1} -> () -> /_int@a1
+            var g: func {@a1} -> /_int@a1 -> func @a1 -> {@a1} -> () -> /_int@a1
             { @SSFIVE
             var five: _int
-            var f: func {@LOCAL} -> {} -> () -> /_int@LOCAL
+            var f: func @LOCAL -> {} -> () -> /_int@LOCAL
             set f = call g {@LOCAL} (/five)
             var v: /_int@LOCAL
             set v = call f {} (): @LOCAL
@@ -492,8 +492,8 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var clone: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
-            set clone = func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1 {
+            var clone: func {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            set clone = func {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1 {
             if ((arg\)?0){
             {
             set ret = <.0 ()>: /</^@j1>@j1
@@ -517,7 +517,7 @@ class TInfer {
             output std call f (call f <.0>)
         """.trimIndent())
         assert(out == """
-            var f: func {} -> {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
+            var f: func {@i1,@j1} -> /</^@i1>@i1 -> /</^@j1>@j1
             output std call f {@LOCAL,@LOCAL} call f {@LOCAL,@LOCAL} <.0 ()>: /</^@LOCAL>@LOCAL: @LOCAL: @LOCAL
 
         """.trimIndent()) { out }

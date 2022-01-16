@@ -12,7 +12,7 @@ fun Expr.tostr (): String {
         is Expr.TDisc -> "(" + this.tup.tostr() + "." + this.tk_.num + ")"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.xscp1.tostr() + ")"
+        is Expr.New   -> "(new " + this.arg.tostr() + ": " + (this.xscp1?.tostr() ?: "") + ")"
         is Expr.Call  -> {
             val inps = " {" + this.xscp1s.first!!.map { it.tostr() }.joinToString(",") + "}"
             val out  = this.xscp1s.second.let { if (it == null) "" else ": "+it.tostr() }
@@ -34,7 +34,7 @@ fun Stmt.tostr (): String {
         is Stmt.SExpr -> this.e.tostr() + "\n"
         is Stmt.If    -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop  -> "loop " + this.block.tostr()
-        is Stmt.Block -> "{" + this.xscp1.tostr().let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
+        is Stmt.Block -> "{" + (this.xscp1?.tostr() ?: "").let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
         else -> TODO(this.toString())
     }
 }
