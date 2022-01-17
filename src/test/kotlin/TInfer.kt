@@ -141,6 +141,13 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun a12_ucons () {
+        val out = all("""
+            var x = <.2 ()>: <()>
+        """.trimIndent())
+        assert(out == "(ln 1, col 11): invalid constructor : out of bounds") { out }
+    }
 
     // inference error
 
