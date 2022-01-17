@@ -38,12 +38,12 @@ class TInfer {
     @Test
     fun a03_input () {
         val out = all("var x: _int = input std ()")
-        assert(out == "var x: _int\nset x = input std: _int\n") { out }
+        assert(out == "var x: _int\nset x = input std (): _int\n") { out }
     }
     @Test
     fun a04_input () {
         val out = all("var x: [_int,_int] = [_10,input std ()]")
-        assert(out == "var x: [_int,_int]\nset x = [(_10: _int),input std: _int]\n") { out }
+        assert(out == "var x: [_int,_int]\nset x = [(_10: _int),input std (): _int]\n") { out }
     }
     @Test
     fun a05_upref () {
@@ -199,6 +199,13 @@ class TInfer {
 
     
         """.trimIndent()) { out }
+    }
+    @Test
+    fun b06_inp_err () {
+        val out = all("""
+            input pico ()
+        """.trimIndent())
+        assert(out == "input pico (): ()\n") { out }
     }
 
     // POINTER ARGUMENTS / SCOPES

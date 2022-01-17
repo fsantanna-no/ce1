@@ -89,6 +89,11 @@ fun Expr.xinfTypes (inf: Type?) {
             Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
         }
         is Expr.Inp -> {
+            //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
+            //    "invalid inference : undetermined type"
+            //}
+            // inf is at least Unit
+            this.arg.xinfTypes(null)
             this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         }
         is Expr.Out -> {
@@ -304,6 +309,9 @@ fun Expr.xinfTypes (inf: Type?) {
 }
 
 fun Stmt.xinfTypes (inf: Type? = null) {
+    fun unit (): Type {
+        return Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
+    }
     when (this) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Ret, is Stmt.Nat -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
@@ -311,7 +319,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
             this.dst.xinfTypes(null)
             this.src.xinfTypes(this.dst.wtype!!)
         }
-        is Stmt.SExpr -> this.e.xinfTypes(null)
+        is Stmt.SExpr -> this.e.xinfTypes(unit())
         is Stmt.If -> {
             this.tst.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
             this.true_.xinfTypes(null)

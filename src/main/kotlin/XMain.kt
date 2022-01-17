@@ -40,6 +40,7 @@ fun main (args: Array<String>) {
     File("out.ce0").writeText(out1)
 
     args[0] = "out.ce0"
+    println((listOf("ce0") + args).joinToString(" "))
     val (_,out2) = exec(listOf("ce0") + args)
     print(out2)
 }

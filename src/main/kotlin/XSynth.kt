@@ -5,7 +5,7 @@ fun Expr.tostr (): String {
         is Expr.Nat   -> "(" + this.tk_.toce() + ": " + this.wtype!!.tostr() + ")"
         is Expr.Upref -> "(/" + this.pln.tostr() + ")"
         is Expr.Dnref -> "(" + this.ptr.tostr() + "\\)"
-        is Expr.Inp   -> "input " + this.lib.str + ": " + this.wtype!!.tostr()
+        is Expr.Inp   -> "input " + this.lib.str + " " + this.arg.tostr() + ": " + this.wtype!!.tostr()
         is Expr.Out   -> "output " + this.lib.str + " " + this.arg.tostr()
         is Expr.TCons -> "[" + this.arg.map { it.tostr() }.joinToString(",") + "]"
         is Expr.UCons -> "<." + this.tk_.num + " " + this.arg.tostr() + ">: " + this.wtype!!.tostr()
