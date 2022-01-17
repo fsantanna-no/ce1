@@ -37,12 +37,12 @@ class TInfer {
     }
     @Test
     fun a03_input () {
-        val out = all("var x: _int = input std")
+        val out = all("var x: _int = input std ()")
         assert(out == "var x: _int\nset x = input std: _int\n") { out }
     }
     @Test
     fun a04_input () {
-        val out = all("var x: [_int,_int] = [_10,input std]")
+        val out = all("var x: [_int,_int] = [_10,input std ()]")
         assert(out == "var x: [_int,_int]\nset x = [(_10: _int),input std: _int]\n") { out }
     }
     @Test
@@ -179,6 +179,26 @@ class TInfer {
             output std x!1.1!1\!1.1!1\!1.2
         """.trimIndent())
         assert(out == "(ln 4, col 17): invalid operand to `/´ : union discriminator") { out }
+    }
+    @Test
+    fun b05_nat () {
+        val out = all("""
+            var output_pico = func () -> () {
+                native _{
+                    pico_output(*(Pico_IO*)&arg);
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            var output_pico: func {} -> () -> ()
+            set output_pico = func {} -> () -> () {
+            native _{
+                    pico_output(*(Pico_IO*)&arg);
+                }
+            }
+
+    
+        """.trimIndent()) { out }
     }
 
     // POINTER ARGUMENTS / SCOPES

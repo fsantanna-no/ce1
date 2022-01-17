@@ -22,23 +22,25 @@ fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
 
 fun main (args: Array<String>) {
     var xinp: String? = null
-    var xcc = ""
     var i = 0
     while (i < args.size) {
         when {
-            (args[i] == "-cc") -> xcc  = "-cc " + args[++i]
+            (args[i] == "-cc") -> i++
             else               -> xinp = args[i]
         }
         i++
     }
-    val inp = File(xinp).readText()
+
+    val inp = File(xinp!!).readText()
     val (ok1,out1) = ce1_to_ce0(inp)
     if (!ok1) {
         println(out1)
         return
     }
     File("out.ce0").writeText(out1)
-    val (_,out2) = exec("ce0 $xcc out.ce0")
+
+    args[0] = "out.ce0"
+    val (_,out2) = exec(listOf("ce0") + args)
     print(out2)
 }
 

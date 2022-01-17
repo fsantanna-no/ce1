@@ -305,7 +305,7 @@ fun Expr.xinfTypes (inf: Type?) {
 
 fun Stmt.xinfTypes (inf: Type? = null) {
     when (this) {
-        is Stmt.Nop, is Stmt.Break, is Stmt.Ret -> {}
+        is Stmt.Nop, is Stmt.Break, is Stmt.Ret, is Stmt.Nat -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Stmt.Set -> {
             this.dst.xinfTypes(null)
@@ -344,6 +344,5 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                 this.s2.xinfTypes(null)
             }
         }
-        else -> TODO(this.toString())
     }
 }

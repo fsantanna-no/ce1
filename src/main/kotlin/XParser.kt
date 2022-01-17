@@ -203,8 +203,9 @@ fun xparser_expr (all: All): Expr {
             val tk = all.tk0 as Tk.Key
             all.accept_err(TK.XVAR)
             val lib = (all.tk0 as Tk.Str)
+            val arg = xparser_expr(all)
             val tp = if (!all.accept(TK.CHAR, ':')) null else xparser_type(all)
-            Expr.Inp(tk, tp, lib)
+            Expr.Inp(tk, tp, lib, arg)
         }
         all.accept(TK.OUTPUT) -> {
             val tk = all.tk0 as Tk.Key

@@ -20,13 +20,13 @@ fun Expr.tostr (): String {
             "call " + this.f.tostr() + inps + " " + this.arg.tostr() + out
         }
         is Expr.Func  -> this.type.tostr() + " " + (if (this.ups.size==0) "" else "["+this.ups.map { it.str }.joinToString(",")+"] ") + this.block.tostr()
-        else -> TODO(this.toString())
     }
 }
 
 fun Stmt.tostr (): String {
     return when (this) {
         is Stmt.Nop   -> "\n"
+        is Stmt.Nat   -> "native " + this.tk_.toce() + "\n"
         is Stmt.Var   -> "var " + this.tk_.str + ": " + this.xtype!!.tostr() + "\n"
         is Stmt.Set   -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Break -> "break\n"
@@ -36,6 +36,5 @@ fun Stmt.tostr (): String {
         is Stmt.If    -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop  -> "loop " + this.block.tostr()
         is Stmt.Block -> "{" + (this.xscp1?.tostr() ?: "").let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
-        else -> TODO(this.toString())
     }
 }
