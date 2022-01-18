@@ -31,6 +31,11 @@ class TInfer {
         assert(out == "var x: ()\nset x = ()\n") { out }
     }
     @Test
+    fun a01_var_err () {
+        val out = all("var x; set x=()")
+        assert(out == "(ln 1, col 6): expected type declaration : have `;´") { out }
+    }
+    @Test
     fun a02_var () {
         val out = all("var x = <.1>:<(),()>")
         assert(out == "var x: <(),()>\nset x = <.1 ()>: <(),()>\n") { out }
@@ -148,6 +153,26 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 1, col 11): invalid constructor : out of bounds") { out }
     }
+    @Test
+    fun a13_input_ptr () {
+        val out = all("""
+            var input_pico_Unit = func /() -> () {}
+            var e: () = ()
+            input pico /e
+        """.trimIndent())
+        assert(out == """
+            var input_pico_Unit: func {@i1} -> /()@i1 -> ()
+            set input_pico_Unit = func {@i1} -> /()@i1 -> () {
+            
+            }
+            
+            var e: ()
+            set e = ()
+            input pico (/e): ()
+
+        """.trimIndent()) { out }
+    }
+
 
     // inference error
 

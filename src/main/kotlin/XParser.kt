@@ -2,7 +2,7 @@ fun xparser_type (all: All): Type {
     return when {
         all.accept(TK.UNIT) -> Type.Unit(all.tk0 as Tk.Sym)
         all.accept(TK.XNAT) -> Type.Nat(all.tk0 as Tk.Nat)
-        all.accept(TK.XUP) -> Type.Rec(all.tk0 as Tk.Up)
+        all.accept(TK.XUP)  -> Type.Rec(all.tk0 as Tk.Up)
         all.accept(TK.CHAR, '/') -> {
             val tk0 = all.tk0 as Tk.Chr
             val pln = xparser_type(all)
@@ -16,7 +16,7 @@ fun xparser_type (all: All): Type {
         all.accept(TK.CHAR, '(') -> {
             val tp = xparser_type(all)
             all.accept_err(TK.CHAR, ')')
-            return tp
+            tp
         }
         all.accept(TK.CHAR, '[') || all.accept(TK.CHAR, '<') -> {
             val tk0 = all.tk0 as Tk.Chr
@@ -163,7 +163,7 @@ fun xparser_expr (all: All): Expr {
         all.accept(TK.NEW) -> {
             val tk0 = all.tk0
             val e = xparser_expr(all)
-            all.assert_tk(tk0, e is Expr.UCons && e.tk_.num != 0) {
+            all.assert_tk(tk0, e is Expr.UCons && e.tk_.num!=0) {
                 //"invalid `new` : unexpected <.0>"
                 "invalid `new` : expected constructor"
             }
