@@ -1,6 +1,6 @@
 # Ce1 - Extensions
 
-*Ce* is simple language with algebraic data types, pointers, first-class
+*Ce* is a simple language with algebraic data types, pointers, first-class
 functions, and region-based memory management.
 The main goal of *Ce* is to support safe memory management for dynamically
 allocated data structures.
@@ -14,8 +14,10 @@ allocated in nested blocks.
 These ideas have been successfully adopted in Cyclone:
 https://cyclone.thelanguage.org/
 
-*Ce1* is an extension to the core version of *Ce1* with type inference and some
+*Ce1* is an extension to the core version of *Ce* with type inference and some
 syntax sugar.
+
+See also *Ce0*: https://github.com/fsantanna/ce0
 
 # INSTALL & RUN
 
