@@ -34,7 +34,7 @@ class TExec {
     fun a02_int_abs () {
         val out = all("""
             var x: _int
-            set x = call _abs _(-1)
+            set x = _abs _(-1)
             output std x
         """.trimIndent())
         assert(out == "1\n") { out }
@@ -75,7 +75,7 @@ class TExec {
             var f = func _int -> _int {
                 return arg
             }
-            var x = call f _10
+            var x = f _10
             output std x
         """.trimIndent())
         assert(out == "10\n") { out }
@@ -88,7 +88,7 @@ class TExec {
                 output std x
             }
             var g = func ()->() {
-                return call f ()
+                return f ()
             }
             call g ()
         """.trimIndent())
@@ -115,7 +115,7 @@ class TExec {
             }
         }
         var a: <(),()> = <.2>
-        var b = call inv a
+        var b = inv a
         output std /b
         """.trimIndent())
         assert(out == "<.1>\n") { out }
@@ -590,7 +590,7 @@ class TExec {
             var f = func /() -> /() {
                 return arg
             }
-            output std (call f ())
+            output std (f ())
         """.trimIndent()
         )
         assert(out == "(ln 3, col 9): invalid return : type mismatch\n") { out }
@@ -602,7 +602,7 @@ class TExec {
                 return arg
             }
             var x: _int = _10
-            var y: /_int = call f /x
+            var y: /_int = f /x
             output std y\
         """.trimIndent()
         )
@@ -615,10 +615,10 @@ class TExec {
                 return arg
             }
             var g = func /_int@k1 -> /()@k1 {
-                return call f arg
+                return f arg
             }
             var x: _int
-            var px = call f /x
+            var px = f /x
             output std _(px == &x):_int
         """.trimIndent()
         )
@@ -632,9 +632,9 @@ class TExec {
                 return arg
             }
             var g = func [(func ()->()), ()] -> () {
-                return call arg.1 arg.2
+                return arg.1 arg.2
             }
-            output std call g [f,()]
+            output std g [f,()]
         """.trimIndent()
         )
         assert(out == "()\n") { out }
@@ -649,7 +649,7 @@ class TExec {
                 }
                return f
             }
-            var f = call g ()
+            var f = g ()
             call f ()
         """.trimIndent()
         )
@@ -677,13 +677,13 @@ class TExec {
     fun d02_clo () {
         val out = all(
             """
-            var g = func {@a1} -> () -> (func @a1->()->()) {
+            var g = func @[@a1] -> () -> (func @a1->()->()) {
                 var x: /</^@a1>@a1 = new <.1 <.0>>
                 return func @a1->()->() [x] {
                     output std x
                 }
             }
-            var f: (func @LOCAL->()->()) = call g ()
+            var f: (func @LOCAL->()->()) = g ()
             call f ()
         """.trimIndent()
         )
@@ -693,7 +693,7 @@ class TExec {
     fun d03_clo () {
         val out = all(
             """
-            var cnst = func {@a1}->/_int@a1 -> (func @a1->()->/_int@a1) {
+            var cnst = func @[@a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
                 var x: /_int@a1 = arg
                 return func @a1->()->/_int@a1 [x] {
                     return x
@@ -701,8 +701,8 @@ class TExec {
             }
             {
                 var five = _5: _int
-                var f: func @LOCAL -> () -> /_int@LOCAL = call cnst /five
-                var v: /_int = call f ()
+                var f: func @LOCAL -> () -> /_int@LOCAL = cnst /five
+                var v: /_int = f ()
                 output std v\
             }
         """.trimIndent()
@@ -722,7 +722,7 @@ class TExec {
             var u = func ()->() {
                 output std ()
             }
-            var ff = call f u
+            var ff = f u
             call ff ()
         """.trimIndent()
         )

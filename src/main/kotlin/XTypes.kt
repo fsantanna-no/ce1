@@ -88,18 +88,6 @@ fun Expr.xinfTypes (inf: Type?) {
             }
             Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
         }
-        is Expr.Inp -> {
-            //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
-            //    "invalid inference : undetermined type"
-            //}
-            // inf is at least Unit
-            this.arg.xinfTypes(null)
-            this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
-        }
-        is Expr.Out -> {
-            this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
-            Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
-        }
         is Expr.Func -> {
             this.block.xinfTypes(null)
             this.type
@@ -315,11 +303,24 @@ fun Stmt.xinfTypes (inf: Type? = null) {
     when (this) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Ret, is Stmt.Nat -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
-        is Stmt.Set -> {
+        is Stmt.SSet -> {
             this.dst.xinfTypes(null)
             this.src.xinfTypes(this.dst.wtype!!)
         }
-        is Stmt.SExpr -> this.e.xinfTypes(unit())
+        is Stmt.ESet -> {
+            this.dst.xinfTypes(null)
+            this.src.xinfTypes(this.dst.wtype!!)
+        }
+        is Stmt.SCall -> this.e.xinfTypes(unit())
+        is Stmt.Inp -> {
+            //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
+            //    "invalid inference : undetermined type"
+            //}
+            // inf is at least Unit
+            this.arg.xinfTypes(null)
+            this.xtype = this.xtype ?: inf?.clone(this,this.tk.lin,this.tk.col) ?: unit()
+        }
+        is Stmt.Out -> this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
         is Stmt.If -> {
             this.tst.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
             this.true_.xinfTypes(null)
@@ -330,15 +331,27 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         is Stmt.Seq -> {
             // var x: ...
             // set x = ...
-            if (this.s1 is Stmt.Var && this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str) {
+            if (this.s1 is Stmt.Var && (this.s2 is Stmt.SSet && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str || this.s2 is Stmt.ESet && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str)) {
                 if (this.s1.xtype == null) {
                     // infer var (s1) from expr (s2)
                     // var x: NO
                     // set x = OK
-                    this.s2.src.xinfTypes(null)
-                    this.s2.src.wtype!!.let {
-                        this.s1.xinfTypes(it)
-                        this.s2.dst.xinfTypes(null) //it
+                    when (this.s2) {
+                        is Stmt.SSet -> {
+                            this.s2.src.xinfTypes(null)
+                            this.s2.src.xtype!!.let {
+                                this.s1.xinfTypes(it)
+                                this.s2.dst.xinfTypes(null) //it
+                            }
+                        }
+                        is Stmt.ESet -> {
+                            this.s2.src.xinfTypes(null)
+                            this.s2.src.wtype!!.let {
+                                this.s1.xinfTypes(it)
+                                this.s2.dst.xinfTypes(null) //it
+                            }
+                        }
+                        else -> error("bug found")
                     }
                 } else {
                     // infer expr (s2) from var (s1)
@@ -352,5 +365,6 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                 this.s2.xinfTypes(null)
             }
         }
+        else -> TODO(this.toString())
     }
 }

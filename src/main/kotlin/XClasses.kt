@@ -39,11 +39,9 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
     data class New   (val tk_: Tk.Key, var xscp1: Tk.Scp1?, var xscp2: Scp2?, val arg: Expr.UCons): Expr(tk_, null, null, null)
     data class Dnref (val tk_: Tk,     val ptr: Expr): Expr(tk_, null, null, null)
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null, null)
-    data class Inp   (val tk_: Tk.Key, var xtype: Type?, val lib: Tk.Str, val arg: Expr): Expr(tk_, null, null, xtype)
-    data class Out   (val tk_: Tk.Key, val lib: Tk.Str, val arg: Expr): Expr(tk_, null, null, null)
     data class Func  (val tk_: Tk.Key, val type: Type.Func, val ups: Array<Tk.Str>, val block: Stmt.Block) : Expr(tk_, null, null, type)
     data class Call (
-        val tk_: Tk.Key,
+        val tk_: Tk,
         val f: Expr,
         val arg: Expr,
         var xscp1s: Pair<Array<Tk.Scp1>?,Tk.Scp1?>, // first=args, second=ret
@@ -55,9 +53,12 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
 sealed class Stmt (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class Nop   (val tk_: Tk) : Stmt(tk_, null, null)
     data class Var   (val tk_: Tk.Str, var xtype: Type?) : Stmt(tk_, null, null)
-    data class Set   (val tk_: Tk.Chr, val dst: Expr, val src: Expr) : Stmt(tk_, null, null)
+    data class SSet  (val tk_: Tk.Chr, val dst: Expr, val src: Stmt.Inp) : Stmt(tk_, null, null)
+    data class ESet  (val tk_: Tk.Chr, val dst: Expr, val src: Expr) : Stmt(tk_, null, null)
     data class Nat   (val tk_: Tk.Nat) : Stmt(tk_, null, null)
-    data class SExpr (val tk_: Tk.Key, val e: Expr) : Stmt(tk_, null, null)
+    data class SCall (val tk_: Tk.Key, val e: Expr) : Stmt(tk_, null, null)
+    data class Inp   (val tk_: Tk.Key, var xtype: Type?, val lib: Tk.Str, val arg: Expr): Stmt(tk_, null, null)
+    data class Out   (val tk_: Tk.Key, val lib: Tk.Str, val arg: Expr): Stmt(tk_, null, null)
     data class Seq   (val tk_: Tk, val s1: Stmt, val s2: Stmt) : Stmt(tk_, null, null)
     data class If    (val tk_: Tk.Key, val tst: Expr, val true_: Block, val false_: Block) : Stmt(tk_, null, null)
     data class Ret   (val tk_: Tk.Key) : Stmt(tk_, null, null)

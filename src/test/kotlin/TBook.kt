@@ -35,7 +35,7 @@ val clone = """
         if arg\?0 {
             return <.0>
         } else {
-            return new <.1 call clone arg\!1>
+            return new <.1 clone arg\!1>
         }
     }
 """.trimIndent()
@@ -46,9 +46,9 @@ val add = """
         var x = arg.1
         var y = arg.2
         if y\?0 {
-            return call clone x
+            return clone x
         } else {
-            return new <.1 call add [x,y\!1]>
+            return new <.1 add [x,y\!1]>
         }
     }
 """.trimIndent()
@@ -61,8 +61,8 @@ val mul = """
         if y\?0 {
             return <.0>
         } else {
-            var z = call mul [x, y\!1]
-            return call add [x,z]
+            var z = mul [x, y\!1]
+            return add [x,z]
         }
     }
 """.trimIndent()
@@ -76,7 +76,7 @@ val lt = """
             if arg.1\?0 {
                 return _1
             } else {
-                return call lt [arg.1\!1,arg.2\!1]
+                return lt [arg.1\!1,arg.2\!1]
             }
         }
     }
@@ -91,9 +91,9 @@ val sub = """
             return <.0>
         } else {
             if y\?0 {
-                return call clone x
+                return clone x
             } else {
-                return call sub [x\!1,y\!1]
+                return sub [x\!1,y\!1]
             }
         }
     }
@@ -102,11 +102,11 @@ val sub = """
 val mod = """
     var mod : func [$Num,$Num] -> $Num
     set mod = func [$Num,$Num] -> $Num {
-        if call lt arg {
-            return call clone arg.1
+        if lt arg {
+            return clone arg.1
         } else {
-            var v = call sub arg
-            return call mod [v,arg.2]
+            var v = sub arg
+            return mod [v,arg.2]
         }
     }    
 """.trimIndent()
@@ -122,7 +122,7 @@ val eq = """
             if y\?0 {
                 return _0
             } else {
-                return call eq [x\!1,y\!1]
+                return eq [x\!1,y\!1]
             }
         }
     }
@@ -131,8 +131,8 @@ val eq = """
 val lte = """
     var lte : func  [$Num,$Num] -> _int
     set lte = func  [$Num,$Num] -> _int {
-        var islt = call lt [arg.1\!1,arg.2\!1]
-        var iseq = call eq [arg.1\!1,arg.2\!1]
+        var islt = lt [arg.1\!1,arg.2\!1]
+        var iseq = eq [arg.1\!1,arg.2\!1]
         return _(islt || iseq)
     }
 """.trimIndent()
@@ -190,7 +190,7 @@ class TBook {
             $nums
             $clone
             $add
-            output std call add [two,one]
+            output std add [two,one]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -201,7 +201,7 @@ class TBook {
             """
             $nums
             $clone
-            output std call clone two
+            output std clone two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.0>>>\n") { out }
@@ -214,9 +214,9 @@ class TBook {
             $clone
             $add
             $mul
-            var x = call add [two,one]
-            output std call mul [two, x]
-            --output std call mul [two, call add [two,one]]
+            var x = add [two,one]
+            output std mul [two, x]
+            --output std mul [two, add [two,one]]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
@@ -227,8 +227,8 @@ class TBook {
             """
             $nums
             $lt
-            output std call lt [two, one]
-            output std call lt [one, two]
+            output std lt [two, one]
+            output std lt [one, two]
         """.trimIndent()
         )
         assert(out == "0\n1\n") { out }
@@ -241,7 +241,7 @@ class TBook {
             $clone
             $add
             $sub
-            output std call sub [three, two]
+            output std sub [three, two]
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n") { out }
@@ -252,8 +252,8 @@ class TBook {
             """
             $nums
             $eq
-            output std call eq [three, two]
-            output std call eq [one, one]
+            output std eq [three, two]
+            output std eq [one, one]
         """.trimIndent()
         )
         assert(out == "0\n1\n") { out }
@@ -270,9 +270,9 @@ class TBook {
             $add
             $mul
             var square = func $Num -> $Num {
-                return call mul [arg,arg]
+                return mul [arg,arg]
             }
-            output std call square two
+            output std square two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.0>>>>>\n") { out }
@@ -286,14 +286,14 @@ class TBook {
             $lt
             -- returns narrower scope, guarantees both alive
             var smaller = func [$NumA1,$NumA2] -> $NumA2 {
-                if call lt arg {
+                if lt arg {
                     return arg.1
                 } else {
                     return arg.2
                 }
             }
-            output std call smaller [one,two]
-            output std call smaller [two,one]
+            output std smaller [one,two]
+            output std smaller [two,one]
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n<.1 <.0>>\n") { out }
@@ -314,7 +314,7 @@ class TBook {
             var f_three = func $Num -> $Num {
                 return three
             }
-            output std call f_three one
+            output std f_three one
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -327,9 +327,9 @@ class TBook {
             var infinity : func () -> $Num
             set infinity = func () -> $Num {
                 output std _10:_int
-                return new <.1 call infinity ()>
+                return new <.1 infinity ()>
             }
-            output std call infinity ()
+            output std infinity ()
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -349,10 +349,10 @@ class TBook {
                 if arg.1\?0 {
                     return <.0>
                 } else {
-                    return call mul [arg.1,arg.2]
+                    return mul [arg.1,arg.2]
                 }
             }
-            output std call multiply [two,three]
+            output std multiply [two,three]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
@@ -371,18 +371,18 @@ class TBook {
             var smallerc = func $NumA1 -> (func @a1 -> $Num->$Num) {
                 var x = arg
                 return func @a1 -> $Num -> $Num [x] {
-                    if (call lt [x,arg]) {
-                        return call clone x     -- TODO: remove clone
+                    if (lt [x,arg]) {
+                        return clone x     -- TODO: remove clone
                     } else {
-                        return call clone arg   -- TODO: remove clone
+                        return clone arg   -- TODO: remove clone
                     }
                 }
             }
             -- 30
             var f: func @LOCAL -> $Num -> $Num
-            set f = call smallerc two
-            output std call f one
-            output std call f three
+            set f = smallerc two
+            output std f one
+            output std f three
         """.trimIndent()
         )
         assert(out == "<.1 <.0>>\n<.1 <.1 <.0>>>\n") { out }
@@ -396,12 +396,12 @@ class TBook {
             $add
             $mul
             var square = func $Num -> $Num {
-                return call mul [arg,arg]
+                return mul [arg,arg]
             }
             var twice = func [func $Num->$Num, $Num] -> $Num {
-                return call arg.1 (call arg.1 arg.2)
+                return arg.1 (arg.1 arg.2)
             }
-            output std call twice [square,two]
+            output std twice [square,two]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
@@ -416,13 +416,13 @@ class TBook {
             var plusc = func $NumA1 -> (func @a1->$Num->$Num) {
                 var x = arg
                 return func @a1->$Num->$Num [x] {
-                    return call add [x,arg]
+                    return add [x,arg]
                 }
             }
-            var f = call plusc one
-            output std call f two
-            output std call f one
-            output std call (call plusc one) zero
+            var f = plusc one
+            output std f two
+            output std f one
+            output std (plusc one) zero
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.0>>>\n<.1 <.0>>\n") { out }
@@ -437,16 +437,16 @@ class TBook {
             $mul
             var square: func $Num -> $Num
             set square = func $Num -> $Num {
-                return call mul [arg,arg]
+                return mul [arg,arg]
             }
             var twicec = func (func $Num->$Num) -> (func @GLOBAL->$Num->$Num) {
                 var f = arg
                 return func @GLOBAL->$Num->$Num [f] {
-                    return call f (call f arg)
+                    return f (f arg)
                 }
             }
-            var quad = call twicec square
-            output std call quad two
+            var quad = twicec square
+            output std quad two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
@@ -465,12 +465,12 @@ class TBook {
                     var ff = f
                     return func @a1->$Num->$Num [ff,x] {
                         var y = arg
-                        return call ff [x,y]
+                        return ff [x,y]
                     }
                 }
             }
-            var addc = call curry add
-            output std call (call addc  one) two
+            var addc = curry add
+            output std (addc  one) two
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -495,7 +495,7 @@ class TBook {
                     var ff = f
                     return $ret2 [ff,x] {
                         var y = arg
-                        return call ff [x,y]
+                        return ff [x,y]
                     }
                 }
             }
@@ -504,13 +504,13 @@ class TBook {
             set uncurry = func $ret1 -> $fadd2 {
                 var f = arg
                 return $fadd2 [f] {
-                    return call (call f arg.1) arg.2
+                    return (f arg.1) arg.2
                 }
             }
             
-            var addc = call curry add
-            var addu = call uncurry addc
-            output std call addu [one,two]
+            var addc = curry add
+            var addu = uncurry addc
+            output std addu [one,two]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -524,19 +524,19 @@ class TBook {
             $add
             
             var inc = func $Num -> $Num {
-                return call add [one,arg]
+                return add [one,arg]
             }
-            output std call inc two
+            output std inc two
             
             var compose = func [func $Num->$Num,func $Num->$Num] -> (func @GLOBAL->$Num->$Num) {
                 var f = arg.1
                 var g = arg.2
                 return func @GLOBAL->$Num->$Num [f,g] {
-                    var v = call f arg
-                    return call g v
+                    var v = f arg
+                    return g v
                 }
             }
-            output std call (call compose [inc,inc]) one
+            output std (compose [inc,inc]) one
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.1 <.0>>>>\n") { out }
@@ -558,12 +558,12 @@ class TBook {
                 if arg\?0 {
                     return new <.1 <.0>>
                 } else {
-                    var x = call fact arg\!1
-                    return call mul [arg,x]
+                    var x = fact arg\!1
+                    return mul [arg,x]
                 }
             }
             
-            output std call fact three
+            output std fact three
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>\n") { out }
@@ -605,10 +605,10 @@ class TBook {
 
     val beq = """
         var beq = func [$B,$B] -> $B {
-            return call or [call and arg, call and [call not arg.1, call not arg.2]] 
+            return or [and arg, and [not arg.1, not arg.2]] 
         }
         var bneq = func [$B,$B] -> $B {
-            return call not call beq arg 
+            return not beq arg 
         }        
     """.trimIndent()
 
@@ -643,7 +643,7 @@ class TBook {
                     return <.1>
                 }
             }
-            var xxx = call not <.1>
+            var xxx = not <.1>
             output std /xxx
         """.trimIndent()
         )
@@ -661,9 +661,9 @@ class TBook {
                     return arg.2
                 }
             }
-            var xxx = call and [<.1>,<.2>]
+            var xxx = and [<.1>,<.2>]
             output std /xxx
-            set xxx = call and [<.2>,<.2>]
+            set xxx = and [<.2>,<.2>]
             output std /xxx
         """.trimIndent()
         )
@@ -680,11 +680,11 @@ class TBook {
                     return arg.2
                 }
             }
-            var xxx = call or [<.1>,<.2>]
+            var xxx = or [<.1>,<.2>]
             output std /xxx
-            set xxx = call or [<.2>,<.1>]
+            set xxx = or [<.2>,<.1>]
             output std /xxx
-            set xxx = call or [<.1>,<.1>]
+            set xxx = or [<.1>,<.1>]
             output std /xxx
         """.trimIndent()
         )
@@ -698,16 +698,16 @@ class TBook {
             $and
             $or
             var eq = func [$B,$B] -> $B {
-                return call or [call and arg, call and [call not arg.1, call not arg.2]]
+                return or [and arg, and [not arg.1, not arg.2]]
             }
             var neq = func [$B,$B] -> $B {
-                return call not call eq arg 
+                return not eq arg 
             }
-            var xxx = call eq [<.1>,<.2>]
+            var xxx = eq [<.1>,<.2>]
             output std /xxx
-            set xxx = call neq [<.2>,<.1>]
+            set xxx = neq [<.2>,<.1>]
             output std /xxx
-            set xxx = call eq [<.1>,<.1>]
+            set xxx = eq [<.1>,<.1>]
             output std /xxx
         """.trimIndent()
         )
@@ -726,14 +726,14 @@ class TBook {
             -- 51
             var mod : func [$Num,$Num] -> $Num
             set mod = func [$Num,$Num] -> $Num {
-                if call lt arg {
-                    return call clone arg.1
+                if lt arg {
+                    return clone arg.1
                 } else {
-                    var v = call sub arg
-                    return call mod [v,arg.2]
+                    var v = sub arg
+                    return mod [v,arg.2]
                 }
             }
-            var v = call mod [three,two]
+            var v = mod [three,two]
             output std v
         """.trimIndent()
         )
@@ -756,24 +756,24 @@ class TBook {
             $and
             $ntob
 
-            var n10 = call mul [five,two]
-            var n100 = call mul [n10,n10]
-            var n400 = call mul [four,n100]
+            var n10 = mul [five,two]
+            var n100 = mul [n10,n10]
+            var n400 = mul [four,n100]
             
             var leap = func $Num -> $B {
-                var mod4 = call mod [arg,four]
-                var mod100 = call mod [arg,n100]
-                var mod400 = call mod [arg,n400]
-                return call or [call ntob mod4\?0, call and [call ntob mod100\?1, call ntob mod400\?0]]
+                var mod4 = mod [arg,four]
+                var mod100 = mod [arg,n100]
+                var mod400 = mod [arg,n400]
+                return or [ntob mod4\?0, and [ntob mod100\?1, ntob mod400\?0]]
             }
             
-            var n2000 = call mul [n400,five]
-            var n20 = call add [n10,n10]
-            var n1980 = call sub [n2000,n20]
-            var n1979 = call sub [n1980,one]
-            var x = call leap n1980
+            var n2000 = mul [n400,five]
+            var n20 = add [n10,n10]
+            var n1980 = sub [n2000,n20]
+            var n1979 = sub [n1980,one]
+            var x = leap n1980
             output std /x
-            set x = call leap n1979
+            set x = leap n1979
             output std /x
         """.trimIndent()
         )
@@ -798,29 +798,29 @@ class TBook {
             $or
             -- 119
             var analyse = func [$Num,$Num,$Num] -> $Tri {
-                var xy = call add [arg.1,arg.2]
-                if call lte[xy,arg.3] {
+                var xy = add [arg.1,arg.2]
+                if lte[xy,arg.3] {
                     return <.1>
                 }
-                if call eq [arg.1,arg.3] {
+                if eq [arg.1,arg.3] {
                     return <.2>:$Tri
                 }
-                if call bton (call or [
-                    call ntob (call eq [arg.1,arg.2]),
-                    call ntob (call eq [arg.2,arg.3])
+                if bton (or [
+                    ntob (eq [arg.1,arg.2]),
+                    ntob (eq [arg.2,arg.3])
                 ]) {
                     return <.3>
                 }
                 return <.4>
             }
-            var n10 = call mul [five,two]
-            var v = call analyse [n10,n10,n10]
+            var n10 = mul [five,two]
+            var v = analyse [n10,n10,n10]
             output std /v
-            set v = call analyse [one,five,five]
+            set v = analyse [one,five,five]
             output std /v
-            set v = call analyse [one,one,five]
+            set v = analyse [one,one,five]
             output std /v
-            set v = call analyse [two,four,five]
+            set v = analyse [two,four,five]
             output std /v
         """.trimIndent()
         )
