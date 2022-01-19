@@ -57,6 +57,15 @@ initialization expression:
 var x = ()  -- `x: ()` is inferred from expression `()`
 ```
 
+## Input
+
+An input may ommit its explicit return type, which the language infers from the
+context:
+
+```
+var x: _int = input std ()   -- `: _int` is inferred from the assignment
+```
+
 ## Conditional
 
 The `else` branch is optional:
@@ -161,15 +170,6 @@ var x: /</^@A>@A = new <.1 <.0>>    -- `: @A` is inferred from the assignment
 
 `TODO: return block`
 
-## Input
-
-An input may ommit its explicit return type, which the language infers from the
-context:
-
-```
-var x: _int = input std ()   -- `: _int` is inferred from the assignment
-```
-
 # 4. LEXICAL RULES
 
 No changes.
@@ -178,7 +178,8 @@ No changes.
 
 ```
 Stmt ::= <...>
-      |  `var´ VAR [`:´ Type] [`=´ Expr]                -- optional type and assignment
+      |  `var´ VAR [`:´ Type] [`=´ (Expr|Stmt)]         -- optional type and assignment
+      |  `input´ VAR Expr [`:´ Type]                    -- optional type
       |  `if´ Expr `{´ Stmt `}´ [`else´ `{´ Stmt `}´]   -- optional `else`
       |  `return´ [Expr]                                -- optional result expression
 
@@ -187,8 +188,7 @@ Expr ::= <...>
       |  `<´ `.´ NUM Expr `>´ [`:´ Type]                -- optional type
       |  `<´ `.´ 0 `>´ [`:´ Type]                       -- optional type
       |  `new´ Expr.Union [`:´ BLOCK]                   -- optional block
-      |  `input´ VAR Expr [`:´ Type]                    -- optional type
-      |  `call´ Expr Blocks Expr [`:´ BLOCK]            -- optional block
+      |  Expr Blocks Expr [`:´ BLOCK]                   -- optional block
 
 Type ::= <...>
       |  `/´ Type [BLOCK]                               -- optional block
