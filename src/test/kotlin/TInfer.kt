@@ -44,7 +44,7 @@ class TInfer {
     @Test
     fun a03_input () {
         val out = all("var x: _int = input std ()")
-        assert(out == "var x: _int\nset x = input std (): _int\n\n") { out }
+        assert(out == "var x: _int\nset x = input std (): _int\n") { out }
     }
     @Disabled // no more expr
     @Test

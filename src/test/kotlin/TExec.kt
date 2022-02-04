@@ -126,15 +126,15 @@ class TExec {
         var i: _int = _1
         var n = _0: _int
         loop {
-            set n = _(n + i)
-            set i = _(i + 1)
-            if _(i > 5) {
+            set n = _(${D}n + ${D}i)
+            set i = _(${D}i + 1)
+            if _(${D}i > 5) {
                 break
             }
         }
         output std n
         """.trimIndent())
-        assert(out == "15\n")
+        assert(out == "15\n") { out }
     }
     @Test
     fun a11_unions () {
@@ -510,7 +510,7 @@ class TExec {
     fun c01 () {
         val out = all("""
         var f = func /_int@k1 -> () {
-           set arg\ = _(*arg+1)
+           set arg\ = _(*${D}arg+1)
            return
         }
         var x: _int = _1
@@ -527,10 +527,10 @@ class TExec {
             set fact = func [/_int,_int] -> () {
                 var x = _1: _int
                 var n = arg.2
-                if _(n > 1) {
-                    call fact [/x,_(n-1)]
+                if _(${D}n > 1) {
+                    call fact [/x,_(${D}n-1)]
                 }
-                set arg.1\ = _(x*n)
+                set arg.1\ = _(${D}x*${D}n)
             }
             var x = _0: _int
             call fact [/x,_6]
@@ -619,7 +619,7 @@ class TExec {
             }
             var x: _int
             var px = f /x
-            output std _(px == &x):_int
+            output std _(${D}px == &${D}x):_int
         """.trimIndent()
         )
         assert(out == "1\n") { out }

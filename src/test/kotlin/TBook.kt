@@ -133,7 +133,7 @@ val lte = """
     set lte = func  [$Num,$Num] -> _int {
         var islt = lt [arg.1\!1,arg.2\!1]
         var iseq = eq [arg.1\!1,arg.2\!1]
-        return _(islt || iseq)
+        return _(${D}islt || ${D}iseq)
     }
 """.trimIndent()
 

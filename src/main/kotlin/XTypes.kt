@@ -105,6 +105,12 @@ fun Expr.xinfTypes (inf: Type?) {
                 it.vec[this.tk_.num - 1]
             }
         }
+        is Expr.Pub -> this.tsk.wtype.let {
+            All_assert_tk(this.tk, it is Type.Spawn) {
+                "invalid \"pub\" : type mismatch : expected active task"
+            }
+            (it as Type.Spawn).tsk.pub!!
+        }
         is Expr.UDisc, is Expr.UPred -> {
             // not possible to infer big (union) from small (disc/pred)
             val (tk_,uni) = when (this) {
@@ -158,7 +164,7 @@ fun Expr.xinfTypes (inf: Type?) {
                             fun Type.map (up: Any): Type {
                                 fun Type.aux (): Type {
                                     return when (this) {
-                                        is Type.Unit, is Type.Nat, is Type.Rec -> this
+                                        is Type.Unit, is Type.Nat, is Type.Rec, is Type.Spawn, is Type.Spawns -> this
                                         is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
                                         is Type.Union -> Type.Union(this.tk_, this.isrec, this.vec.map { it.aux() }.toTypedArray())
                                         is Type.Func  -> this
@@ -255,33 +261,35 @@ fun Expr.xinfTypes (inf: Type?) {
                                     ?: Pair(this, scp2)
                             }
 
-                            fun map(tp: Type): Type {
-                                return when (tp) {
-                                    is Type.Ptr -> tp.xscp1!!.get(tp.xscp2!!).let {
-                                        Type.Ptr(tp.tk_, it.first, it.second, map(tp.pln))
-                                            .clone(this, this.tk.lin, this.tk.col)
+                            val outer = this
+                            fun Type.map(): Type {
+                                return when (this) {
+                                    is Type.Ptr -> this.xscp1!!.get(this.xscp2!!).let {
+                                        Type.Ptr(this.tk_, it.first, it.second, this.pln.map())
+                                            .clone(outer, outer.tk.lin, outer.tk.col)
                                     }
-                                    is Type.Tuple -> Type.Tuple(tp.tk_, tp.vec.map { map(it) }.toTypedArray())
-                                        .clone(this, this.tk.lin, this.tk.col)
-                                    is Type.Union -> Type.Union(tp.tk_, tp.isrec, tp.vec.map { map(it) }.toTypedArray())
-                                        .clone(this, this.tk.lin, this.tk.col)
+                                    is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.map() }.toTypedArray())
+                                        .clone(outer, outer.tk.lin, outer.tk.col)
+                                    is Type.Union -> Type.Union(this.tk_, this.isrec, this.vec.map { it.map() }.toTypedArray())
+                                        .clone(outer, outer.tk.lin, outer.tk.col)
                                     is Type.Func -> {
-                                        val clo = tp.xscp1s.first?.get(tp.xscp2s!!.first!!)
-                                        val (x1, x2) = tp.xscp1s.second!!.zip(tp.xscp2s!!.second)
+                                        val clo = this.xscp1s.first?.get(this.xscp2s!!.first!!)
+                                        val (x1, x2) = this.xscp1s.second!!.zip(this.xscp2s!!.second)
                                             .map { it.first.get(it.second) }
                                             .unzip()
                                         Type.Func(
-                                            tp.tk_,
+                                            this.tk_,
                                             Pair(clo?.first, x1.toTypedArray()),
                                             Pair(clo?.second, x2.toTypedArray()),
-                                            map(tp.inp),
-                                            map(tp.out)
-                                        ).clone(this, this.tk.lin, this.tk.col)
+                                            this.inp.map(),
+                                            this.pub?.map(),
+                                            this.out.map()
+                                        ).clone(outer, outer.tk.lin, outer.tk.col)
                                     }
-                                    else -> tp
+                                    else -> this
                                 }
                             }
-                            map(ft.out)
+                            ft.out.map()
                         }
                     }
                     else -> {
@@ -301,18 +309,14 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         return Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
     }
     when (this) {
-        is Stmt.Nop, is Stmt.Break, is Stmt.Ret, is Stmt.Nat -> {}
+        is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
-        is Stmt.SSet -> {
-            this.dst.xinfTypes(null)
-            this.src.xinfTypes(this.dst.wtype!!)
-        }
-        is Stmt.ESet -> {
+        is Stmt.Set -> {
             this.dst.xinfTypes(null)
             this.src.xinfTypes(this.dst.wtype!!)
         }
         is Stmt.SCall -> this.e.xinfTypes(unit())
-        is Stmt.Inp -> {
+        is Stmt.Input -> {
             //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
             //    "invalid inference : undetermined type"
             //}
@@ -320,7 +324,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
             this.arg.xinfTypes(null)
             this.xtype = this.xtype ?: inf?.clone(this,this.tk.lin,this.tk.col) ?: unit()
         }
-        is Stmt.Out -> this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
+        is Stmt.Output -> this.arg.xinfTypes(null)  // no inf b/c output always depends on the argument
         is Stmt.If -> {
             this.tst.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
             this.true_.xinfTypes(null)
@@ -331,20 +335,20 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         is Stmt.Seq -> {
             // var x: ...
             // set x = ...
-            if (this.s1 is Stmt.Var && (this.s2 is Stmt.SSet && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str || this.s2 is Stmt.ESet && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str)) {
+            if (this.s1 is Stmt.Var && (this.s2 is Stmt.Input && this.s2.dst!!.let { it is Expr.Var && this.s1.tk_.str==it.tk_.str } || this.s2 is Stmt.SSpawn && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str || this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str)) {
                 if (this.s1.xtype == null) {
                     // infer var (s1) from expr (s2)
                     // var x: NO
                     // set x = OK
                     when (this.s2) {
-                        is Stmt.SSet -> {
-                            this.s2.src.xinfTypes(null)
-                            this.s2.src.xtype!!.let {
+                        is Stmt.Input -> {
+                            this.s2.xinfTypes(null)
+                            this.s2.xtype!!.let {
                                 this.s1.xinfTypes(it)
-                                this.s2.dst.xinfTypes(null) //it
+                                this.s2.dst!!.xinfTypes(null) //it
                             }
                         }
-                        is Stmt.ESet -> {
+                        is Stmt.Set -> {
                             this.s2.src.xinfTypes(null)
                             this.s2.src.wtype!!.let {
                                 this.s1.xinfTypes(it)
@@ -358,7 +362,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                     // var x: OK
                     // set x = NO
                     this.s1.xinfTypes(null)
-                    this.s2.xinfTypes(null) //this.s1.type
+                    this.s2.xinfTypes(this.s1.xtype)
                 }
             } else {
                 this.s1.xinfTypes(null)
