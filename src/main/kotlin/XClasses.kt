@@ -58,7 +58,7 @@ sealed class Stmt (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class Nop    (val tk_: Tk) : Stmt(tk_, null, null)
     data class Var    (val tk_: Tk.Str, var xtype: Type?) : Stmt(tk_, null, null)
     data class Set    (val tk_: Tk.Chr, val dst: Expr, val src: Expr) : Stmt(tk_, null, null)
-    data class Native (val tk_: Tk.Nat) : Stmt(tk_, null, null)
+    data class Native (val tk_: Tk.Nat, val istype: Boolean) : Stmt(tk_, null, null)
     data class SCall  (val tk_: Tk.Key, val e: Expr) : Stmt(tk_, null, null)
     data class SSpawn (val tk_: Tk.Key, val dst: Expr, val call: Expr.Call): Stmt(tk_, null, null)
     data class DSpawn (val tk_: Tk.Key, val dst: Expr, val call: Expr.Call): Stmt(tk_, null, null)
