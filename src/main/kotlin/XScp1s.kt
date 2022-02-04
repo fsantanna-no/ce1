@@ -7,15 +7,7 @@ fun Stmt.xinfScp1s () {
                 }
             }
             is Type.Func -> {
-                // if returns closure, label must go to input scope
-                //      var f: func () -> (func @a1->()->())
-                //      var f: func {@a1} -> () -> (func @a1->()->())
-                val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null && tp.out.xscp1s.first?.enu==TK.XSCPVAR) {
-                    arrayOf(tp.out.xscp1s.first!!)
-                } else {
-                    emptyArray()
-                }
-
+                // TODO: inp_pub_out
                 // set increasing @a_X to each pointer in [inp]->[out]
                 val inp_out = let {
                     var c = 'h'     // first is 'i'
@@ -70,11 +62,25 @@ fun Stmt.xinfScp1s () {
                         .filterNotNull()
                 }
 
+                // task needs to add implicit closure @LOCAL if absent
+                val first = tp.xscp1s.first ?: Tk.Scp1(TK.XSCPCST, tp.tk.lin, tp.tk.col, "LOCAL", null)
+
                 // {closure} + {explicit scopes} + implicit inp_out
-                val scp1s = (clo + (tp.xscp1s.second ?: emptyArray()) + inp_out)
-                    .distinctBy { Pair(it.lbl,it.num) }
-                    .toTypedArray()
-                tp.xscp1s = Pair(tp.xscp1s.first, scp1s)
+                val second = let {
+                    // if returns closure, label must go to input scope
+                    //      var f: func () -> (func @a1->()->())
+                    //      var f: func {@a1} -> () -> (func @a1->()->())
+                    val clo = if (tp.out is Type.Func && tp.out.xscp1s.first!=null && tp.out.xscp1s.first?.enu==TK.XSCPVAR) {
+                        arrayOf(tp.out.xscp1s.first!!)
+                    } else {
+                        emptyArray()
+                    }
+
+                    (clo + (tp.xscp1s.second ?: emptyArray()) + inp_out)
+                        .distinctBy { Pair(it.lbl,it.num) }
+                        .toTypedArray()
+                }
+                tp.xscp1s = Pair(first, second)
             }
         }
     }

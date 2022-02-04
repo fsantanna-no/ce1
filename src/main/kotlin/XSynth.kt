@@ -40,7 +40,7 @@ fun Stmt.tostr (): String {
         is Stmt.SSpawn -> "set " + this.dst.tostr() + " = spawn " + this.call.tostr() + "\n"
         is Stmt.DSpawn -> "spawn " + this.call + " in " + this.dst.tostr() + "\n"
         is Stmt.Await  -> "await " + this.e.tostr() + "\n"
-        is Stmt.Bcast  -> "bcast " + this.e.tostr() + "\n"
+        is Stmt.Bcast  -> "bcast " + this.scp1!!.tostr() + " " + this.e.tostr() + "\n"
         is Stmt.Throw  -> "throw\n"
         is Stmt.DLoop  -> "loop " + this.i.tostr() + " in " + this.tsks.tostr() + this.block.tostr()
     }

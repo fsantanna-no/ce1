@@ -174,6 +174,16 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun a14_nat1 () {
+        val out = all("var x: _int = _10")
+        assert(out == "var x: _int\nset x = (_10: _int)\n") { out }
+    }
+    @Test
+    fun a15_nat2 () {
+        val out = all("var x: _int ; set x = _10")
+        assert(out == "var x: _int\nset x = (_10: _int)\n") { out }
+    }
 
 
     // inference error

@@ -316,6 +316,12 @@ fun Stmt.xinfTypes (inf: Type? = null) {
             this.src.xinfTypes(this.dst.wtype!!)
         }
         is Stmt.SCall -> this.e.xinfTypes(unit())
+        is Stmt.SSpawn -> {
+            this.dst.xinfTypes(null)
+            this.call.xinfTypes(null)
+        }
+        is Stmt.Await -> this.e.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
+        is Stmt.Bcast -> this.e.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
         is Stmt.Input -> {
             //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
             //    "invalid inference : undetermined type"
@@ -346,6 +352,18 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                             this.s2.xtype!!.let {
                                 this.s1.xinfTypes(it)
                                 this.s2.dst!!.xinfTypes(null) //it
+                            }
+                        }
+                        is Stmt.SSpawn -> {
+                            this.s2.call.xinfTypes(null)
+                            this.s2.call.f.wtype!!.let {
+                                this.s1.xinfTypes (
+                                    Type.Spawn (
+                                        Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
+                                        it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col) as Type.Func
+                                    )
+                                )
+                                this.s2.dst.xinfTypes(null) //it
                             }
                         }
                         is Stmt.Set -> {

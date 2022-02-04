@@ -63,7 +63,7 @@ sealed class Stmt (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class SSpawn (val tk_: Tk.Key, val dst: Expr, val call: Expr.Call): Stmt(tk_, null, null)
     data class DSpawn (val tk_: Tk.Key, val dst: Expr, val call: Expr.Call): Stmt(tk_, null, null)
     data class Await  (val tk_: Tk.Key, val e: Expr): Stmt(tk_, null, null)
-    data class Bcast  (val tk_: Tk.Key, val scp1: Tk.Scp1, val e: Expr): Stmt(tk_, null, null)
+    data class Bcast  (val tk_: Tk.Key, var scp1: Tk.Scp1, val e: Expr): Stmt(tk_, null, null)
     data class Throw  (val tk_: Tk.Key): Stmt(tk_, null, null)
     data class Input  (val tk_: Tk.Key, var xtype: Type?, val dst: Expr?, val lib: Tk.Str, val arg: Expr): Stmt(tk_, null, null)
     data class Output (val tk_: Tk.Key, val lib: Tk.Str, val arg: Expr): Stmt(tk_, null, null)
