@@ -144,7 +144,7 @@ class TTask {
                 }
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 9): invalid return : type mismatch") { out }
+        assert(out == "(ln 3, col 9): invalid return : type mismatch\n") { out }
     }
     @Test
     fun a06_par1 () {
@@ -173,8 +173,8 @@ class TTask {
                     output std _2:_int
                 }
             }
-            var f = build @[@LOCAL] ()
-            var g = build @[@LOCAL] ()
+            var f = build ()
+            var g = build ()
             output std _10:_int
             var x = spawn f ()
             output std _11:_int
@@ -385,15 +385,6 @@ class TTask {
     // THROW / CATCH
 
     @Test
-    fun c00_catch () {
-        val out = all("""
-           catch {
-           }
-        """.trimIndent())
-        assert(out == "(ln 1, col 7): invalid `catch` : requires enclosing task\n") { out }
-    }
-
-    @Test
     fun c00_err () {
         val out = all("""
             var f : task ()->()->()
@@ -528,14 +519,6 @@ class TTask {
     // FIELDS
 
     @Test
-    fun d00_err () {
-        val out = all("""
-            var f : task()->_int->()
-            set f.pub = _4:_int
-        """.trimIndent())
-        assert(out == "(ln 2, col 7): invalid \"pub\" : type mismatch : expected active task") { out }
-    }
-    @Test
     fun d01_field () {
         val out = all("""
             var f = task ()->_int->() {
@@ -554,21 +537,13 @@ class TTask {
     // SPAWN / DYNAMIC
 
     @Test
-    fun e01_spawn_err1 () {
-        val out = all("""
-            spawn task ()->()->() {
-            } ()
-        """.trimIndent())
-        assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
-    }
-    @Test
     fun e01_spawn_err2 () {
         val out = all("""
             var f : func ()->()
-            var fs : active tasks @LOCAL->@[]->()->()->()
+            var fs : active tasks ()->()->()
             spawn f () in fs
         """.trimIndent())
-        assert(out == "(ln 3, col 7): invalid `spawn` : type mismatch : expected task") { out }
+        assert(out == "(ln 3, col 8): invalid `spawn` : type mismatch : expected task\n") { out }
     }
     @Test
     fun e01_spawn_err3 () {
@@ -576,7 +551,7 @@ class TTask {
             var f : task ()->()->()
             spawn f () in ()
         """.trimIndent())
-        assert(out == "(ln 2, col 15): invalid `spawn` : type mismatch : expected active tasks") { out }
+        assert(out == "(ln 2, col 21): invalid `spawn` : type mismatch : expected active tasks\n") { out }
     }
     @Test
     fun e01_spawn_err4 () {
@@ -585,7 +560,7 @@ class TTask {
             var fs : active tasks [()]->()->()
             spawn f () in fs
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch\n    tasks @LOCAL -> @[] -> [()] -> ()\n    task @LOCAL -> @[] -> () -> ()") { out }
+        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch\n    tasks @LOCAL -> @[] -> [()] -> ()\n    task @LOCAL -> @[] -> () -> ()\n") { out }
     }
     @Test
     fun e02_spawn_free () {
@@ -614,7 +589,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 6): invalid `loop` : type mismatch : expected task type") { out }
+        assert(out == "(ln 3, col 6): invalid `loop` : type mismatch : expected task type\n") { out }
 
     }
     @Test
@@ -625,7 +600,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid `loop` : type mismatch\n    active task @LOCAL -> @[] -> () -> ()\n    active tasks @LOCAL -> @[] -> [()] -> ()") { out }
+        assert(out == "(ln 3, col 1): invalid `loop` : type mismatch\n    active task @LOCAL -> @[] -> () -> ()\n    active tasks @LOCAL -> @[] -> [()] -> ()\n") { out }
 
     }
     @Test
@@ -635,7 +610,7 @@ class TTask {
             loop x in () {
             }
         """.trimIndent())
-        assert(out == "(ln 2, col 6): invalid `loop` : type mismatch : expected task type") { out }
+        assert(out == "(ln 2, col 6): invalid `loop` : type mismatch : expected task type\n") { out }
     }
     @Test
     fun f04_err () {
@@ -644,7 +619,7 @@ class TTask {
             loop x in () {
             }
         """.trimIndent())
-        assert(out == "(ln 2, col 11): invalid `loop` : type mismatch : expected tasks type") { out }
+        assert(out == "(ln 2, col 11): invalid `loop` : type mismatch : expected tasks type\n") { out }
     }
 
     @Test

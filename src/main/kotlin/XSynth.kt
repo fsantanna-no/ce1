@@ -36,12 +36,12 @@ fun Stmt.tostr (): String {
         is Stmt.Output   -> "output " + this.lib.str + " " + this.arg.tostr() + "\n"
         is Stmt.If    -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop  -> "loop " + this.block.tostr()
-        is Stmt.Block -> "{" + (this.xscp1?.tostr() ?: "").let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
+        is Stmt.Block -> (if (this.iscatch) "catch " else "") + "{" + (this.xscp1?.tostr() ?: "").let { if (it == "") "" else " "+it } + "\n" + this.body.tostr() + "}\n"
         is Stmt.SSpawn -> "set " + this.dst.tostr() + " = spawn " + this.call.tostr() + "\n"
-        is Stmt.DSpawn -> "spawn " + this.call + " in " + this.dst.tostr() + "\n"
+        is Stmt.DSpawn -> "spawn " + this.call.tostr() + " in " + this.dst.tostr() + "\n"
         is Stmt.Await  -> "await " + this.e.tostr() + "\n"
         is Stmt.Bcast  -> "bcast " + this.scp1!!.tostr() + " " + this.e.tostr() + "\n"
         is Stmt.Throw  -> "throw\n"
-        is Stmt.DLoop  -> "loop " + this.i.tostr() + " in " + this.tsks.tostr() + this.block.tostr()
+        is Stmt.DLoop  -> "loop " + this.i.tostr() + " in " + this.tsks.tostr() + " " + this.block.tostr()
     }
 }

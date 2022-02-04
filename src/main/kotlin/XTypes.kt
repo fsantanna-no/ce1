@@ -105,11 +105,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 it.vec[this.tk_.num - 1]
             }
         }
-        is Expr.Pub -> this.tsk.wtype.let {
-            All_assert_tk(this.tk, it is Type.Spawn) {
-                "invalid \"pub\" : type mismatch : expected active task"
+        is Expr.Pub -> {
+            this.tsk.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
+            this.tsk.wtype.let {
+                All_assert_tk(this.tk, it is Type.Spawn) {
+                    "invalid \"pub\" : type mismatch : expected active task"
+                }
+                (it as Type.Spawn).tsk.pub!!
             }
-            (it as Type.Spawn).tsk.pub!!
         }
         is Expr.UDisc, is Expr.UPred -> {
             // not possible to infer big (union) from small (disc/pred)
@@ -309,7 +312,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         return Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
     }
     when (this) {
-        is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native -> {}
+        is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native, is Stmt.Throw -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Stmt.Set -> {
             this.dst.xinfTypes(null)
@@ -317,6 +320,10 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         }
         is Stmt.SCall -> this.e.xinfTypes(unit())
         is Stmt.SSpawn -> {
+            this.dst.xinfTypes(null)
+            this.call.xinfTypes(null)
+        }
+        is Stmt.DSpawn -> {
             this.dst.xinfTypes(null)
             this.call.xinfTypes(null)
         }
@@ -337,6 +344,11 @@ fun Stmt.xinfTypes (inf: Type? = null) {
             this.false_.xinfTypes(null)
         }
         is Stmt.Loop -> this.block.xinfTypes(null)
+        is Stmt.DLoop -> {
+            this.tsks.xinfTypes(null)
+            this.i.xinfTypes(null)
+            this.block.xinfTypes(null)
+        }
         is Stmt.Block -> this.body.xinfTypes(null)
         is Stmt.Seq -> {
             // var x: ...

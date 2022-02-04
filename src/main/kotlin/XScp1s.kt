@@ -63,7 +63,9 @@ fun Stmt.xinfScp1s () {
                 }
 
                 // task needs to add implicit closure @LOCAL if absent
-                val first = tp.xscp1s.first ?: Tk.Scp1(TK.XSCPCST, tp.tk.lin, tp.tk.col, "LOCAL", null)
+                val first = tp.xscp1s.first ?: if (tp.tk.enu==TK.FUNC) null else {
+                    Tk.Scp1(TK.XSCPCST, tp.tk.lin, tp.tk.col, "LOCAL", null)
+                }
 
                 // {closure} + {explicit scopes} + implicit inp_out
                 val second = let {
