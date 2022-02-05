@@ -25,7 +25,7 @@ fun Expr.tostr (): String {
 fun Stmt.tostr (): String {
     return when (this) {
         is Stmt.Nop   -> "\n"
-        is Stmt.Native   -> "native " + this.tk_.toce() + "\n"
+        is Stmt.Native   -> "native " + (if (this.istype) "type " else "") + this.tk_.toce() + "\n"
         is Stmt.Var   -> "var " + this.tk_.str + ": " + this.xtype!!.tostr() + "\n"
         is Stmt.Set -> "set " + this.dst.tostr() + " = " + this.src.tostr() + "\n"
         is Stmt.Break -> "break\n"
