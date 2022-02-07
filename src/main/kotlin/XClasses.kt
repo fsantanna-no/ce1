@@ -81,7 +81,7 @@ sealed class Stmt (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class Block  (val tk_: Tk.Chr, val iscatch: Boolean, var xscp1: Tk.Id?, val body: Stmt) : Stmt(tk_, null, null)
     data class Typedef (
         val tk_: Tk.Id,
-        val xscp1s: Pair<Array<Tk.Id>,Array<Pair<String,String>>>,
+        var xscp1s: Pair<Array<Tk.Id>?,Array<Pair<String,String>>?>,
         var xscp2s: Array<Scp2>?,
         val type: Type
     ) : Stmt(tk_, null, null)

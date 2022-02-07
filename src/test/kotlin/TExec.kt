@@ -766,6 +766,16 @@ class TExec {
     fun e04_type () {
         val out = all("""
             type List = </List>
+            var l: /List = new <.1 <.0>>
+            output std l
+        """.trimIndent())
+        //assert(out == "(ln 1, col 21): invalid assignment : type mismatch") { out }
+        assert(out == "<.1 <.0>>\n") { out }
+    }
+    @Test
+    fun e05_type () {
+        val out = all("""
+            type List = </List>
             { @A
                 var pa: /List @[LOCAL] @LOCAL
                 set pa = new <.1 <.0>: /List @[A] @A>:List @[A]: @A

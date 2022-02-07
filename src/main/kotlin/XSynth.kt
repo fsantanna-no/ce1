@@ -44,7 +44,7 @@ fun Stmt.tostr (): String {
         is Stmt.Throw   -> "throw\n"
         is Stmt.DLoop   -> "loop " + this.i.tostr() + " in " + this.tsks.tostr() + " " + this.block.tostr()
         is Stmt.Typedef -> {
-            val scps = " @[" + this.xscp1s.first.map { it.id }.joinToString(",") + "]"
+            val scps = " @[" + this.xscp1s.first!!.map { it.id }.joinToString(",") + "]"
             "type " + this.tk_.id + scps + " = " + this.type.tostr() + "\n"
         }
     }

@@ -148,9 +148,22 @@ class TInfer {
             output std l
         """.trimIndent())
         assert(out == """
-            TODO
-            
+            type List @[i] = </List@i>
+            var l: /List@LOCAL
+            set l = <.0>: /List@LOCAL
+            output std l
+
         """.trimIndent()) { out }
+    }
+    @Test
+    fun a10_type3 () {
+        val out = all("""
+            type List = </List>
+            var l: /List = new <.1 <.0>>
+            output std l
+        """.trimIndent())
+        //assert(out == "(ln 1, col 21): invalid assignment : type mismatch") { out }
+        assert(out == "<.1 <.0>>\n") { out }
     }
     @Test
     fun a10_new () {
