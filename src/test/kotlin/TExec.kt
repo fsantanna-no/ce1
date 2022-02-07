@@ -11,7 +11,7 @@ class TExec {
     fun all (inp: String): String {
         val all = All_new(PushbackReader(StringReader(inp), 2))
         lexer(all)
-        val s = xparser_stmts(all, Pair(TK.EOF,null))
+        val s = xparser_stmts(all)
         s.setUps(null)
         s.setEnvs(null)
         s.xinfScp1s()
@@ -728,5 +728,60 @@ class TExec {
         )
         assert(out == "()\n") { out }
     }
+
+    // TYPE / ALIAS
+
+    @Test
+    fun e01_type () {
+        val out = all("""
+            type List = </List @LOCAL>
+            var l: /List = <.0>
+            output std l
+        """.trimIndent())
+        assert(out == "<.0>\n") { out }
+    }
+    @Test
+    fun e02_type () {
+        val out = all("""
+            type List = </List @LOCAL>
+            var l: /List = new <.1 <.0>>
+            output std l
+        """.trimIndent())
+        //assert(out == "(ln 1, col 21): invalid assignment : type mismatch") { out }
+        assert(out == "<.1 <.0>>\n") { out }
+    }
+    @Test
+    fun e03_type () {
+        val out = all("""
+            type List = </List @LOCAL>
+            var l: /List
+            var z: /List = <.0>
+            var one: /List = new <.1 z>
+            set l = new <.1 one>
+            output std l\!1
+        """.trimIndent())
+        assert(out == "<.1 <.0>>\n") { out }
+    }
+    @Test
+    fun e04_type () {
+        val out = all("""
+            type List = </List>
+            { @A
+                var pa: /List @[LOCAL] @LOCAL
+                set pa = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                var f: func @A-> ()->()
+                set f = func@A-> @[]-> ()->()[pa]{
+                    var pf: /List @[A] @A
+                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                    set pa\!1 = pf
+                    --output std pa
+                }
+                call f ()
+                output std pa
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
+
 
 }

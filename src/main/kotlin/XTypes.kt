@@ -9,29 +9,29 @@ fun Expr.xinfTypes (inf: Type?) {
         is Expr.Unit  -> this.wtype!!
         is Expr.Nat   -> this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Expr.Upref -> {
-            All_assert_tk(this.tk, inf==null || inf is Type.Ptr) { "invalid inference : type mismatch"}
-            this.pln.xinfTypes((inf as Type.Ptr?)?.pln)
+            All_assert_tk(this.tk, inf==null || inf is Type.Pointer) { "invalid inference : type mismatch"}
+            this.pln.xinfTypes((inf as Type.Pointer?)?.pln)
             this.pln.wtype!!.let {
                 val lbl = this.toBaseVar()?.let {
-                    val blk = (it.env() as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
+                    val blk = (it.env(it.tk_.id) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
                     when {
                         (blk == null) -> "GLOBAL"
                         (blk.xscp1 == null) -> {
-                            val lbl = "SS" + it.tk_.str.toUpperCase()
-                            blk.xscp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,lbl,null)
+                            val lbl = "SS" + it.tk_.id.toUpperCase()
+                            blk.xscp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
                             lbl
                         }
-                        else -> blk.xscp1!!.lbl
+                        else -> blk.xscp1!!.id
                     }
                 } ?: "GLOBAL"
-                val scp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,lbl,null)
-                Type.Ptr(this.tk_, scp1, scp1.toScp2(this), it).clone(this, this.tk.lin, this.tk.col)
+                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
+                Type.Pointer(this.tk_, scp1, scp1.toScp2(this), it).clone(this, this.tk.lin, this.tk.col)
             }
         }
         is Expr.Dnref -> {
             this.ptr.xinfTypes(inf?.let {
-                val scp1 = Tk.Scp1(TK.XSCPCST,this.tk.lin,this.tk.col,"LOCAL",null)
-                Type.Ptr (
+                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,"LOCAL")
+                Type.Pointer (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
                     scp1,
                     scp1.toScp2(this),
@@ -40,10 +40,10 @@ fun Expr.xinfTypes (inf: Type?) {
             })
             this.ptr.wtype!!.let {
                 if (it is Type.Nat) it else {
-                    All_assert_tk(this.tk, it is Type.Ptr) {
+                    All_assert_tk(this.tk, it is Type.Pointer) {
                         "invalid operand to `\\´ : not a pointer"
                     }
-                    (it as Type.Ptr).pln
+                    (it as Type.Pointer).pln
                 }
             }
         }
@@ -56,10 +56,10 @@ fun Expr.xinfTypes (inf: Type?) {
         }
         is Expr.UCons -> {
             val x = if (this.xtype != null) {
-                (this.xtype as Type.Union).expand()[this.tk_.num - 1]
+                (this.xtype as Type.Union).vec[this.tk_.num - 1]
             } else {
                 All_assert_tk(this.tk, inf is Type.Union) { "invalid inference : type mismatch"}
-                (inf as Type.Union).expand()[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
+                (inf as Type.Union).vec[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
             }
             this.arg.xinfTypes(x)
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
@@ -74,19 +74,19 @@ fun Expr.xinfTypes (inf: Type?) {
             this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         }
         is Expr.New   -> {
-            All_assert_tk(this.tk, inf==null || inf is Type.Ptr) {
+            All_assert_tk(this.tk, inf==null || inf is Type.Pointer) {
                 "invalid inference : type mismatch"
             }
-            this.arg.xinfTypes((inf as Type.Ptr?)?.pln)
+            this.arg.xinfTypes((inf as Type.Pointer?)?.pln)
             if (this.xscp1 == null) {
-                if (inf is Type.Ptr) {
+                if (inf is Type.Pointer) {
                     this.xscp1 = inf.xscp1
                 } else {
-                    this.xscp1 = Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col, "LOCAL", null)
+                    this.xscp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col, "LOCAL")
                 }
                 this.xscp2 = this.xscp1!!.toScp2(this)
             }
-            Type.Ptr(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
+            Type.Pointer(Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'), this.xscp1!!, this.xscp2!!, this.arg.wtype!!).clone(this, this.tk.lin, this.tk.col)
         }
         is Expr.Func -> {
             this.block.xinfTypes(null)
@@ -137,14 +137,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 is Expr.UDisc -> if (this.tk_.num == 0) {
                     Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
                 } else {
-                    tp.expand()[this.tk_.num - 1]
+                    tp.vec[this.tk_.num - 1]
                 }
                 is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col)
                 else -> error("bug found")
             }
         }
         is Expr.Var -> {
-            val s = this.env()!!
+            val s = this.env(this.tk_.id)!!
             All_assert_tk(this.tk, s !is Stmt.Var || s.xtype!=null) {
                 "invalid inference : undetermined type"
             }
@@ -167,13 +167,14 @@ fun Expr.xinfTypes (inf: Type?) {
                             fun Type.map (up: Any): Type {
                                 fun Type.aux (): Type {
                                     return when (this) {
-                                        is Type.Unit, is Type.Nat, is Type.Rec, is Type.Spawn, is Type.Spawns -> this
+                                        is Type.Alias -> TODO()
+                                        is Type.Unit, is Type.Nat, is Type.Spawn, is Type.Spawns -> this
                                         is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
-                                        is Type.Union -> Type.Union(this.tk_, this.isrec, this.vec.map { it.aux() }.toTypedArray())
+                                        is Type.Union -> Type.Union(this.tk_, this.vec.map { it.aux() }.toTypedArray())
                                         is Type.Func  -> this
-                                        is Type.Ptr   -> {
-                                            val scp1 = Tk.Scp1(TK.XSCPCST, this.tk.lin, this.tk.col,"LOCAL",null)
-                                            Type.Ptr(this.tk_, scp1, scp1.toScp2(e), this.pln.aux())
+                                        is Type.Pointer   -> {
+                                            val scp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")
+                                            Type.Pointer(this.tk_, scp1, scp1.toScp2(e), this.pln.aux())
                                         }
                                     }
                                 }
@@ -189,7 +190,7 @@ fun Expr.xinfTypes (inf: Type?) {
                             // scope of expected closure environment
                             //      var f: func {@LOCAL} -> ...     // f will hold env in @LOCAL
                             //      set f = call g {@LOCAL} ()      // pass it for the builder function
-                            val clo: List<Pair<Tk.Scp1,Tk.Scp1>> = if (inf is Type.Func && inf.xscp1s.first!=null) {
+                            val clo: List<Pair<Tk.Id,Tk.Id>> = if (inf is Type.Func && inf.xscp1s.first!=null) {
                                 listOf(Pair((ft.out as Type.Func).xscp1s.first!!,inf.xscp1s.first!!))
                             } else {
                                 emptyList()
@@ -200,39 +201,39 @@ fun Expr.xinfTypes (inf: Type?) {
                             val ret1s = if (inf == null) {
                                 // no attribution expected, save to @LOCAL as shortest scope possible
                                 ft.out.flattenLeft()
-                                    .filter { it is Type.Ptr }
-                                    .let { it as List<Type.Ptr> }
-                                    .map { Tk.Scp1(TK.XSCPCST, it.tk.lin, it.tk.col, "LOCAL", null) }
+                                    .filter { it is Type.Pointer }
+                                    .let { it as List<Type.Pointer> }
+                                    .map { Tk.Id(TK.XID, it.tk.lin, it.tk.col, "LOCAL") }
                             } else {
                                 inf.flattenLeft()
-                                    .filter { it is Type.Ptr }
-                                    .let { it as List<Type.Ptr> }
+                                    .filter { it is Type.Pointer }
+                                    .let { it as List<Type.Pointer> }
                                     .map { it.xscp1!! }
                             }
-                            assert(ret1s.distinctBy { Pair(it.lbl,it.num) }.size <= 1) { "TODO: multiple pointer returns" }
+                            assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
                             val arg1s = this.arg.wtype!!.flattenLeft()
-                                .filter { it is Type.Ptr }
-                                .let { it as List<Type.Ptr> }
+                                .filter { it is Type.Pointer }
+                                .let { it as List<Type.Pointer> }
                                 .map { it.xscp1!! }
 
                             // var ret = call f arg  ==>  { arg, ret }
-                            val arg_ret: List<Tk.Scp1> = arg1s + ret1s
+                            val arg_ret: List<Tk.Id> = arg1s + ret1s
 
                             /////////
 
                             // func inp -> out  ==>  { inp, out }
-                            val inp_out: List<Tk.Scp1> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
-                                .filter { it is Type.Ptr }
-                                .let { it as List<Type.Ptr> }
+                            val inp_out: List<Tk.Id> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
+                                .filter { it is Type.Pointer }
+                                .let { it as List<Type.Pointer> }
                                 .map { it.xscp1!! }
 
-                            val xxx: List<Pair<Tk.Scp1, Tk.Scp1>> = inp_out.zip(arg_ret)
+                            val xxx: List<Pair<Tk.Id, Tk.Id>> = inp_out.zip(arg_ret)
 
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
-                            val scp1s: List<Tk.Scp1> = (clo + xxx)
-                                .filter { it.first.enu == TK.XSCPVAR }  // ignore constant labels (they not args)
-                                .distinctBy { Pair(it.first.lbl,it.first.num) }
+                            val scp1s: List<Tk.Id> = (clo + xxx)
+                                .filter { it.first.enu == TK.XID }  // ignore constant labels (they not args)
+                                .distinctBy { it.first.id }
                                 .map { it.second }
 
                             Pair(scp1s.toTypedArray(), if (ret1s.size==0) null else ret1s[0])
@@ -256,24 +257,24 @@ fun Expr.xinfTypes (inf: Type?) {
                             // TODO: may fail before check2, return anything
                             Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR")).clone(this,this.tk.lin,this.tk.col)
                         } else {
-                            val MAP: List<Pair<Tk.Scp1, Pair<Tk.Scp1, Scp2>>> =
+                            val MAP: List<Pair<Tk.Id, Pair<Tk.Id, Scp2>>> =
                                 ft.xscp1s.second!!.zip(this.xscp1s.first!!.zip(this.xscp2s!!.first))
 
-                            fun Tk.Scp1.get(scp2: Scp2): Pair<Tk.Scp1, Scp2> {
-                                return MAP.find { it.first.let { it.lbl == this.lbl && it.num == this.num } }?.second
+                            fun Tk.Id.get(scp2: Scp2): Pair<Tk.Id, Scp2> {
+                                return MAP.find { it.first.let { it.id == this.id } }?.second
                                     ?: Pair(this, scp2)
                             }
 
                             val outer = this
                             fun Type.map(): Type {
                                 return when (this) {
-                                    is Type.Ptr -> this.xscp1!!.get(this.xscp2!!).let {
-                                        Type.Ptr(this.tk_, it.first, it.second, this.pln.map())
+                                    is Type.Pointer -> this.xscp1!!.get(this.xscp2!!).let {
+                                        Type.Pointer(this.tk_, it.first, it.second, this.pln.map())
                                             .clone(outer, outer.tk.lin, outer.tk.col)
                                     }
                                     is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.map() }.toTypedArray())
                                         .clone(outer, outer.tk.lin, outer.tk.col)
-                                    is Type.Union -> Type.Union(this.tk_, this.isrec, this.vec.map { it.map() }.toTypedArray())
+                                    is Type.Union -> Type.Union(this.tk_, this.vec.map { it.map() }.toTypedArray())
                                         .clone(outer, outer.tk.lin, outer.tk.col)
                                     is Type.Func -> {
                                         val clo = this.xscp1s.first?.get(this.xscp2s!!.first!!)
@@ -282,7 +283,7 @@ fun Expr.xinfTypes (inf: Type?) {
                                             .unzip()
                                         Type.Func(
                                             this.tk_,
-                                            Pair(clo?.first, x1.toTypedArray()),
+                                            Triple(clo?.first, x1.toTypedArray(), this.xscp1s.third),
                                             Pair(clo?.second, x2.toTypedArray()),
                                             this.inp.map(),
                                             this.pub?.map(),
@@ -312,7 +313,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         return Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
     }
     when (this) {
-        is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native, is Stmt.Throw -> {}
+        is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native, is Stmt.Throw, is Stmt.Typedef -> {}
         is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
         is Stmt.Set -> {
             this.dst.xinfTypes(null)
@@ -353,7 +354,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         is Stmt.Seq -> {
             // var x: ...
             // set x = ...
-            if (this.s1 is Stmt.Var && (this.s2 is Stmt.Input && this.s2.dst!!.let { it is Expr.Var && this.s1.tk_.str==it.tk_.str } || this.s2 is Stmt.SSpawn && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str || this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.str==this.s2.dst.tk_.str)) {
+            if (this.s1 is Stmt.Var && (this.s2 is Stmt.Input && this.s2.dst!!.let { it is Expr.Var && this.s1.tk_.id==it.tk_.id } || this.s2 is Stmt.SSpawn && this.s2.dst is Expr.Var && this.s1.tk_.id==this.s2.dst.tk_.id || this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.id==this.s2.dst.tk_.id)) {
                 if (this.s1.xtype == null) {
                     // infer var (s1) from expr (s2)
                     // var x: NO

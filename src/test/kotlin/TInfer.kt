@@ -12,7 +12,7 @@ class TInfer {
         val all = All_new(PushbackReader(StringReader(inp), 2))
         lexer(all)
         try {
-            val s = xparser_stmts(all, Pair(TK.EOF, null))
+            val s = xparser_stmts(all)
             s.setUps(null)
             s.setEnvs(null)
             s.xinfScp1s()
@@ -126,6 +126,33 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
+    fun a10_type1 () {
+        val out = all("""
+            type List = </List @LOCAL>
+            var l: /List = <.0>
+            output std l
+        """.trimIndent())
+        assert(out == """
+            type List @[] = </List@LOCAL>
+            var l: /List@LOCAL
+            set l = <.0>: /List@LOCAL
+            output std l
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun a10_type2 () {
+        val out = all("""
+            type List = </List>
+            var l: /List = <.0>
+            output std l
+        """.trimIndent())
+        assert(out == """
+            TODO
+            
+        """.trimIndent()) { out }
+    }
+    @Test
     fun a10_new () {
         val out = all("""
             var l: /</^ @LOCAL> @LOCAL
@@ -153,7 +180,7 @@ class TInfer {
         val out = all("""
             var x = <.2 ()>: <()>
         """.trimIndent())
-        assert(out == "(ln 1, col 11): invalid constructor : out of bounds") { out }
+        assert(out == "(ln 1, col 11): invalid union constructor : out of bounds") { out }
     }
     @Test
     fun a13_input_ptr () {
@@ -163,8 +190,8 @@ class TInfer {
             input pico /e
         """.trimIndent())
         assert(out == """
-            var input_pico_Unit: func @[@i1] -> /()@i1 -> ()
-            set input_pico_Unit = func @[@i1] -> /()@i1 -> () {
+            var input_pico_Unit: func @[i] -> /()@i -> ()
+            set input_pico_Unit = func @[i] -> /()@i -> () {
 
             }
 
@@ -259,7 +286,7 @@ class TInfer {
         val out = all("""
         var f: func /_int -> ()
         """.trimIndent())
-        assert(out == "var f: func @[@i1] -> /_int@i1 -> ()\n") { out }
+        assert(out == "var f: func @[i] -> /_int@i -> ()\n") { out }
     }
     @Test
     fun c02 () {
@@ -267,8 +294,8 @@ class TInfer {
         var f = func /_int -> () {}
         """.trimIndent())
         assert(out == """
-            var f: func @[@i1] -> /_int@i1 -> ()
-            set f = func @[@i1] -> /_int@i1 -> () {
+            var f: func @[i] -> /_int@i -> ()
+            set f = func @[i] -> /_int@i -> () {
             
             }
             
@@ -283,10 +310,10 @@ class TInfer {
         call f /x
         """.trimIndent())
         assert(out == """
-            var f: func @[@k1] -> /_int@k1 -> ()
+            var f: func @[k1] -> /_int@k1 -> ()
             var x: _int
             set x = (_1: _int)
-            call (f @[@GLOBAL] (/x))
+            call (f @[GLOBAL] (/x))
             
         """.trimIndent()) { out }
     }
@@ -302,14 +329,14 @@ class TInfer {
         }
         """.trimIndent())
         assert(out == """
-            var f: func @[@k1] -> /_int@k1 -> ()
+            var f: func @[k] -> /_int@k -> ()
             { @SSX
             var x: _int
             set x = (_1: _int)
             var y: _int
             set y = (_1: _int)
-            call (f @[@SSX] (/x))
-            call (f @[@SSX] (/y))
+            call (f @[SSX] (/x))
+            call (f @[SSX] (/y))
             }
             
         """.trimIndent()) { out }
@@ -334,9 +361,9 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var f: func @[@i1] -> /</^@i1>@i1 -> ()
-            set f = func @[@i1] -> /</^@i1>@i1 -> () {
-            set ((arg\)!1) = (new <.1 <.0>: /</^@i1>@i1>: </^@i1>: @i1)
+            var f: func @[i] -> /</^@i>@i -> ()
+            set f = func @[i] -> /</^@i>@i -> () {
+            set ((arg\)!1) = (new <.1 <.0>: /</^@i>@i>: </^@i>: @i)
             }
 
 
@@ -421,7 +448,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func @[@a1] -> () -> func @a1 -> @[] -> () -> ()
+            var f: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -444,7 +471,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func @[@a1] -> () -> func @a1 -> @[] -> () -> ()
+            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
             var f: func @LOCAL -> @[] -> () -> ()
             
         """.trimIndent()) { out }
@@ -458,9 +485,9 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func @[@a1] -> () -> func @a1 -> @[] -> () -> ()
+            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
             var f: func @LOCAL -> @[] -> () -> ()
-            set f = (g @[@LOCAL] ())
+            set f = (g @[LOCAL] ())
             
         """.trimIndent()) { out }
     }
@@ -474,9 +501,9 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var g: func @[@a1] -> () -> func @a1 -> @[] -> () -> ()
+            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
             var f: func @LOCAL -> @[] -> () -> ()
-            set f = (g @[@LOCAL] ())
+            set f = (g @[LOCAL] ())
             call (f @[] ())
             
         """.trimIndent()) { out }
@@ -484,7 +511,7 @@ class TInfer {
     @Test
     fun d07_clo () {
         val out = all("""
-            var cnst = func @[@a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
+            var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
                 var x: /_int@a1 = arg
                 return func @a1->()->/_int@a1 [x] {
                     return x
@@ -492,8 +519,8 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var cnst: func @[@a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1
-            set cnst = func @[@a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1 {
+            var cnst: func @[a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1
+            set cnst = func @[a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1 {
             var x: /_int@a1
             set x = arg
             set ret = func @a1 -> @[] -> () -> /_int@a1 [x] {
@@ -510,25 +537,25 @@ class TInfer {
     @Test
     fun d08_clo () {
         val out = all("""
-            var g: func @[@a]->/_int@a -> (func @a->()->/_int@a)
+            var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
             var five: _int
             var f: func @LOCAL->()->/_int@LOCAL = g /five
             var v: /_int = f ()
         """.trimIndent())
         assert(out == """
-            var g: func @[@a1] -> /_int@a1 -> func @a1 -> @[@a1] -> () -> /_int@a1
+            var g: func @[a] -> /_int@a -> func @a -> @[a] -> () -> /_int@a
             var five: _int
             var f: func @LOCAL -> @[] -> () -> /_int@LOCAL
-            set f = (g @[@LOCAL] (/five))
+            set f = (g @[LOCAL] (/five))
             var v: /_int@LOCAL
-            set v = (f @[] (): @LOCAL)
+            set v = (f @[LOCAL] (): @LOCAL)
 
         """.trimIndent()) { out }
     }
     @Test
     fun d09_clo () {
         val out = all("""
-            var g: func @[@a]->/_int@a -> (func @a->()->/_int@a)
+            var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
             {
                 var five: _int
                 var f: func @LOCAL->()->/_int@LOCAL = g /five
@@ -536,13 +563,13 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var g: func @[@a1] -> /_int@a1 -> func @a1 -> @[@a1] -> () -> /_int@a1
+            var g: func @[a] -> /_int@a -> func @a -> @[a] -> () -> /_int@a
             { @SSFIVE
             var five: _int
             var f: func @LOCAL -> @[] -> () -> /_int@LOCAL
-            set f = (g @[@LOCAL] (/five))
+            set f = (g @[LOCAL] (/five))
             var v: /_int@LOCAL
-            set v = (f @[] (): @LOCAL)
+            set v = (f @[LOCAL] (): @LOCAL)
             }
 
         """.trimIndent()) { out }

@@ -12,7 +12,7 @@ class TTask {
     fun all (inp: String): String {
         val all = All_new(PushbackReader(StringReader(inp), 2))
         lexer(all)
-        val s = xparser_stmts(all, Pair(TK.EOF,null))
+        val s = xparser_stmts(all)
         s.setUps(null)
         s.setEnvs(null)
         s.xinfScp1s()
