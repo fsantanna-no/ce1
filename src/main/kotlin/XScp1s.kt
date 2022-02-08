@@ -2,45 +2,66 @@
 fun List<Type>.increasing (): List<Tk.Id> {
     var c = 'h'     // first is 'i'
     return this
-        .filter { it is Type.Pointer }
-        .let { it as List<Type.Pointer> }
-        .map { ptr ->
-            ptr.xscp1 = ptr.xscp1 ?: let {
-                // infer implicit scope incrementally
-                c += 1
-                Tk.Id(TK.XID, ptr.tk.lin, ptr.tk.col, c + "")
+        .filter { it is Type.Pointer || it is Type.Alias }
+        //.let { it as List<Type.Pointer> }
+        .map { tp ->
+            when (tp) {
+                is Type.Pointer -> {
+                    tp.xscp1 = tp.xscp1 ?: let {
+                        c += 1  // infer implicit scope incrementally
+                        Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, c + "")
+                    }
+                    arrayOf(tp.xscp1!!)
+                }
+                is Type.Alias -> {
+                    assert(tp.xscp1s == null)
+                    val isself = tp.ups_first { it is Stmt.Typedef }.let {
+                        (it != null) && ((it as Stmt.Typedef).tk_.id == tp.tk_.id)
+                    }
+                    when {
+                        isself -> emptyArray()              // do not infer inside self declaration (it is inferred there)
+                        (tp.xscp1s != null) -> tp.xscp1s!!  // just forward existing? (TODO: assert above failed)
+                        else -> {
+                            val def = tp.env(tp.tk_.id)!! as Stmt.Typedef
+                            tp.xscp1s = def.xscp1s.first!!.map {
+                                c += 1  // infer implicit scope incrementally
+                                Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, c + "")
+                            }.toTypedArray()
+                            tp.xscp1s!!
+                        }
+                    }
+                }
+                else -> error("bug found")
             }
-
-            // do not return constant scopes and local outer/lexical scopes
-            if (ptr.xscp1!!.isscopecst()) {
-                // do not add constant scopes
-                null
-            } else {
+            .filter { it.isscopepar() }
+            //.let { print("111: ");println(it) ; it}
+            .filter { tk ->
+                // do not return constant scopes and local outer/lexical scopes
                 // do not add if already in outer Func
                 //      var outer = func {@a1}->... {          // receives env
                 //          return func @a1->()->/_int@a1 {   // holds/uses outer env
-                val outers = ptr.ups_tolist().filter { it is Expr.Func } as List<Expr.Func>
-                val me = ptr.xscp1!!
-                if (outers.any { it.type.xscp1s.second?.any { it.id==me.id } ?: false }) {
-                    null
-                } else {
-                    me
-                }
+                tp.ups_tolist()
+                    .filter { it is Expr.Func || it is Stmt.Typedef }
+                    //.let { println(it) ; it }
+                    .any {
+                        (it !is Expr.Func) || it.type.xscp1s.second?.none { it.id==tk.id } ?: true
+                    }
             }
+            //.let {print("222: ");println(it) ; it}
         }
-        .filterNotNull()
+        .flatten()
 }
 
 fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Alias -> {
-                if (tp.xscp1s==null && tp.ups_first { it is Stmt.Typedef }==null) {
+                if (tp.xscp1s==null && tp.ups_first { it is Stmt.Typedef || it is Type.Func }==null) {
                     val def = tp.env(tp.tk_.id) as Stmt.Typedef
                     val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
                     tp.xscp1s = Array(size) { Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL") }
                 } else {
-                    // do not infer inside typedef declaration (it is inferred there)
+                    // do not infer inside func/typedef declaration (it is inferred there)
                 }
             }
             is Type.Pointer -> {
@@ -107,13 +128,11 @@ fun Stmt.xinfScp1s () {
             is Stmt.Typedef -> {
                 val tps  = s.type.flattenLeft()
                 val scps = tps.increasing()
-                val fst = ((s.xscp1s.first ?: emptyArray()) + scps)
+                val fst  = ((s.xscp1s.first ?: emptyArray()) + scps)
                     .distinctBy { it.id }
                     .toTypedArray()
-                tps.filter { it is Type.Alias }.let { it as List<Type.Alias> }.forEach {
-                    if (it.xisrec) {
-                        it.xscp1s = fst
-                    }
+                tps.filter { it is Type.Alias && it.xisrec }.let { it as List<Type.Alias> }.forEach {
+                    it.xscp1s = fst
                 }
                 s.xscp1s = Pair(fst, s.xscp1s.second ?: emptyArray())
             }

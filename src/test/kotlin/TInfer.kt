@@ -135,7 +135,7 @@ class TInfer {
         assert(out == """
             type List @[] = </List @LOCAL>
             var l: /List @LOCAL
-            set l = <.0>: /List @LOCAL
+            set l = <.0>: /List @[LOCAL] @LOCAL
             output std l
             
         """.trimIndent()) { out }
@@ -156,7 +156,7 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun a10_type3 () {
+    fun a10_new () {
         val out = all("""
             type List = </List>
             var l: /List = new <.1 <.0>>
@@ -171,34 +171,27 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun a10_new () {
-        val out = all("""
-            var l: /</^ @LOCAL> @LOCAL
-            set l = new <.1 <.0>>
-        """.trimIndent())
-        assert(out == """
-            var l: /</^@LOCAL>@LOCAL
-            set l = (new <.1 <.0>: /</^@LOCAL>@LOCAL>: </^@LOCAL>: @LOCAL)
-
-        """.trimIndent()) { out }
-    }
-    @Test
     fun a11_new () {
         val out = all("""
-            var l = new <.1 <.0>>:</^>
+            type List = </List>
+            var l = new <.1 <.0>>:List
+            output std l
         """.trimIndent())
         assert(out == """
-            var l: /</^@LOCAL>@LOCAL
-            set l = (new <.1 <.0>: /</^@LOCAL>@LOCAL>: </^@LOCAL>: @LOCAL)
-            
+            type List @[i] = </List @[i] @i>
+            var l: /List @[LOCAL] @LOCAL
+            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            output std l
+
         """.trimIndent()) { out }
     }
     @Test
     fun a12_ucons () {
         val out = all("""
-            var x = <.2 ()>: <()>
+            type X = <()>
+            var y = <.2 ()>: X
         """.trimIndent())
-        assert(out == "(ln 1, col 11): invalid union constructor : out of bounds") { out }
+        assert(out == "(ln 2, col 11): invalid union constructor : out of bounds") { out }
     }
     @Test
     fun a13_input_ptr () {
@@ -208,8 +201,8 @@ class TInfer {
             input pico /e
         """.trimIndent())
         assert(out == """
-            var input_pico_Unit: func @[i] -> /()@i -> ()
-            set input_pico_Unit = func @[i] -> /()@i -> () {
+            var input_pico_Unit: func @[i] -> /() @i -> ()
+            set input_pico_Unit = func @[i] -> /() @i -> () {
 
             }
 
@@ -233,6 +226,7 @@ class TInfer {
 
     // inference error
 
+    @Disabled
     @Test
     fun b01 () {
         val out = all("""
@@ -241,6 +235,7 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 11): invalid inference : type mismatch") { out }
     }
+    @Disabled
     @Test
     fun b02 () {
         val out = all("""
@@ -249,6 +244,7 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 27): invalid inference : type mismatch") { out }
     }
+    @Disabled
     @Test
     fun b03 () {
         val out = all("""
@@ -257,6 +253,7 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
     }
+    @Disabled
     @Test
     fun b04_self () {
         val out = all("""
@@ -304,7 +301,7 @@ class TInfer {
         val out = all("""
         var f: func /_int -> ()
         """.trimIndent())
-        assert(out == "var f: func @[i] -> /_int@i -> ()\n") { out }
+        assert(out == "var f: func @[i] -> /_int @i -> ()\n") { out }
     }
     @Test
     fun c02 () {
@@ -312,8 +309,8 @@ class TInfer {
         var f = func /_int -> () {}
         """.trimIndent())
         assert(out == """
-            var f: func @[i] -> /_int@i -> ()
-            set f = func @[i] -> /_int@i -> () {
+            var f: func @[i] -> /_int @i -> ()
+            set f = func @[i] -> /_int @i -> () {
             
             }
             
@@ -328,7 +325,7 @@ class TInfer {
         call f /x
         """.trimIndent())
         assert(out == """
-            var f: func @[k1] -> /_int@k1 -> ()
+            var f: func @[k1] -> /_int @k1 -> ()
             var x: _int
             set x = (_1: _int)
             call (f @[GLOBAL] (/x))
@@ -347,7 +344,7 @@ class TInfer {
         }
         """.trimIndent())
         assert(out == """
-            var f: func @[k] -> /_int@k -> ()
+            var f: func @[k] -> /_int @k -> ()
             { @SSX
             var x: _int
             set x = (_1: _int)
@@ -374,11 +371,13 @@ class TInfer {
     @Test
     fun c06_new_return () {
         val out = all("""
-            var f = func /</^>->() {
+            type List = </List>
+            var f = func /List->() {
                 set arg\!1 = new <.1 <.0>>
             }
         """.trimIndent())
         assert(out == """
+            type List @[i] = </List @[i] @i>
             var f: func @[i] -> /</^@i>@i -> ()
             set f = func @[i] -> /</^@i>@i -> () {
             set ((arg\)!1) = (new <.1 <.0>: /</^@i>@i>: </^@i>: @i)
@@ -397,38 +396,44 @@ class TInfer {
     @Test
     fun c08_null () {
         val out = all("""
-            var v: /</^> = <.0>
+            type List = </List>
+            var v: /List = <.0>
         """.trimIndent())
         assert(out == """
-            var v: /</^@LOCAL>@LOCAL
-            set v = <.0>: /</^@LOCAL>@LOCAL
+            type List @[i] = </List @[i] @i>
+            var v: /List @[LOCAL] @LOCAL
+            set v = <.0>: /List @[LOCAL] @LOCAL
 
         """.trimIndent()) { out }
     }
     @Test
     fun c09_null () {
         val out = all("""
-            var f : func /</^> -> ()
+            type List = </List>
+            var f : func /List -> ()
             call f <.0>
         """.trimIndent())
         assert(out == """
-            var f: func @[@i1] -> /</^@i1>@i1 -> ()
-            call (f @[@LOCAL] <.0>: /</^@LOCAL>@LOCAL)
+            type List @[i] = </List @[i] @i>
+            var f: func @[i] -> /List @[i] @i -> ()
+            call (f @[LOCAL] <.0>: /List @[LOCAL] @LOCAL)
 
         """.trimIndent()) { out }
     }
     @Test
     fun c10_ff () {
         val out = all("""
-            var f : func /</^> -> /</^>
+            type List = </List>
+            var f : func /List -> /List
             var v = f <.0>
             output std f v
         """.trimIndent())
         assert(out == """
-            var f: func @[@i1,@j1] -> /</^@i1>@i1 -> /</^@j1>@j1
-            var v: /</^@LOCAL>@LOCAL
-            set v = (f @[@LOCAL,@LOCAL] <.0>: /</^@LOCAL>@LOCAL: @LOCAL)
-            output std (f @[@LOCAL,@LOCAL] v: @LOCAL)
+            type List @[i] = </List @[i] @i>
+            var f: func @[i,j] -> /List @[i] @i -> /List @[i] @j
+            var v: /List @[LOCAL] @LOCAL
+            set v = (f @[LOCAL,LOCAL] <.0>: /List @[LOCAL] @LOCAL: @LOCAL)
+            output std (f @[LOCAL,LOCAL] v: @LOCAL)
 
         """.trimIndent()) { out }
     }

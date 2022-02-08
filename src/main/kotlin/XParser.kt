@@ -188,9 +188,6 @@ fun xparser_expr (all: All): Expr {
                 }
                 Expr.UNull(tk0, tp)
             } else {
-                if (tp != null) {
-                    All_assert_tk(tp.tk, tp is Type.Union) { "invalid type : expected union" }
-                }
                 Expr.UCons(tk0, tp, cons!!)
             }
         }

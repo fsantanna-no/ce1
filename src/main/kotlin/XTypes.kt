@@ -71,7 +71,7 @@ fun Expr.xinfTypes (inf: Type?) {
         }
         is Expr.UCons -> {
             val x = if (this.xtype != null) {
-                (this.xtype as Type.Union).vec[this.tk_.num - 1]
+                (this.xtype!!.noalias() as Type.Union).vec[this.tk_.num - 1]
             } else {
                 assert(inf != null)
                 val xinf = inf!!.noalias()
@@ -91,7 +91,9 @@ fun Expr.xinfTypes (inf: Type?) {
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
                 "invalid inference : undetermined type"
             }
-            this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+            this.xtype ?: inf!!
+                .clone(this,this.tk.lin,this.tk.col)
+                .mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
         }
         is Expr.New   -> {
             All_assert_tk(this.tk, inf==null || inf is Type.Pointer) {
@@ -142,13 +144,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 else -> error("impossible case")
             }
             val tp = uni.wtype!!
+            val xtp = tp.noalias()
 
-            All_assert_tk(this.tk, tp is Type.Union) {
+            All_assert_tk(this.tk, xtp is Type.Union) {
                 "invalid discriminator : not an union"
             }
             assert(tk_.num!=0 || tp.isrec()) { "bug found" }
 
-            val (MIN, MAX) = Pair(if (tp.isrec()) 0 else 1, (tp as Type.Union).vec.size)
+            val (MIN, MAX) = Pair(if (tp.isrec()) 0 else 1, (xtp as Type.Union).vec.size)
             All_assert_tk(this.tk, MIN <= tk_.num && tk_.num <= MAX) {
                 "invalid discriminator : out of bounds"
             }
@@ -157,7 +160,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 is Expr.UDisc -> if (this.tk_.num == 0) {
                     Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
                 } else {
-                    tp.vec[this.tk_.num - 1]
+                    xtp.vec[this.tk_.num - 1]
                 }
                 is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col)
                 else -> error("bug found")
@@ -183,6 +186,8 @@ fun Expr.xinfTypes (inf: Type?) {
                     }
                     is Type.Func -> {
                         val e = this
+
+                        // TODO: remove after change increasing?
                         this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")))
 
                         // Calculates type scopes {...}:
