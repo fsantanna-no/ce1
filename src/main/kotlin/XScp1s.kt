@@ -34,20 +34,21 @@ fun List<Type>.increasing (): List<Tk.Id> {
                 else -> error("bug found")
             }
             .filter { it.isscopepar() }
-            //.let { print("111: ");println(it) ; it}
+            //.let { print("111: "); println(it) ; it}
             .filter { tk ->
                 // do not return constant scopes and local outer/lexical scopes
                 // do not add if already in outer Func
                 //      var outer = func {@a1}->... {          // receives env
                 //          return func @a1->()->/_int@a1 {   // holds/uses outer env
                 tp.ups_tolist()
-                    .filter { it is Expr.Func || it is Stmt.Typedef }
+                    .filter { it is Type.Func || it is Stmt.Typedef }
                     //.let { println(it) ; it }
                     .any {
-                        (it !is Expr.Func) || it.type.xscp1s.second?.none { it.id==tk.id } ?: true
+                        //println(it.toType().tostr())
+                        (it !is Type.Func) || (it.xscp1s.second?.none { it.id==tk.id } ?: true)
                     }
             }
-            //.let {print("222: ");println(it) ; it}
+            //.let {print("222: "); println(it) ; it}
         }
         .flatten()
 }
@@ -131,6 +132,7 @@ fun Stmt.xinfScp1s () {
                 val fst  = ((s.xscp1s.first ?: emptyArray()) + scps)
                     .distinctBy { it.id }
                     .toTypedArray()
+                //println(tps)
                 tps.filter { it is Type.Alias && it.xisrec }.let { it as List<Type.Alias> }.forEach {
                     it.xscp1s = fst
                 }
