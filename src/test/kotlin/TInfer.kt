@@ -135,7 +135,7 @@ class TInfer {
         assert(out == """
             type List @[] = </List @LOCAL>
             var l: /List @LOCAL
-            set l = <.0>: /List @[LOCAL] @LOCAL
+            set l = <.0>: /List @LOCAL
             output std l
             
         """.trimIndent()) { out }
@@ -165,7 +165,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[LOCAL] @LOCAL
-            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>: @LOCAL)
             output std l
 
         """.trimIndent()) { out }
@@ -378,7 +378,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var f: func @[i,j] -> /List @[j] @i -> ()
+            var f : func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
             set ((arg\)!1) = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
             }
