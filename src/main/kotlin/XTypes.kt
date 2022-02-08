@@ -4,6 +4,21 @@
 //  var x: <(),()> = <.1>: ?
 //  var x: _int = _v: ?
 
+fun Type.mapScp1 (up: Any, to: Tk.Id): Type {
+    fun Type.aux (): Type {
+        return when (this) {
+            is Type.Unit, is Type.Nat, is Type.Spawn, is Type.Spawns -> this
+            is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
+            is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.aux() }.toTypedArray())
+            is Type.Func    -> this
+            is Type.Pointer -> Type.Pointer(this.tk_, to, to.toScp2(this), this.pln.aux())
+            is Type.Alias   -> Type.Alias(this.tk_, this.xisrec, arrayOf(to), arrayOf(to.toScp2(this)))
+                                                                    // TODO: wrong
+        }
+    }
+    return this.aux().clone(up, this.tk.lin, this.tk.col)
+}
+
 fun Expr.xinfTypes (inf: Type?) {
     this.wtype = when (this) {
         is Expr.Unit  -> this.wtype!!
@@ -61,7 +76,10 @@ fun Expr.xinfTypes (inf: Type?) {
                 assert(inf != null)
                 val xinf = inf!!.noalias()
                 All_assert_tk(this.tk, xinf is Type.Union) { "invalid inference : type mismatch : expected union : have ${inf!!.tostr()}"}
-                (xinf as Type.Union).vec[this.tk_.num-1].clone(this,this.tk.lin,this.tk.col)
+                (xinf as Type.Union).vec[this.tk_.num-1]
+                    .clone(this,this.tk.lin,this.tk.col)
+                    .mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
+
             }
             this.arg.xinfTypes(x)
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
@@ -165,26 +183,7 @@ fun Expr.xinfTypes (inf: Type?) {
                     }
                     is Type.Func -> {
                         val e = this
-                        this.arg.xinfTypes(ft.inp.let {
-                            // map @i1,@j1 -> @LOCAL,@LOCAL
-                            fun Type.map (up: Any): Type {
-                                fun Type.aux (): Type {
-                                    return when (this) {
-                                        is Type.Alias -> TODO()
-                                        is Type.Unit, is Type.Nat, is Type.Spawn, is Type.Spawns -> this
-                                        is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
-                                        is Type.Union -> Type.Union(this.tk_, this.vec.map { it.aux() }.toTypedArray())
-                                        is Type.Func  -> this
-                                        is Type.Pointer   -> {
-                                            val scp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")
-                                            Type.Pointer(this.tk_, scp1, scp1.toScp2(e), this.pln.aux())
-                                        }
-                                    }
-                                }
-                                return this.aux().clone(up, this.tk.lin, this.tk.col)
-                            }
-                            it.map(this)
-                        })
+                        this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")))
 
                         // Calculates type scopes {...}:
                         //  call f {...} arg

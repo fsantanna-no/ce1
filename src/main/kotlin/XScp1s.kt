@@ -35,11 +35,12 @@ fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Alias -> {
-                // do not infer inside typedef declaration (it is inferred there)
                 if (tp.xscp1s==null && tp.ups_first { it is Stmt.Typedef }==null) {
                     val def = tp.env(tp.tk_.id) as Stmt.Typedef
                     val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
-                    tp.xscp1s = tp.xscp1s ?: Array(size) { Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL") }
+                    tp.xscp1s = Array(size) { Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL") }
+                } else {
+                    // do not infer inside typedef declaration (it is inferred there)
                 }
             }
             is Type.Pointer -> {
@@ -109,9 +110,8 @@ fun Stmt.xinfScp1s () {
                 val fst = ((s.xscp1s.first ?: emptyArray()) + scps)
                     .distinctBy { it.id }
                     .toTypedArray()
-                tps.forEach { println(it) }
                 tps.filter { it is Type.Alias }.let { it as List<Type.Alias> }.forEach {
-                    if (it.tk_.id == s.tk_.id) {
+                    if (it.xisrec) {
                         it.xscp1s = fst
                     }
                 }

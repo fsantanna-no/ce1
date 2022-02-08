@@ -165,7 +165,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[LOCAL] @LOCAL
-            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List: @LOCAL)
+            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
             output std l
 
         """.trimIndent()) { out }
