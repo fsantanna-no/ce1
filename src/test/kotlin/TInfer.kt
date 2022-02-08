@@ -62,7 +62,7 @@ class TInfer {
         assert(out == """
             var y: _int
             set y = (_10: _int)
-            var x: /_int@LOCAL
+            var x: /_int @LOCAL
             set x = (/(_y: _int))
             output std (x\)
             
@@ -76,10 +76,10 @@ class TInfer {
             output std x\
         """.trimIndent())
         assert(out == """
-            var y: /_int@LOCAL
-            set y = (_10: /_int@LOCAL)
+            var y: /_int @LOCAL
+            set y = (_10: /_int @LOCAL)
             var x: _int
-            set x = ((_y: /_int@LOCAL)\)
+            set x = ((_y: /_int @LOCAL)\)
             output std (x\)
             
         """.trimIndent()) { out }
@@ -133,9 +133,9 @@ class TInfer {
             output std l
         """.trimIndent())
         assert(out == """
-            type List @[] = </List@LOCAL>
-            var l: /List@LOCAL
-            set l = <.0>: /List@LOCAL
+            type List @[] = </List @LOCAL>
+            var l: /List @LOCAL
+            set l = <.0>: /List @LOCAL
             output std l
             
         """.trimIndent()) { out }
@@ -148,9 +148,9 @@ class TInfer {
             output std l
         """.trimIndent())
         assert(out == """
-            type List @[i] = </List@i>
-            var l: /List@LOCAL
-            set l = <.0>: /List@LOCAL
+            type List @[i] = </List @[i] @i>
+            var l: /List @[LOCAL] @LOCAL
+            set l = <.0>: /List @[LOCAL] @LOCAL
             output std l
 
         """.trimIndent()) { out }
@@ -162,8 +162,13 @@ class TInfer {
             var l: /List = new <.1 <.0>>
             output std l
         """.trimIndent())
-        //assert(out == "(ln 1, col 21): invalid assignment : type mismatch") { out }
-        assert(out == "<.1 <.0>>\n") { out }
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var l: /List @[LOCAL] @LOCAL
+            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List: @LOCAL)
+            output std l
+
+        """.trimIndent()) { out }
     }
     @Test
     fun a10_new () {

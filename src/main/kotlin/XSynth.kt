@@ -12,7 +12,7 @@ fun Expr.tostr (): String {
         is Expr.Pub   -> "(" + this.tsk.tostr() + ".pub)"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + ": " + this.xscp1!!.id + ")"
+        is Expr.New   -> "(new " + this.arg.tostr() + ": @" + this.xscp1!!.id + ")"
         is Expr.Call  -> {
             val inps = " @[" + this.xscp1s.first!!.map { it.id }.joinToString(",") + "]"
             val out  = this.xscp1s.second.let { if (it == null) "" else ": @"+it.id }

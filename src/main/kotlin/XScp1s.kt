@@ -34,6 +34,14 @@ fun List<Type>.increasing (): List<Tk.Id> {
 fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
+            is Type.Alias -> {
+                // do not infer inside typedef declaration (it is inferred there)
+                if (tp.xscp1s==null && tp.ups_first { it is Stmt.Typedef }==null) {
+                    val def = tp.env(tp.tk_.id) as Stmt.Typedef
+                    val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
+                    tp.xscp1s = tp.xscp1s ?: Array(size) { Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL") }
+                }
+            }
             is Type.Pointer -> {
                 // do not infer to LOCAL if inside function/typedef declaration
                 if (tp.xscp1==null && tp.ups_first { it is Type.Func || it is Stmt.Typedef }==null) {
@@ -96,10 +104,17 @@ fun Stmt.xinfScp1s () {
     fun fs (s: Stmt) {
         when (s) {
             is Stmt.Typedef -> {
-                val scps = s.type.flattenLeft().increasing()
-                val fst  = ((s.xscp1s.first ?: emptyArray()) + scps)
+                val tps  = s.type.flattenLeft()
+                val scps = tps.increasing()
+                val fst = ((s.xscp1s.first ?: emptyArray()) + scps)
                     .distinctBy { it.id }
                     .toTypedArray()
+                tps.forEach { println(it) }
+                tps.filter { it is Type.Alias }.let { it as List<Type.Alias> }.forEach {
+                    if (it.tk_.id == s.tk_.id) {
+                        it.xscp1s = fst
+                    }
+                }
                 s.xscp1s = Pair(fst, s.xscp1s.second ?: emptyArray())
             }
 

@@ -1,29 +1,32 @@
-fun parser_scopepars (all: All): Pair<Array<Tk.Id>,Array<Pair<String,String>>> {
+fun parser_scp1s (all: All, f: (Tk)->Tk.Id): Array<Tk.Id> {
     val scps = mutableListOf<Tk.Id>()
+    while (all.accept(TK.XID)) {
+        scps.add(f(all.tk0))
+        if (!all.accept(TK.CHAR, ',')) {
+            break
+        }
+    }
+    return scps.toTypedArray()
+}
+
+fun parser_scopepars (all: All): Pair<Array<Tk.Id>,Array<Pair<String,String>>> {
+    all.accept_err(TK.ATBRACK)
+    val scps = parser_scp1s(all, { it.asscopepar() })
     val ctrs = mutableListOf<Pair<String,String>>()
-    if (all.accept(TK.ATBRACK)) {
+    if (all.accept(TK.CHAR,':')) {
         while (all.accept(TK.XID)) {
-            scps.add(all.tk0.asscopepar())
+            val id1 = all.tk0.asscopepar().id
+            all.accept_err(TK.CHAR,'>')
+            all.accept_err(TK.XID)
+            val id2 = all.tk0.asscopepar().id
+            ctrs.add(Pair(id1,id2))
             if (!all.accept(TK.CHAR, ',')) {
                 break
             }
         }
-        if (all.accept(TK.CHAR,':')) {
-            while (all.accept(TK.XID)) {
-                val id1 = all.tk0.asscopepar().id
-                all.accept_err(TK.CHAR,'>')
-                all.accept_err(TK.XID)
-                val id2 = all.tk0.asscopepar().id
-                ctrs.add(Pair(id1,id2))
-                if (!all.accept(TK.CHAR, ',')) {
-                    break
-                }
-            }
-        }
-        all.accept_err(TK.CHAR, ']')
     }
-
-    return Pair(scps.toTypedArray(), ctrs.toTypedArray())
+    all.accept_err(TK.CHAR, ']')
+    return Pair(scps, ctrs.toTypedArray())
 }
 
 fun xparser_type (all: All, tasks: Boolean=false): Type {
@@ -32,17 +35,14 @@ fun xparser_type (all: All, tasks: Boolean=false): Type {
         all.accept(TK.XNAT) -> Type.Nat(all.tk0 as Tk.Nat)
         all.accept(TK.XID)  -> {
             val tk0 = all.tk0.astype()
-            val scps = mutableListOf<Tk.Id>()
-            if (all.accept(TK.ATBRACK)) {
-                while (all.accept(TK.XID)) {
-                    scps.add(all.tk0.asscope())
-                    if (!all.accept(TK.CHAR, ',')) {
-                        break
-                    }
-                }
+            val scps = if (all.accept(TK.ATBRACK)) {
+                val ret = parser_scp1s(all, { it.asscope() })
                 all.accept_err(TK.CHAR, ']')
+                ret
+            } else {
+                null
             }
-            Type.Alias(tk0, false, scps.toTypedArray(), null)
+            Type.Alias(tk0, false, scps, null)
         }
         all.accept(TK.CHAR, '/') -> {
             val tk0 = all.tk0 as Tk.Chr
@@ -93,10 +93,12 @@ fun xparser_type (all: All, tasks: Boolean=false): Type {
             } else {
                 null
             }
-            val at = all.check(TK.ATBRACK)
-            val (scps,ctrs) = parser_scopepars(all)
-            if (at) {
+            val (scps,ctrs) = if (all.check(TK.ATBRACK)) {
+                val (x,y) = parser_scopepars(all)
                 all.accept_err(TK.ARROW)
+                Pair(x,y)
+            } else {
+                Pair(null,null)
             }
 
             // input & pub & output
@@ -283,16 +285,12 @@ fun xparser_expr (all: All): Expr {
     // call
 
     if (all.checkExpr() || all.check(TK.ATBRACK)) {
-        val iscps = mutableListOf<Tk.Id>()
-        if (all.accept(TK.ATBRACK)) {
-            while (all.accept(TK.XID)) {
-                val tk = all.tk0.asscope()
-                iscps.add(tk)
-                if (!all.accept(TK.CHAR, ',')) {
-                    break
-                }
-            }
+        val iscps = if (all.accept(TK.ATBRACK)) {
+            val ret = parser_scp1s(all, { it.asscope() })
             all.accept_err(TK.CHAR, ']')
+            ret
+        } else {
+            null
         }
         val arg = xparser_expr(all)
         val oscp = if (!all.accept(TK.CHAR, ':')) null else {
@@ -300,7 +298,7 @@ fun xparser_expr (all: All): Expr {
             all.accept_err(TK.XID)
             all.tk0.asscope()
         }
-        e = Expr.Call(e.tk, e, arg, Pair(iscps.toTypedArray(),oscp), null)
+        e = Expr.Call(e.tk, e, arg, Pair(iscps,oscp), null)
     }
     return e
 }
@@ -556,7 +554,7 @@ fun xparser_stmt (all: All): Stmt {
         all.accept(TK.TYPE) -> {
             all.accept_err(TK.XID)
             val id = all.tk0.astype()
-            val scps = parser_scopepars(all)
+            val scps = if (all.check(TK.ATBRACK)) parser_scopepars(all) else Pair(null,null)
             all.accept_err(TK.CHAR,'=')
             val tp = xparser_type(all)
             Stmt.Typedef(id, scps, null, tp)

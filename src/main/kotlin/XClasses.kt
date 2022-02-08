@@ -15,7 +15,7 @@ sealed class Type (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class Alias (
         val tk_: Tk.Id,
         var xisrec: Boolean,
-        val xscp1s: Array<Tk.Id>?,
+        var xscp1s: Array<Tk.Id>?,
         var xscp2s: Array<Scp2>?
     ): Type(tk_, null, null)
 }
