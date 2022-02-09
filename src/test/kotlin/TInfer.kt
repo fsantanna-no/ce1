@@ -12,7 +12,7 @@ class TInfer {
         All_new(PushbackReader(StringReader(inp), 2))
         Lexer.lex()
         try {
-            val s = xparser_stmts(all)
+            val s = xparser_stmts()
             s.setUps(null)
             s.setEnvs(null)
             s.xinfScp1s()
