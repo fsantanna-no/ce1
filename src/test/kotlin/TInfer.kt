@@ -377,7 +377,7 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            type List @[i] = </List @[i] @i>
+            type List @[x] = </List @[x] @x>
             var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
             set ((arg\)!1) = <.0>: /List @[j] @j
@@ -414,9 +414,9 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var f : func @[i,j] -> /List @[j] @i -> ()
+            var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
-            set ((arg\)!1) = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            set ((arg\)!1) = (new <.1 <.0>: /List @[j] @j>: </List @[j] @j>: @j)
             }
 
         """.trimIndent()) { out }
@@ -449,6 +449,9 @@ class TInfer {
             call f <.0>
         """.trimIndent())
         assert(out == """
+            type List @[i] = /</List @[i] @i> @i
+            var f: func @[i] -> List @[i] -> ()
+            call (f @[LOCAL] <.0>: List @[LOCAL])
 
         """.trimIndent()) { out }
     }
@@ -462,7 +465,7 @@ class TInfer {
         assert(out == """
             type List @[i,j] = /</List @[i,j] @j> @i
             var f: func @[i,j] -> List @[i,j] -> ()
-            call (f @[] <.0>: List @[LOCAL,LOCAL])
+            call (f @[LOCAL,LOCAL] <.0>: List @[LOCAL,LOCAL])
 
         """.trimIndent()) { out }
     }
@@ -476,10 +479,10 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var f: func @[i,j] -> /List @[i] @i -> /List @[i] @j
+            var f: func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k
             var v: /List @[LOCAL] @LOCAL
-            set v = (f @[LOCAL,LOCAL] <.0>: /List @[LOCAL] @LOCAL: @LOCAL)
-            output std (f @[LOCAL,LOCAL] v: @LOCAL)
+            set v = (f @[LOCAL,LOCAL,LOCAL,LOCAL] <.0>: /List @[LOCAL] @LOCAL: @LOCAL)
+            output std (f @[LOCAL,LOCAL,LOCAL,LOCAL] v: @LOCAL)
 
         """.trimIndent()) { out }
     }

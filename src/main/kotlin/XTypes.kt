@@ -215,36 +215,38 @@ fun Expr.xinfTypes (inf: Type?) {
 
                             /////////
 
+                            fun Type.toScp1s (): List<Tk.Id> {
+                                return when (this) {
+                                    is Type.Pointer -> listOf(this.xscp1!!)
+                                    is Type.Alias   -> this.xscp1s!!.toList()
+                                    else -> emptyList()
+                                }
+                            }
+
                             val ret1s = if (inf == null) {
                                 // no attribution expected, save to @LOCAL as shortest scope possible
                                 ft.out.flattenLeft()
-                                    .filter { it is Type.Pointer }
-                                    .let { it as List<Type.Pointer> }
-                                    .map { Tk.Id(TK.XID, it.tk.lin, it.tk.col, "LOCAL") }
+                                    .map { it.toScp1s() }
+                                    .flatten()
+                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, "LOCAL") }
                             } else {
                                 inf.flattenLeft()
-                                    .filter { it is Type.Pointer }
-                                    .let { it as List<Type.Pointer> }
-                                    .map { it.xscp1!! }
+                                    .map { it.toScp1s() }
+                                    .flatten()
                             }
                             assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
                             val arg1s = this.arg.wtype!!.flattenLeft()
-                                .filter { it is Type.Pointer }
-                                .let { it as List<Type.Pointer> }
-                                .map { it.xscp1!! }
-
-                            // var ret = call f arg  ==>  { arg, ret }
-                            val arg_ret: List<Tk.Id> = arg1s + ret1s
+                                .map { it.toScp1s() }
+                                .flatten()
 
                             /////////
 
                             // func inp -> out  ==>  { inp, out }
                             val inp_out: List<Tk.Id> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
-                                .filter { it is Type.Pointer }
-                                .let { it as List<Type.Pointer> }
-                                .map { it.xscp1!! }
+                                .map { it.toScp1s() }
+                                .flatten()
 
-                            val xxx: List<Pair<Tk.Id, Tk.Id>> = inp_out.zip(arg_ret)
+                            val xxx: List<Pair<Tk.Id, Tk.Id>> = inp_out.zip(arg1s + ret1s)
 
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
@@ -282,17 +284,13 @@ fun Expr.xinfTypes (inf: Type?) {
                                     ?: Pair(this, scp2)
                             }
 
-                            val outer = this
                             fun Type.map(): Type {
                                 return when (this) {
                                     is Type.Pointer -> this.xscp1!!.get(this.xscp2!!).let {
                                         Type.Pointer(this.tk_, it.first, it.second, this.pln.map())
-                                            .clone(outer, outer.tk.lin, outer.tk.col)
                                     }
                                     is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.map() }.toTypedArray())
-                                        .clone(outer, outer.tk.lin, outer.tk.col)
                                     is Type.Union -> Type.Union(this.tk_, this.vec.map { it.map() }.toTypedArray())
-                                        .clone(outer, outer.tk.lin, outer.tk.col)
                                     is Type.Func -> {
                                         val clo = this.xscp1s.first?.get(this.xscp2s!!.first!!)
                                         val (x1, x2) = this.xscp1s.second!!.zip(this.xscp2s!!.second)
@@ -305,12 +303,18 @@ fun Expr.xinfTypes (inf: Type?) {
                                             this.inp.map(),
                                             this.pub?.map(),
                                             this.out.map()
-                                        ).clone(outer, outer.tk.lin, outer.tk.col)
+                                        )
+                                    }
+                                    is Type.Alias -> {
+                                        val (x1, x2) = this.xscp1s!!.zip(this.xscp2s!!)
+                                            .map { it.first.get(it.second) }
+                                            .unzip()
+                                        Type.Alias(this.tk_, this.xisrec, x1.toTypedArray(), x2.toTypedArray())
                                     }
                                     else -> this
                                 }
                             }
-                            ft.out.map()
+                            ft.out.map().clone(this, this.tk.lin, this.tk.col)
                         }
                     }
                     else -> {
@@ -331,7 +335,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
     }
     when (this) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native, is Stmt.Throw, is Stmt.Typedef -> {}
-        is Stmt.Var -> this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+        is Stmt.Var -> { this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col) }
         is Stmt.Set -> {
             this.dst.xinfTypes(null)
             this.src.xinfTypes(this.dst.wtype!!)
