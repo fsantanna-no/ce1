@@ -196,12 +196,10 @@ fun Expr.xinfTypes (inf: Type?) {
                         val e = this
 
                         // TODO: remove after change increasing?
-                        //println(ft.inp.tostr())
-                        //println(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")).tostr())
                         this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")))
 
                         // Calculates type scopes {...}:
-                        //  call f {...} arg
+                        //  call f @[...] arg
 
                         this.xscp1s = let {
                             // scope of expected closure environment

@@ -82,9 +82,6 @@ fun xparser_type (all: All, tasks: Boolean=false): Type {
         }
         all.accept(TK.FUNC) || all.accept(TK.TASK) || (tasks && all.accept(TK.TASKS)) -> {
             val tk0 = all.tk0 as Tk.Key
-            if (tk0.enu != TK.FUNC) {
-                all.check_err(TK.CHAR,'@')
-            }
             val clo = if (all.accept(TK.CHAR,'@')) {
                 all.accept_err(TK.XID)
                 val tk = all.tk0.asscope()

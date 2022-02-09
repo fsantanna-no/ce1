@@ -492,8 +492,9 @@ class TInfer {
     @Test
     fun d01_clo () {
         val out = all("""
+            type List = </List>
             {
-                var pa: /</^> = new <.1 <.0>>
+                var pa: /List = new <.1 <.0>>
                 var f = func () -> () [pa] {
                 }
                 call f ()

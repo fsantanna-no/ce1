@@ -7,27 +7,28 @@ import java.io.PushbackReader
 import java.io.StringReader
 
 val nums = """
-    var zero:  /</^> = <.0>
-    var one:   /</^> = new <.1 zero>
-    var two:   /</^> = new <.1 one>
-    var three: /</^> = new <.1 two>
-    var four:  /</^> = new <.1 three>
-    var five:  /</^> = new <.1 four>
+    type Num = </Num>    
+    var zero:  /Num = <.0>
+    var one:   /Num = new <.1 zero>
+    var two:   /Num = new <.1 one>
+    var three: /Num = new <.1 two>
+    var four:  /Num = new <.1 three>
+    var five:  /Num = new <.1 four>
 """.trimIndent()
 
 fun Num (ptr: Boolean, scope: String): String {
-    val ret = "</^$scope>"
-    return if (!ptr) ret else "/"+ret+scope
+    val ret = "(Num @[$scope])"
+    return if (!ptr) ret else "/"+ret+"@"+scope
 }
-val Num    = "/</^>"
-val NumTL  = Num(true,  "@LOCAL")
-val NumA1  = Num(true,  "@a1")
-val NumA2  = Num(true,  "@a2")
-val NumB1  = Num(true,  "@b1")
-val NumC1  = Num(true,  "@c1")
-val NumR1  = Num(true,  "@r1")
-val _NumR1 = Num(false, "@r1")
-val NumS1  = Num(true,  "@s1")
+val Num    = "/Num"
+val NumTL  = Num(true,  "LOCAL")
+val NumA1  = Num(true,  "a1")
+val NumA2  = Num(true,  "a2")
+val NumB1  = Num(true,  "b1")
+val NumC1  = Num(true,  "c1")
+val NumR1  = Num(true,  "r1")
+val _NumR1 = Num(false, "r1")
+val NumS1  = Num(true,  "s1")
 
 val clone = """
     var clone : func $Num -> $Num
@@ -175,9 +176,9 @@ class TBook {
     fun pre_01_nums() {
         val out = all(
             """
-            var zero: /</^> = <.0>
-            var one:   </^> = <.1 zero>
-            var two:   </^> = <.1 /one>
+            var zero: /Num = <.0>
+            var one:   Num = <.1 zero>
+            var two:   Num = <.1 /one>
             output std /two
         """.trimIndent()
         )
