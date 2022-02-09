@@ -369,7 +369,43 @@ class TInfer {
         assert(out == "(ln 3, col 10): invalid inference : undetermined type") { out }
     }
     @Test
-    fun c06_new_return () {
+    fun c06_new_return0 () {
+        val out = all("""
+            type List @[x] = </List @[x] @x>
+            var f = func /List->() {
+                set arg\!1 = <.0>
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var f: func @[i,j] -> /List @[j] @i -> ()
+            set f = func @[i,j] -> /List @[j] @i -> () {
+            set ((arg\)!1) = <.0>: /List @[j] @j
+            }
+
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c06_new_return1 () {
+        val out = all("""
+            type List = </List>
+            var f = func /List->() {
+                set arg\!1 = <.0>
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var f: func @[i,j] -> /List @[j] @i -> ()
+            set f = func @[i,j] -> /List @[j] @i -> () {
+            set ((arg\)!1) = <.0>: /List @[j] @j
+            }
+
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c06_new_return2 () {
         val out = all("""
             type List = </List>
             var f = func /List->() {

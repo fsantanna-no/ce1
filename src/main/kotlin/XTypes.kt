@@ -109,8 +109,6 @@ fun Expr.xinfTypes (inf: Type?) {
                 } else {
                     this.xscp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col, "LOCAL")
                 }
-                println(inf)
-                println(this.xscp1)
                 this.xscp2 = this.xscp1!!.toScp2(this)
             }
             Type.Pointer (

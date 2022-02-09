@@ -14,7 +14,7 @@ fun List<Type>.increasing (): List<Tk.Id> {
                     arrayOf(tp.xscp1!!)
                 }
                 is Type.Alias -> {
-                    assert(tp.xscp1s == null)
+                    //assert(tp.xscp1s == null)
                     val isself = tp.ups_first { it is Stmt.Typedef }.let {
                         (it != null) && ((it as Stmt.Typedef).tk_.id == tp.tk_.id)
                     }
