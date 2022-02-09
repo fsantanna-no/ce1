@@ -158,7 +158,7 @@ class TBook {
 
         All_new(PushbackReader(StringReader(inp), 2))
         Lexer.lex()
-        val s = xparser_stmts()
+        val s = XParser().stmts()
         s.setUps(null)
         s.setEnvs(null)
         s.xinfScp1s()

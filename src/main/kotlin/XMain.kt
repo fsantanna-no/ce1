@@ -6,7 +6,7 @@ fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
     All_new(PushbackReader(StringReader(ce1), 2))
     Lexer.lex()
     try {
-        val s = xparser_stmts()
+        val s = XParser().stmts()
         s.setUps(null)
         s.setEnvs(null)
         s.xinfScp1s()
