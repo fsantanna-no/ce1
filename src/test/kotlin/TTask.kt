@@ -10,8 +10,8 @@ import java.io.StringReader
 class TTask {
 
     fun all (inp: String): String {
-        val all = All_new(PushbackReader(StringReader(inp), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader(inp), 2))
+        Lexer.lex()
         val s = xparser_stmts(all)
         s.setUps(null)
         s.setEnvs(null)

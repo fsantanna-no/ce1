@@ -3,8 +3,8 @@ import java.io.PushbackReader
 import java.io.StringReader
 
 fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
-    val all = All_new(PushbackReader(StringReader(ce1), 2))
-    lexer(all)
+    All_new(PushbackReader(StringReader(ce1), 2))
+    Lexer.lex()
     try {
         val s = xparser_stmts(all)
         s.setUps(null)

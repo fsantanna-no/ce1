@@ -37,31 +37,31 @@ class TParser {
 
     @Test
     fun c01_parser_var () {
-        val all = All_new(PushbackReader(StringReader("var x: () = ()"), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader("var x: () = ()"), 2))
+        Lexer.lex()
         val s = xparser_stmt(all)
         assert(s is Stmt.Seq && s.s1 is Stmt.Var && s.s2 is Stmt.Set)
         assert(s.tostr() == "var x: ()\nset x = ()\n") { s.tostr() }
     }
     @Test
     fun c02_parser_var () {
-        val all = All_new(PushbackReader(StringReader("var x: ()"), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader("var x: ()"), 2))
+        Lexer.lex()
         val s = xparser_stmt(all)
         assert(s is Stmt.Var)
         assert(s.tostr() == "var x: ()\n") { s.tostr() }
     }
     @Test
     fun c03_parser_var () {
-        val all = All_new(PushbackReader(StringReader("var x = ()"), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader("var x = ()"), 2))
+        Lexer.lex()
         val s = xparser_stmt(all)
         assert(s is Stmt.Seq && s.s1 is Stmt.Var && s.s2 is Stmt.Set)
     }
     @Test
     fun c04_parser_var () {
-        val all = All_new(PushbackReader(StringReader("var x"), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader("var x"), 2))
+        Lexer.lex()
         try {
             xparser_stmt(all)
             error("impossible case")

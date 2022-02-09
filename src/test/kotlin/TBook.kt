@@ -156,8 +156,8 @@ class TBook {
         println("or:    ${or.count    { it == '\n' }}")
         println("and:   ${and.count   { it == '\n' }}")
 
-        val all = All_new(PushbackReader(StringReader(inp), 2))
-        lexer(all)
+        All_new(PushbackReader(StringReader(inp), 2))
+        Lexer.lex()
         val s = xparser_stmts(all)
         s.setUps(null)
         s.setEnvs(null)
