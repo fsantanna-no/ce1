@@ -148,7 +148,7 @@ class XParser: Parser()
                     this.type(false)
                 }
                 if (all.accept(TK.CHAR, '=')) {
-                    val tk = all.tk0 as Tk.Chr
+                    val tk0 = all.tk0 as Tk.Chr
                     val dst = Expr.Var(tk_id)
                     val src = when {
                         all.check(TK.INPUT) -> {
@@ -157,8 +157,8 @@ class XParser: Parser()
                             all.accept_err(TK.XID)
                             val lib = (all.tk0 as Tk.Id)
                             val arg = this.expr()
-                            val tp = if (!all.accept(TK.CHAR, ':')) null else this.type(false)
-                            Stmt.Input(tk, tp, dst, lib, arg)
+                            val inp = if (!all.accept(TK.CHAR, ':')) null else this.type(false)
+                            Stmt.Input(tk, inp, dst, lib, arg)
                         }
                         all.check(TK.SPAWN) -> {
                             all.accept(TK.SPAWN)
@@ -169,7 +169,7 @@ class XParser: Parser()
                         }
                         else -> {
                             val src = this.expr()
-                            Stmt.Set(tk, dst, src)
+                            Stmt.Set(tk0, dst, src)
                         }
                     }
                     Stmt.Seq(tk_id, Stmt.Var(tk_id, tp), src)
