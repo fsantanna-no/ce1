@@ -83,7 +83,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 All_assert_tk(this.tk, xinf is Type.Union) { "invalid inference : type mismatch : expected union : have ${inf.tostr()}"}
                 val x = (xinf as Type.Union).vec[this.tk_.num-1]
                 this.arg.xinfTypes(x)
-                xinf
+                inf
             }
         }
         is Expr.UNull -> {
