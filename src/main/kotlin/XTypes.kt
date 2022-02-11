@@ -214,39 +214,43 @@ fun Expr.xinfTypes (inf: Type?) {
                                 emptyList()
                             }
 
-                            val ret1s: List<Tk.Id> = if (inf == null) {
-                                // no attribution expected, save to @LOCAL as shortest scope possible
-                                ft.out.flattenLeft()
+                            val (inp_out,ret) = let {
+                                val ret1s: List<Tk.Id> = if (inf == null) {
+                                    // no attribution expected, save to @LOCAL as shortest scope possible
+                                    ft.out.flattenLeft()
+                                        .map { it.toScp1s() }
+                                        .flatten()
+                                        .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, ft.localBlock()) }
+                                } else {
+                                    inf.flattenLeft()
+                                        .map { it.toScp1s() }
+                                        .flatten()
+                                }
+
+                                assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
+                                val arg1s: List<Tk.Id> = this.arg.wtype!!.flattenLeft()
                                     .map { it.toScp1s() }
                                     .flatten()
-                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, ft.localBlock()) }
-                            } else {
-                                inf.flattenLeft()
+
+                                // func inp -> out  ==>  { inp, out }
+                                val inp_out: List<Tk.Id> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
                                     .map { it.toScp1s() }
                                     .flatten()
+
+                                Pair (
+                                    inp_out.zip(arg1s+ret1s),
+                                    if (ret1s.size==0) null else Scope(ret1s[0],null)
+                                )
                             }
-
-                            assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
-                            val arg1s: List<Tk.Id> = this.arg.wtype!!.flattenLeft()
-                                .map { it.toScp1s() }
-                                .flatten()
-
-                            // func inp -> out  ==>  { inp, out }
-                            val inp_out: List<Tk.Id> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
-                                .map { it.toScp1s() }
-                                .flatten()
 
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
-                            val scp1s: List<Tk.Id> = (clo + inp_out.zip(arg1s+ret1s))
+                            val scp1s: List<Tk.Id> = (clo + inp_out)
                                 .filter { it.first.isscopepar() }  // ignore constant labels (they not args)
                                 .distinctBy { it.first.id }
                                 .map { it.second }
 
-                            Pair (
-                                scp1s.map { Scope(it,null) },
-                                if (ret1s.size==0) null else Scope(ret1s[0],null)
-                            )
+                            Pair(scp1s.map { Scope(it,null) }, ret)
                         }
 
                         // calculates return of "e" call based on "e.f" function type
