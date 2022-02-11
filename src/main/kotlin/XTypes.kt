@@ -264,7 +264,9 @@ fun Expr.xinfTypes (inf: Type?) {
                             // TODO: may fail before check2, return anything
                             Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR"))
                         } else {
-                            ft.out.map_arg_to_inp_to_out(this.xscps.first!!, ft.xscps.second!!)
+                            ft.out.mapScps(true,
+                                ft.xscps.second!!.map { it.scp1.id }.zip(this.xscps.first!!).toMap()
+                            )
                         }
                     }
                     else -> {
