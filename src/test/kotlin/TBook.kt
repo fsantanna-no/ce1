@@ -285,8 +285,9 @@ class TBook {
             """
             $nums
             $lt
+            -- 20
             -- returns narrower scope, guarantees both alive
-            var smaller = func [$NumA1,$NumA2] -> $NumA2 {
+            var smaller = func @[a1,a2: a2>a1] -> [$NumA1,$NumA2] -> $NumA2 {
                 if lt arg {
                     return arg.1
                 } else {

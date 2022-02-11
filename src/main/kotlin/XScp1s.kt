@@ -132,7 +132,7 @@ fun Stmt.xinfScp1s () {
                                 it?.xscp
                             }
                         }
-                    e.type.xscps = Triple(ups, e.type.xscps.second, emptyList())
+                    e.type.xscps = Triple(ups, e.type.xscps.second, e.type.xscps.third)
                 }
             }
         }

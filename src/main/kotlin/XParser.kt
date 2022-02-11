@@ -83,12 +83,6 @@ class XParser: Parser()
                 all.accept_err(TK.CHAR, '>')
                 val tp = if (!all.accept(TK.CHAR, ':')) null else this.type(false)
                 if (tk0.num == 0) {
-                    if (tp != null) {
-                        All_assert_tk(
-                            tp.tk,
-                            (tp is Type.Pointer && tp.pln is Type.Union)
-                        ) { "invalid type : expected pointer to union" }
-                    }
                     Expr.UNull(tk0, tp)
                 } else {
                     Expr.UCons(tk0, tp, cons!!)

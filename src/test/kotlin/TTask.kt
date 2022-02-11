@@ -144,7 +144,7 @@ class TTask {
                 }
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 9): invalid return : type mismatch\n") { out }
+        assert(out.startsWith("(ln 3, col 9): invalid return : type mismatch")) { out }
     }
     @Test
     fun a06_par1 () {

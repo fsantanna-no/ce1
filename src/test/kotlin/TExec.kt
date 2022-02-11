@@ -818,6 +818,24 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
-
-
+    @Test
+    fun e06_type () {
+        val out = all("""
+            type List = </List>
+            { @A
+                var pa: /List @[LOCAL] @LOCAL
+                set pa = new <.1 <.0>>
+                var f: func @A-> ()->()
+                set f = func@A-> @[]-> ()->()[pa]{
+                    var pf: /List @[A] @A
+                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                    set pa\!1 = pf
+                    --output std pa
+                }
+                call f ()
+                output std pa
+            }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
+    }
 }
