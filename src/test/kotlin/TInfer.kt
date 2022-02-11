@@ -700,4 +700,13 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun e03_clo () {
+        val out = all(
+            """
+            var f: func (func ()->()) -> (func @GLOBAL->()->())
+        """.trimIndent()
+        )
+        assert(out == "var f: func @[] -> func @[] -> () -> () -> func @GLOBAL -> @[] -> () -> ()\n") { out }
+    }
 }

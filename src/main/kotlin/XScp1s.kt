@@ -102,6 +102,7 @@ fun Stmt.xinfScp1s () {
 
                     (clo.filter(::noneInUps) + (tp.xscps.second ?: emptyList()) + inp_pub_out.filter(::noneInUps))
                         .distinctBy { it.scp1.id }
+                        .filter { it.scp1.isscopepar() }
                         
                 }
                 tp.xscps = Triple(first, second, tp.xscps.third)
