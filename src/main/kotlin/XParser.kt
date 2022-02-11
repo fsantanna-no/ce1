@@ -11,7 +11,7 @@ class XParser: Parser()
                 } else {
                     null
                 }
-                Type.Alias(tk0, false, scps, null)
+                Type.Alias(tk0, false, scps?.map { Scope(it,null) })
             }
             all.accept(TK.CHAR, '/') -> {
                 val tk0 = all.tk0 as Tk.Chr
@@ -22,7 +22,7 @@ class XParser: Parser()
                 } else {
                     null
                 }
-                Type.Pointer(tk0, scp, null, pln)
+                Type.Pointer(tk0, if (scp==null) null else Scope(scp,null), pln)
             }
             all.accept(TK.FUNC) || all.accept(TK.TASK) || (tasks && all.accept(TK.TASKS)) -> {
                 val tk0 = all.tk0 as Tk.Key
@@ -51,7 +51,12 @@ class XParser: Parser()
                 all.accept_err(TK.ARROW)
                 val out = this.type(false) // right associative
 
-                Type.Func(tk0, Triple(clo, scps, ctrs), null, inp, pub, out)
+                Type.Func(tk0,
+                    Triple(
+                        clo.let { if (it==null) null else Scope(it,null) },
+                        if (scps==null) null else scps.map { Scope(it,null) },
+                        ctrs),
+                    inp, pub, out)
             }
             else -> super.type(tasks)
         }
@@ -95,6 +100,7 @@ class XParser: Parser()
                 all.assert_tk(tk0, e is Expr.UCons && e.tk_.num != 0) {
                     "invalid `new` : expected constructor"
                 }
+
                 val scp = if (all.accept(TK.CHAR, ':')) {
                     all.accept_err(TK.CHAR, '@')
                     all.accept_err(TK.XID)
@@ -102,7 +108,7 @@ class XParser: Parser()
                 } else {
                     null
                 }
-                Expr.New(tk0 as Tk.Key, scp, null, e as Expr.UCons)
+                Expr.New(tk0 as Tk.Key, if (scp==null) null else Scope(scp,null), e as Expr.UCons)
             }
             else -> super.expr_one()
         }
@@ -113,12 +119,10 @@ class XParser: Parser()
 
         // call
         if (all.checkExpr() || all.check(TK.ATBRACK)) {
-            val iscps = if (all.accept(TK.ATBRACK)) {
+            val iscps = if (!all.accept(TK.ATBRACK)) null else {
                 val ret = this.scp1s { it.asscope() }
                 all.accept_err(TK.CHAR, ']')
                 ret
-            } else {
-                null
             }
             val arg = this.expr()
             val oscp = if (!all.accept(TK.CHAR, ':')) null else {
@@ -126,7 +130,11 @@ class XParser: Parser()
                 all.accept_err(TK.XID)
                 all.tk0.asscope()
             }
-            e = Expr.Call(e.tk, e, arg, Pair(iscps, oscp), null)
+            e = Expr.Call(e.tk, e, arg,
+                Pair(
+                    if (iscps==null) null else iscps.map { Scope(it,null) },
+                    if (oscp==null) null else Scope(oscp,null)
+                ))
         }
         return e
     }
@@ -214,7 +222,7 @@ class XParser: Parser()
                 val scps = if (all.check(TK.ATBRACK)) this.scopepars() else Pair(null, null)
                 all.accept_err(TK.CHAR, '=')
                 val tp = this.type(false)
-                Stmt.Typedef(id, scps, null, tp)
+                Stmt.Typedef(id, scps, tp)
             }
             else -> super.stmt()
         }

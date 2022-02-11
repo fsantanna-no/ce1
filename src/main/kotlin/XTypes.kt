@@ -8,13 +8,12 @@ fun Type.mapScp1 (up: Any, to: Tk.Id): Type {
     fun Type.aux (): Type {
         return when (this) {
             is Type.Unit, is Type.Nat, is Type.Spawn, is Type.Spawns -> this
-            is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.aux() }.toTypedArray())
-            is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.aux() }.toTypedArray())
+            is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.aux() })
+            is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.aux() })
             is Type.Func    -> this
-            is Type.Pointer -> Type.Pointer(this.tk_, to, to.toScp2(this), this.pln.aux())
+            is Type.Pointer -> Type.Pointer(this.tk_, Scope(to,null), this.pln.aux())
             is Type.Alias   -> Type.Alias(this.tk_, this.xisrec,
-                /*arrayOf(to),*/                this.xscp1s!!.map{to}.toTypedArray(),   // TODO: wrong
-                /*arrayOf(to.toScp2(up)))*/     this.xscp1s!!.map{to.toScp2(up)}.toTypedArray())
+                /*listOf(to),*/ this.xscps!!.map{Scope(to,null)})   // TODO: wrong
         }
     }
     return this.aux().clone(up, this.tk.lin, this.tk.col)
@@ -32,16 +31,16 @@ fun Expr.xinfTypes (inf: Type?) {
                     val blk = (it.env(it.tk_.id) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
                     when {
                         (blk == null) -> "GLOBAL"
-                        (blk.xscp1 == null) -> {
+                        (blk.scp1 == null) -> {
                             val lbl = "SS" + it.tk_.id.toUpperCase()
-                            blk.xscp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
+                            blk.scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
                             lbl
                         }
-                        else -> blk.xscp1!!.id
+                        else -> blk.scp1!!.id
                     }
                 } ?: "GLOBAL"
                 val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
-                Type.Pointer(this.tk_, scp1, scp1.toScp2(this), it).clone(this, this.tk.lin, this.tk.col)
+                Type.Pointer(this.tk_, Scope(scp1,TODO()), it).clone(this, this.tk.lin, this.tk.col)
             }
         }
         is Expr.Dnref -> {
@@ -49,8 +48,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,"LOCAL")
                 Type.Pointer (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
-                    scp1,
-                    scp1.toScp2(this),
+                    Scope(scp1,TODO()),
                     inf
                 ).clone(this, this.tk.lin, this.tk.col)
             })
@@ -68,7 +66,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : type mismatch"
             }
             this.arg.forEachIndexed { i,e -> e.xinfTypes(inf?.let { (inf as Type.Tuple).vec[i] }) }
-            Type.Tuple(this.tk_, this.arg.map { it.wtype!! }.toTypedArray()).clone(this, this.tk.lin, this.tk.col)
+            Type.Tuple(this.tk_, this.arg.map { it.wtype!! }).clone(this, this.tk.lin, this.tk.col)
         }
         is Expr.UCons -> {
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
@@ -103,18 +101,16 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : type mismatch"
             }
             this.arg.xinfTypes((inf as Type.Pointer?)?.pln)
-            if (this.xscp1 == null) {
+            if (this.xscp == null) {
                 if (inf is Type.Pointer) {
-                    this.xscp1 = inf.xscp1
+                    this.xscp = inf.xscp
                 } else {
-                    this.xscp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col, "LOCAL")
+                    this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, "LOCAL"), TODO())
                 }
-                this.xscp2 = this.xscp1!!.toScp2(this)
             }
             Type.Pointer (
                 Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'),
-                this.xscp1!!,
-                this.xscp2!!,
+                this.xscp!!,
                 this.arg.wtype!!
             ).clone(this, this.tk.lin, this.tk.col)
         }
@@ -189,7 +185,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 when (ft) {
                     is Type.Nat -> {
                         this.arg.xinfTypes(nat)
-                        this.xscp1s = Pair(this.xscp1s.first ?: emptyArray(), this.xscp1s.second)
+                        this.xscps = Pair(this.xscps.first ?: emptyList(), this.xscps.second)
                         ft
                     }
                     is Type.Func -> {
@@ -201,27 +197,26 @@ fun Expr.xinfTypes (inf: Type?) {
                         // Calculates type scopes {...}:
                         //  call f @[...] arg
 
-                        this.xscp1s = let {
+                        this.xscps = let {
                             // scope of expected closure environment
                             //      var f: func {@LOCAL} -> ...     // f will hold env in @LOCAL
                             //      set f = call g {@LOCAL} ()      // pass it for the builder function
-                            val clo: List<Pair<Tk.Id,Tk.Id>> = if (inf is Type.Func && inf.xscp1s.first!=null) {
-                                listOf(Pair((ft.out as Type.Func).xscp1s.first!!,inf.xscp1s.first!!))
-                            } else {
-                                emptyList()
-                            }
-
-                            /////////
 
                             fun Type.toScp1s (): List<Tk.Id> {
                                 return when (this) {
-                                    is Type.Pointer -> listOf(this.xscp1!!)
-                                    is Type.Alias   -> this.xscp1s!!.toList()
+                                    is Type.Pointer -> listOf(this.xscp!!.scp1)
+                                    is Type.Alias   -> this.xscps!!.map { it.scp1 }
                                     else -> emptyList()
                                 }
                             }
 
-                            val ret1s = if (inf == null) {
+                            val clo: List<Pair<Tk.Id,Tk.Id>> = if (inf is Type.Func && inf.xscps.first!=null) {
+                                listOf(Pair((ft.out as Type.Func).xscps.first!!.scp1,inf.xscps.first!!.scp1))
+                            } else {
+                                emptyList()
+                            }
+
+                            val ret1s: List<Tk.Id> = if (inf == null) {
                                 // no attribution expected, save to @LOCAL as shortest scope possible
                                 ft.out.flattenLeft()
                                     .map { it.toScp1s() }
@@ -232,12 +227,11 @@ fun Expr.xinfTypes (inf: Type?) {
                                     .map { it.toScp1s() }
                                     .flatten()
                             }
+
                             assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
-                            val arg1s = this.arg.wtype!!.flattenLeft()
+                            val arg1s: List<Tk.Id> = this.arg.wtype!!.flattenLeft()
                                 .map { it.toScp1s() }
                                 .flatten()
-
-                            /////////
 
                             // func inp -> out  ==>  { inp, out }
                             val inp_out: List<Tk.Id> = (ft.inp.flattenLeft() + ft.out.flattenLeft())
@@ -253,12 +247,11 @@ fun Expr.xinfTypes (inf: Type?) {
                                 .distinctBy { it.first.id }
                                 .map { it.second }
 
-                            Pair(scp1s.toTypedArray(), if (ret1s.size==0) null else ret1s[0])
+                            Pair (
+                                scp1s.map { Scope(it,null) },
+                                if (ret1s.size==0) null else Scope(ret1s[0],null)
+                            )
                         }
-                        this.xscp2s = Pair (
-                            this.xscp1s.first!!.map { it.toScp2(this) }.toTypedArray(),
-                            this.xscp1s.second?.toScp2(this)
-                        )
 
                         // calculates return of "e" call based on "e.f" function type
                         // "e" passes "e.arg" with "e.scp1s.first" scopes which may affect "e.f" return scopes
@@ -270,44 +263,35 @@ fun Expr.xinfTypes (inf: Type?) {
                         //  so @scp2 maps to @b_1
                         // zip [[{@scp1a,@scp1b},{@scp2a,@scp2b}],{@a1,@b_1}]
 
-                        if (ft.xscp1s.second!!.size != this.xscp1s.first!!.size) {
+                        if (ft.xscps.second!!.size != this.xscps.first!!.size) {
                             // TODO: may fail before check2, return anything
                             Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR")).clone(this,this.tk.lin,this.tk.col)
                         } else {
-                            val MAP: List<Pair<Tk.Id, Pair<Tk.Id, Scp2>>> =
-                                ft.xscp1s.second!!.zip(this.xscp1s.first!!.zip(this.xscp2s!!.first))
+                            val MAP: List<Pair<Scope,Scope>> =
+                                ft.xscps.second!!.zip(this.xscps.first!!)
 
-                            fun Tk.Id.get(scp2: Scp2): Pair<Tk.Id, Scp2> {
-                                return MAP.find { it.first.let { it.id == this.id } }?.second
-                                    ?: Pair(this, scp2)
+                            fun Scope.get(): Scope {
+                                return MAP.find {
+                                    it.first.let { it.scp1.id == this.scp1.id }
+                                }?.second ?: this
                             }
 
                             fun Type.map(): Type {
                                 return when (this) {
-                                    is Type.Pointer -> this.xscp1!!.get(this.xscp2!!).let {
-                                        Type.Pointer(this.tk_, it.first, it.second, this.pln.map())
-                                    }
-                                    is Type.Tuple -> Type.Tuple(this.tk_, this.vec.map { it.map() }.toTypedArray())
-                                    is Type.Union -> Type.Union(this.tk_, this.vec.map { it.map() }.toTypedArray())
+                                    is Type.Pointer -> Type.Pointer(this.tk_, this.xscp!!.get(), this.pln.map())
+                                    is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.map() })
+                                    is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.map() })
+                                    is Type.Alias   -> Type.Alias(this.tk_, this.xisrec, this.xscps!!.map { it.get() })
                                     is Type.Func -> {
-                                        val clo = this.xscp1s.first?.get(this.xscp2s!!.first!!)
-                                        val (x1, x2) = this.xscp1s.second!!.zip(this.xscp2s!!.second)
-                                            .map { it.first.get(it.second) }
-                                            .unzip()
-                                        Type.Func(
+                                        val clo = this.xscps.first?.get()
+                                        val inp = this.xscps.second!!.map { it.get() }
+                                        Type.Func (
                                             this.tk_,
-                                            Triple(clo?.first, x1.toTypedArray(), this.xscp1s.third),
-                                            Pair(clo?.second, x2.toTypedArray()),
+                                            Triple(clo, inp, this.xscps.third),
                                             this.inp.map(),
                                             this.pub?.map(),
                                             this.out.map()
                                         )
-                                    }
-                                    is Type.Alias -> {
-                                        val (x1, x2) = this.xscp1s!!.zip(this.xscp2s!!)
-                                            .map { it.first.get(it.second) }
-                                            .unzip()
-                                        Type.Alias(this.tk_, this.xisrec, x1.toTypedArray(), x2.toTypedArray())
                                     }
                                     else -> this
                                 }

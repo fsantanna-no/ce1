@@ -9,9 +9,9 @@ open class Parser
                     all.accept_err(TK.CHAR, ']')
                     ret
                 } else {
-                    emptyArray()
+                    emptyList()
                 }
-                Type.Alias(tk0, false, scps, null)
+                Type.Alias(tk0, false, scps.map { Scope(it,null) })
             }
             all.accept(TK.CHAR, '/') -> {
                 val tk0 = all.tk0 as Tk.Chr
@@ -22,7 +22,7 @@ open class Parser
                 } else {
                     Tk.Id(TK.XID, all.tk0.lin, all.tk0.col, "LOCAL")
                 }
-                Type.Pointer(tk0, scp, null, pln)
+                Type.Pointer(tk0, Scope(scp,null), pln)
             }
             all.accept(TK.FUNC) || all.accept(TK.TASK) || (tasks && all.accept(TK.TASKS)) -> {
                 val tk0 = all.tk0 as Tk.Key
@@ -43,7 +43,7 @@ open class Parser
                     all.accept_err(TK.ARROW)
                     Pair(x, y)
                 } else {
-                    Pair(emptyArray(), emptyArray())
+                    Pair(emptyList(), emptyList())
                 }
 
                 val inp = this.type(false)
@@ -56,7 +56,13 @@ open class Parser
                 all.accept_err(TK.ARROW)
                 val out = this.type(false) // right associative
 
-                Type.Func(tk0, Triple(clo, scps, ctrs), null, inp, pub, out)
+                Type.Func(tk0,
+                    Triple (
+                        clo.let { if (it == null) null else Scope(it,null) },
+                        scps.map { Scope(it,null) },
+                        ctrs
+                    ),
+                    inp, pub, out)
             }
             all.accept(TK.UNIT) -> Type.Unit(all.tk0 as Tk.Sym)
             all.accept(TK.XNAT) -> Type.Nat(all.tk0 as Tk.Nat)
@@ -78,10 +84,10 @@ open class Parser
                 }
                 if (tk0.chr == '[') {
                     all.accept_err(TK.CHAR, ']')
-                    Type.Tuple(tk0, tps.toTypedArray())
+                    Type.Tuple(tk0, tps)
                 } else {
                     all.accept_err(TK.CHAR, '>')
-                    val vec = tps.toTypedArray()
+                    val vec = tps
                     Type.Union(tk0, vec)
                 }
             }
@@ -139,7 +145,7 @@ open class Parser
                 } else {
                     Tk.Id(TK.XID, all.tk0.lin, all.tk0.col, "LOCAL")
                 }
-                Expr.New(tk0 as Tk.Key, scp, null, e as Expr.UCons)
+                Expr.New(tk0 as Tk.Key, Scope(scp,null), e as Expr.UCons)
             }
             all.accept(TK.UNIT) -> Expr.Unit(all.tk0 as Tk.Sym)
             all.accept(TK.XID) -> Expr.Var(all.tk0 as Tk.Id)
@@ -171,13 +177,13 @@ open class Parser
                     es.add(e2)
                 }
                 all.accept_err(TK.CHAR, ']')
-                Expr.TCons(tk0, es.toTypedArray())
+                Expr.TCons(tk0, es)
             }
             all.check(TK.TASK) || all.check(TK.FUNC) -> {
                 val tk = all.tk1 as Tk.Key
                 val tp = this.type(false) as Type.Func
 
-                val ups: Array<Tk.Id> = if (!all.accept(TK.CHAR, '[')) emptyArray() else {
+                val ups: List<Tk.Id> = if (!all.accept(TK.CHAR, '[')) emptyList() else {
                     val ret = mutableListOf<Tk.Id>()
                     while (all.accept(TK.XID)) {
                         ret.add(all.tk0 as Tk.Id)
@@ -186,7 +192,7 @@ open class Parser
                         }
                     }
                     all.accept_err(TK.CHAR, ']')
-                    ret.toTypedArray()
+                    ret
                 }
 
                 val block = this.block()
@@ -199,65 +205,6 @@ open class Parser
         }
     }
 
-    fun expr_dots (): Expr {
-        var e = this.expr_one()
-
-        // one!1\.2?1
-        while (all.accept(TK.CHAR, '\\') || all.accept(TK.CHAR, '.') || all.accept(TK.CHAR, '!') || all.accept(
-                TK.CHAR,
-                '?'
-            )
-        ) {
-            val chr = all.tk0 as Tk.Chr
-            e = if (chr.chr == '\\') {
-                all.assert_tk(
-                    all.tk0,
-                    e is Expr.Nat || e is Expr.Var || e is Expr.TDisc || e is Expr.UDisc || e is Expr.Dnref || e is Expr.Upref || e is Expr.Call
-                ) {
-                    "unexpected operand to `\\´"
-                }
-                Expr.Dnref(chr, e)
-            } else {
-                val ok = when {
-                    (chr.chr != '.') -> false
-                    all.accept(TK.XID) -> {
-                        val tk = all.tk0 as Tk.Id
-                        all.assert_tk(tk, tk.id == "pub") {
-                            "unexpected \"${tk.id}\""
-                        }
-                        true
-                    }
-                    else -> false
-                }
-                if (!ok) {
-                    all.accept_err(TK.XNUM)
-                }
-                val num = if (ok) null else (all.tk0 as Tk.Num)
-                all.assert_tk(all.tk0, e !is Expr.TCons && e !is Expr.UCons && e !is Expr.UNull) {
-                    "invalid discriminator : unexpected constructor"
-                }
-                if (chr.chr == '?' || chr.chr == '!') {
-                    All_assert_tk(all.tk0, num!!.num != 0 || e is Expr.Dnref) {
-                        "invalid discriminator : union cannot be <.0>"
-                    }
-                }
-                when {
-                    (chr.chr == '?') -> Expr.UPred(num!!, e)
-                    (chr.chr == '!') -> Expr.UDisc(num!!, e)
-                    (chr.chr == '.') -> {
-                        if (all.tk0.enu == TK.XID) {
-                            Expr.Pub(all.tk0 as Tk.Id, e)
-                        } else {
-                            Expr.TDisc(num!!, e)
-                        }
-                    }
-                    else -> error("impossible case")
-                }
-            }
-        }
-        return e
-    }
-
     open fun expr (): Expr {
         var e = this.expr_dots()
 
@@ -268,7 +215,7 @@ open class Parser
                 all.accept_err(TK.CHAR, ']')
                 ret
             } else {
-                emptyArray()
+                emptyList()
             }
             val arg = this.expr()
             val oscp = if (!all.accept(TK.CHAR, ':')) null else {
@@ -276,7 +223,10 @@ open class Parser
                 all.accept_err(TK.XID)
                 all.tk0.asscope()
             }
-            e = Expr.Call(e.tk, e, arg, Pair(iscps, oscp), null)
+            e = Expr.Call(e.tk, e, arg, Pair (
+                iscps.map { Scope(it,null) },
+                if (oscp == null) null else Scope(oscp,null)
+            ))
         }
         return e
     }
@@ -339,10 +289,14 @@ open class Parser
             all.accept(TK.TYPE) -> {
                 all.accept_err(TK.XID)
                 val id = all.tk0.astype()
-                val scps = if (all.check(TK.ATBRACK)) this.scopepars() else Pair(emptyArray(), emptyArray())
+                val scp1s = if (all.check(TK.ATBRACK)) {
+                    this.scopepars()
+                } else {
+                    Pair(emptyList(), emptyList())
+                }
                 all.accept_err(TK.CHAR, '=')
                 val tp = this.type(false)
-                Stmt.Typedef(id, scps, null, tp)
+                Stmt.Typedef(id, scp1s, tp)
             }
             all.accept(TK.NATIVE) -> {
                 val istype = all.accept(TK.TYPE)
@@ -377,7 +331,7 @@ open class Parser
                     Tk.Id(TK.XID, all.tk0.lin, all.tk0.col, "GLOBAL")
                 }
                 val e = this.expr()
-                Stmt.Bcast(tk0, scp, e)
+                Stmt.Bcast(tk0, Scope(scp,null), e)
             }
             all.accept(TK.THROW) -> {
                 Stmt.Throw(all.tk0 as Tk.Key)
@@ -412,7 +366,7 @@ open class Parser
         }
     }
 
-    fun scp1s (f: (Tk) -> Tk.Id): Array<Tk.Id> {
+    fun scp1s (f: (Tk) -> Tk.Id): List<Tk.Id> {
         val scps = mutableListOf<Tk.Id>()
         while (all.accept(TK.XID)) {
             scps.add(f(all.tk0))
@@ -420,10 +374,10 @@ open class Parser
                 break
             }
         }
-        return scps.toTypedArray()
+        return scps
     }
 
-    fun scopepars (): Pair<Array<Tk.Id>, Array<Pair<String, String>>> {
+    fun scopepars (): Pair<List<Tk.Id>, List<Pair<String, String>>> {
         all.accept_err(TK.ATBRACK)
         val scps = this.scp1s { it.asscopepar() }
         val ctrs = mutableListOf<Pair<String, String>>()
@@ -440,7 +394,66 @@ open class Parser
             }
         }
         all.accept_err(TK.CHAR, ']')
-        return Pair(scps, ctrs.toTypedArray())
+        return Pair(scps, ctrs)
+    }
+
+    fun expr_dots (): Expr {
+        var e = this.expr_one()
+
+        // one!1\.2?1
+        while (all.accept(TK.CHAR, '\\') || all.accept(TK.CHAR, '.') || all.accept(TK.CHAR, '!') || all.accept(
+                TK.CHAR,
+                '?'
+            )
+        ) {
+            val chr = all.tk0 as Tk.Chr
+            e = if (chr.chr == '\\') {
+                all.assert_tk(
+                    all.tk0,
+                    e is Expr.Nat || e is Expr.Var || e is Expr.TDisc || e is Expr.UDisc || e is Expr.Dnref || e is Expr.Upref || e is Expr.Call
+                ) {
+                    "unexpected operand to `\\´"
+                }
+                Expr.Dnref(chr, e)
+            } else {
+                val ok = when {
+                    (chr.chr != '.') -> false
+                    all.accept(TK.XID) -> {
+                        val tk = all.tk0 as Tk.Id
+                        all.assert_tk(tk, tk.id == "pub") {
+                            "unexpected \"${tk.id}\""
+                        }
+                        true
+                    }
+                    else -> false
+                }
+                if (!ok) {
+                    all.accept_err(TK.XNUM)
+                }
+                val num = if (ok) null else (all.tk0 as Tk.Num)
+                all.assert_tk(all.tk0, e !is Expr.TCons && e !is Expr.UCons && e !is Expr.UNull) {
+                    "invalid discriminator : unexpected constructor"
+                }
+                if (chr.chr == '?' || chr.chr == '!') {
+                    All_assert_tk(all.tk0, num!!.num != 0 || e is Expr.Dnref) {
+                        "invalid discriminator : union cannot be <.0>"
+                    }
+                }
+                when {
+                    (chr.chr == '?') -> Expr.UPred(num!!, e)
+                    (chr.chr == '!') -> Expr.UDisc(num!!, e)
+                    (chr.chr == '.') -> {
+                        if (all.tk0.enu == TK.XID) {
+                            Expr.Pub(all.tk0 as Tk.Id, e)
+                        } else {
+                            Expr.TDisc(num!!, e)
+                        }
+                    }
+                    else -> error("impossible case")
+                }
+            }
+        }
+        return e
     }
 
     fun attr (): Attr {
@@ -520,13 +533,16 @@ open class Parser
         val iscatch = (all.tk0.enu == TK.CATCH)
         all.accept_err(TK.CHAR, '{')
         val tk0 = all.tk0 as Tk.Chr
-        val scp = if (!all.accept(TK.CHAR, '@')) null else {
+        val scp1 = if (!all.accept(TK.CHAR, '@')) null else {
             all.accept_err(TK.XID)
             all.tk0.asscopecst()
         }
-        val ret = this.stmts()
+        val ss = this.stmts()
         all.accept_err(TK.CHAR, '}')
-        return Stmt.Block(tk0, iscatch, scp, ret)
+        return Stmt.Block(tk0, iscatch, scp1, ss).let {
+            it.scp1 = it.scp1 ?: Tk.Id(TK.XID, tk0.lin, tk0.col, "B${it.n}")
+            it
+        }
     }
 
 

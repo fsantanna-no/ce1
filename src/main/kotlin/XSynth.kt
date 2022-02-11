@@ -12,10 +12,10 @@ fun Expr.tostr (): String {
         is Expr.Pub   -> "(" + this.tsk.tostr() + ".pub)"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + ": @" + this.xscp1!!.id + ")"
+        is Expr.New   -> "(new " + this.arg.tostr() + ": @" + this.xscp!!.scp1.id + ")"
         is Expr.Call  -> {
-            val inps = " @[" + this.xscp1s.first!!.map { it.id }.joinToString(",") + "]"
-            val out  = this.xscp1s.second.let { if (it == null) "" else ": @"+it.id }
+            val inps = " @[" + this.xscps.first!!.map { it.scp1.id }.joinToString(",") + "]"
+            val out  = this.xscps.second.let { if (it == null) "" else ": @"+it.scp1.id }
             "(" + this.f.tostr() + inps + " " + this.arg.tostr() + out + ")"
         }
         is Expr.Func  -> this.type.tostr() + " " + (if (this.ups.size==0) "" else "["+this.ups.map { it.id }.joinToString(",")+"] ") + this.block.tostr()
@@ -36,11 +36,11 @@ fun Stmt.tostr (): String {
         is Stmt.Output  -> "output " + this.lib.id + " " + this.arg.tostr() + "\n"
         is Stmt.If      -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop    -> "loop " + this.block.tostr()
-        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (this.xscp1.let { if (it == null) "" else " @"+it.id }) + "\n" + this.body.tostr() + "}\n"
+        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (this.scp1.let { if (it == null) "" else " @"+it.id }) + "\n" + this.body.tostr() + "}\n"
         is Stmt.SSpawn  -> "set " + this.dst.tostr() + " = spawn " + this.call.tostr() + "\n"
         is Stmt.DSpawn  -> "spawn " + this.call.tostr() + " in " + this.dst.tostr() + "\n"
         is Stmt.Await   -> "await " + this.e.tostr() + "\n"
-        is Stmt.Bcast   -> "bcast @" + this.scp1!!.id + " " + this.e.tostr() + "\n"
+        is Stmt.Bcast   -> "bcast @" + this.scp!!.scp1.id + " " + this.e.tostr() + "\n"
         is Stmt.Throw   -> "throw\n"
         is Stmt.DLoop   -> "loop " + this.i.tostr() + " in " + this.tsks.tostr() + " " + this.block.tostr()
         is Stmt.Typedef -> {
