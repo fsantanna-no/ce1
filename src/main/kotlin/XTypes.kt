@@ -22,7 +22,7 @@ fun Type.mapScp1 (up: Any, to: Tk.Id): Type {
 fun Expr.xinfTypes (inf: Type?) {
     this.wtype = when (this) {
         is Expr.Unit  -> this.wtype!!
-        is Expr.Nat   -> this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col)
+        is Expr.Nat   -> this.xtype ?: inf!!
         is Expr.Upref -> {
             All_assert_tk(this.tk, inf==null || inf is Type.Pointer) { "invalid inference : type mismatch"}
             this.pln.xinfTypes((inf as Type.Pointer?)?.pln)
@@ -40,7 +40,7 @@ fun Expr.xinfTypes (inf: Type?) {
                     }
                 } ?: "GLOBAL"
                 val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
-                Type.Pointer(this.tk_, Scope(scp1,null), it).clone(this, this.tk.lin, this.tk.col)
+                Type.Pointer(this.tk_, Scope(scp1,null), it)
             }
         }
         is Expr.Dnref -> {
@@ -50,7 +50,7 @@ fun Expr.xinfTypes (inf: Type?) {
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
                     Scope(scp1,null),
                     inf
-                ).clone(this, this.tk.lin, this.tk.col)
+                )
             })
             this.ptr.wtype!!.let {
                 if (it is Type.Nat) it else {
@@ -66,7 +66,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : type mismatch"
             }
             this.arg.forEachIndexed { i,e -> e.xinfTypes(inf?.let { (inf as Type.Tuple).vec[i] }) }
-            Type.Tuple(this.tk_, this.arg.map { it.wtype!! }).clone(this, this.tk.lin, this.tk.col)
+            Type.Tuple(this.tk_, this.arg.map { it.wtype!! })
         }
         is Expr.UCons -> {
             All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
@@ -75,15 +75,13 @@ fun Expr.xinfTypes (inf: Type?) {
             if (this.xtype != null) {
                 val x = (this.xtype!!.noalias() as Type.Union).vec[this.tk_.num - 1]
                 this.arg.xinfTypes(x)
-                this.xtype
+                this.xtype!!
             } else {
                 assert(inf != null)
                 val xinf = inf!!.noalias()
                     //.mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
                 All_assert_tk(this.tk, xinf is Type.Union) { "invalid inference : type mismatch : expected union : have ${inf.tostr()}"}
-                val x = (xinf as Type.Union)
-                    .vec[this.tk_.num-1]
-                    .clone(this,this.tk.lin,this.tk.col)
+                val x = (xinf as Type.Union).vec[this.tk_.num-1]
                 this.arg.xinfTypes(x)
                 xinf
             }
@@ -93,7 +91,6 @@ fun Expr.xinfTypes (inf: Type?) {
                 "invalid inference : undetermined type"
             }
             this.xtype ?: inf!!
-                .clone(this,this.tk.lin,this.tk.col)
                 //.mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
         }
         is Expr.New   -> {
@@ -112,7 +109,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 Tk.Chr(TK.CHAR, this.tk.lin, this.tk.col, '/'),
                 this.xscp!!,
                 this.arg.wtype!!
-            ).clone(this, this.tk.lin, this.tk.col)
+            )
         }
         is Expr.Func -> {
             this.block.xinfTypes(null)
@@ -162,11 +159,11 @@ fun Expr.xinfTypes (inf: Type?) {
 
             when (this) {
                 is Expr.UDisc -> if (this.tk_.num == 0) {
-                    Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()")).clone(this, this.tk.lin, this.tk.col)
+                    Type.Unit(Tk.Sym(TK.UNIT, this.tk.lin, this.tk.col, "()"))
                 } else {
                     xtp.vec[this.tk_.num - 1]
                 }
-                is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col)
+                is Expr.UPred -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int"))
                 else -> error("bug found")
             }
         }
@@ -178,7 +175,7 @@ fun Expr.xinfTypes (inf: Type?) {
             s.toType()
         }
         is Expr.Call -> {
-            val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"")).clone(this, this.tk.lin, this.tk.col)
+            val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,""))
             this.f.xinfTypes(nat)    // no infer for functions, default _ for nat
 
             this.f.wtype!!.let { ft ->
@@ -265,9 +262,9 @@ fun Expr.xinfTypes (inf: Type?) {
 
                         if (ft.xscps.second!!.size != this.xscps.first!!.size) {
                             // TODO: may fail before check2, return anything
-                            Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR")).clone(this,this.tk.lin,this.tk.col)
+                            Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR"))
                         } else {
-                            ft.out.map_arg_to_inp_to_out(this.xscps.first!!, ft.xscps.second!!).clone(this, this.tk.lin, this.tk.col)
+                            ft.out.map_arg_to_inp_to_out(this.xscps.first!!, ft.xscps.second!!)
                         }
                     }
                     else -> {
@@ -277,9 +274,9 @@ fun Expr.xinfTypes (inf: Type?) {
                         error("impossible case")
                     }
                 }
-            }.clone(this.f,this.tk.lin,this.tk.col)
+            }
         }
-    }
+    }.clone(this, this.tk.lin, this.tk.col)
 }
 
 fun Stmt.xinfTypes (inf: Type? = null) {
