@@ -595,11 +595,11 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var cnst: func @[a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1
-            set cnst = func @[a1] -> /_int@a1 -> func @a1 -> @[] -> () -> /_int@a1 {
-            var x: /_int@a1
+            var cnst: func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1
+            set cnst = func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1 {
+            var x: /_int @a1
             set x = arg
-            set ret = func @a1 -> @[] -> () -> /_int@a1 [x] {
+            set ret = func @a1 -> @[] -> () -> /_int @a1 [x] {
             set ret = x
             return
             }
@@ -619,7 +619,7 @@ class TInfer {
             var v: /_int = f ()
         """.trimIndent())
         assert(out == """
-            var g: func @[a] -> /_int @a -> func @a -> @[a] -> () -> /_int @a
+            var g: func @[a] -> /_int @a -> func @a -> @[] -> () -> /_int @a
             var five: _int
             var f: func @GLOBAL -> @[] -> () -> /_int @GLOBAL
             set f = (g @[GLOBAL] (/five))
@@ -639,7 +639,7 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var g: func @[a] -> /_int @a -> func @a -> @[a] -> () -> /_int @a
+            var g: func @[a] -> /_int @a -> func @a -> @[] -> () -> /_int @a
             { @SSFIVE
             var five: _int
             var f: func @LOCAL -> @[] -> () -> /_int @LOCAL

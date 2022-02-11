@@ -90,7 +90,17 @@ fun Stmt.xinfScp1s () {
                         emptyList()
                     }
 
-                    (clo + (tp.xscps.second ?: emptyList()) + inp_pub_out)
+                    // remove scopes that are declared in outer Funcs
+                    val outers: List<Scope> = tp.ups_tolist().let {
+                        val es = it.filter { it is Expr.Func }.let { it as List<Expr.Func> }.map { it.type }
+                        val ts = it.filter { it is Type.Func }.let { it as List<Type.Func> }
+                        (es + ts).map { it.xscps.second ?: emptyList() }.flatten()
+                    }
+                    fun noneInUps (x: Scope): Boolean {
+                        return outers.none { it.scp1.id==x.scp1.id }
+                    }
+
+                    (clo.filter(::noneInUps) + (tp.xscps.second ?: emptyList()) + inp_pub_out.filter(::noneInUps))
                         .distinctBy { it.scp1.id }
                         
                 }
