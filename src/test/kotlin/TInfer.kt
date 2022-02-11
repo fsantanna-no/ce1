@@ -716,6 +716,6 @@ class TInfer {
             var smaller: func @[a1,a2: a2>a1] -> [/_int@a1,/_int@a2] -> /_int@a2
         """.trimIndent()
         )
-        assert(out == "var f: func @[] -> func @[] -> () -> () -> func @GLOBAL -> @[] -> () -> ()\n") { out }
+        assert(out == "var smaller: func @[a1,a2: a2>a1] -> [/_int @a1,/_int @a2] -> /_int @a2\n") { out }
     }
 }
