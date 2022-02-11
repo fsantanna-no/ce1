@@ -203,6 +203,7 @@ fun Expr.xinfTypes (inf: Type?) {
                                 return when (this) {
                                     is Type.Pointer -> listOf(this.xscp!!.scp1)
                                     is Type.Alias   -> this.xscps!!.map { it.scp1 }
+                                    is Type.Func    -> this.xscps.first.let { if (it==null) emptyList() else listOf(it.scp1) }
                                     else -> emptyList()
                                 }
                             }
@@ -235,12 +236,10 @@ fun Expr.xinfTypes (inf: Type?) {
                                 .map { it.toScp1s() }
                                 .flatten()
 
-                            val xxx: List<Pair<Tk.Id, Tk.Id>> = inp_out.zip(arg1s + ret1s)
-
                             // [ (inp,arg), (out,ret) ] ==> remove all repeated inp/out
                             // TODO: what if out/ret are not the same for the removed reps?
-                            val scp1s: List<Tk.Id> = (clo + xxx)
-                                .filter { it.first.enu == TK.XID }  // ignore constant labels (they not args)
+                            val scp1s: List<Tk.Id> = (clo + inp_out.zip(arg1s+ret1s))
+                                .filter { it.first.isscopepar() }  // ignore constant labels (they not args)
                                 .distinctBy { it.first.id }
                                 .map { it.second }
 
