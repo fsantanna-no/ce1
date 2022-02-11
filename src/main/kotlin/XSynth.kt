@@ -12,10 +12,10 @@ fun Expr.tostr (): String {
         is Expr.Pub   -> "(" + this.tsk.tostr() + ".pub)"
         is Expr.UDisc -> "(" + this.uni.tostr() + "!" + this.tk_.num + ")"
         is Expr.UPred -> "(" + this.uni.tostr() + "?" + this.tk_.num + ")"
-        is Expr.New   -> "(new " + this.arg.tostr() + ": @" + this.xscp!!.scp1.id + ")"
+        is Expr.New   -> "(new " + this.arg.tostr() + ": @" + this.xscp!!.scp1.anon2local() + ")"
         is Expr.Call  -> {
-            val inps = " @[" + this.xscps.first!!.map { it.scp1.id }.joinToString(",") + "]"
-            val out  = this.xscps.second.let { if (it == null) "" else ": @"+it.scp1.id }
+            val inps = " @[" + this.xscps.first!!.map { it.scp1.anon2local() }.joinToString(",") + "]"
+            val out  = this.xscps.second.let { if (it == null) "" else ": @"+it.scp1.anon2local() }
             "(" + this.f.tostr() + inps + " " + this.arg.tostr() + out + ")"
         }
         is Expr.Func  -> this.type.tostr() + " " + (if (this.ups.size==0) "" else "["+this.ups.map { it.id }.joinToString(",")+"] ") + this.block.tostr()
@@ -36,7 +36,7 @@ fun Stmt.tostr (): String {
         is Stmt.Output  -> "output " + this.lib.id + " " + this.arg.tostr() + "\n"
         is Stmt.If      -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop    -> "loop " + this.block.tostr()
-        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (this.scp1.let { if (it==null || it.id[0]=='B'&&it.id[1].isDigit()) "" else " @"+it.id }) + "\n" + this.body.tostr() + "}\n"
+        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (if (this.scp1.isanon()) "" else " @"+this.scp1!!.id) + "\n" + this.body.tostr() + "}\n"
         is Stmt.SSpawn  -> "set " + this.dst.tostr() + " = spawn " + this.call.tostr() + "\n"
         is Stmt.DSpawn  -> "spawn " + this.call.tostr() + " in " + this.dst.tostr() + "\n"
         is Stmt.Await   -> "await " + this.e.tostr() + "\n"

@@ -503,11 +503,12 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            { @SS
-            var pa: /</^@LOCAL>@LOCAL
-            set pa = (new <.1 <.0>: /</^@LOCAL>@LOCAL>: </^@GLOBAL>: @LOCAL)
-            var f: func @SS -> @[] -> () -> ()
-            set f = func @SS -> @[] -> () -> () [pa] {
+            type List @[i] = </List @[i] @i>
+            {
+            var pa: /List @[LOCAL] @LOCAL
+            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>: @LOCAL)
+            var f: func @LOCAL -> @[] -> () -> ()
+            set f = func @LOCAL -> @[] -> () -> () [pa] {
 
             }
             
@@ -618,11 +619,11 @@ class TInfer {
             var v: /_int = f ()
         """.trimIndent())
         assert(out == """
-            var g: func @[a] -> /_int@a -> func @a -> @[a] -> () -> /_int@a
+            var g: func @[a] -> /_int @a -> func @a -> @[a] -> () -> /_int @a
             var five: _int
-            var f: func @GLOBAL -> @[] -> () -> /_int@GLOBAL
+            var f: func @GLOBAL -> @[] -> () -> /_int @GLOBAL
             set f = (g @[GLOBAL] (/five))
-            var v: /_int@GLOBAL
+            var v: /_int @GLOBAL
             set v = (f @[GLOBAL] (): @GLOBAL)
 
         """.trimIndent()) { out }
@@ -638,12 +639,12 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var g: func @[a] -> /_int@a -> func @a -> @[a] -> () -> /_int@a
+            var g: func @[a] -> /_int @a -> func @a -> @[a] -> () -> /_int @a
             { @SSFIVE
             var five: _int
-            var f: func @LOCAL -> @[] -> () -> /_int@LOCAL
+            var f: func @LOCAL -> @[] -> () -> /_int @LOCAL
             set f = (g @[LOCAL] (/five))
-            var v: /_int@LOCAL
+            var v: /_int @LOCAL
             set v = (f @[LOCAL] (): @LOCAL)
             }
 

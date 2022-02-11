@@ -31,7 +31,7 @@ fun Expr.xinfTypes (inf: Type?) {
                     val blk = (it.env(it.tk_.id) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
                     when {
                         (blk == null) -> "GLOBAL"
-                        (blk.scp1 == null) -> {
+                        blk.scp1.isanon() -> {
                             val lbl = "SS" + it.tk_.id.toUpperCase()
                             blk.scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
                             lbl

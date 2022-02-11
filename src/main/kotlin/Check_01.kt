@@ -1,6 +1,7 @@
 fun Scope.check (up: Any) {
     val ok = when {
         (this.scp1.id == "GLOBAL") -> true
+        (this.scp1.id == "LOCAL") -> true
         (up.ups_first { it is Type.Func || it is Stmt.Typedef } != null) -> true  // (@i1 -> ...)
         up.env(this.scp1.id).let {                              // { @aaa ... @aaa }
             it is Stmt.Block && this.scp1.id==it.scp1!!.id  ||

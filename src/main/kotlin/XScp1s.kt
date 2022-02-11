@@ -107,10 +107,8 @@ fun Stmt.xinfScp1s () {
                         // Type.Ptr of all ups, find the one with deepest scope, return its scp1
                         .map { (e.env(it.id)!!.toType() as Type.Pointer?) }
                         .filterNotNull()
-                        .firstOrNull()
-                        ?.xscp
-                            /*
-                        .minByOrNull { it.toScp2().depth!! }
+                        //.let { it }
+                        .minByOrNull { it.xscp!!.toScp2(it).third!! }
                         .let {
                             if (it?.xscp?.scp1?.id == "LOCAL") {
                                 val blk =  it.ups_first { it is Stmt.Block } as Stmt.Block?
@@ -123,7 +121,6 @@ fun Stmt.xinfScp1s () {
                                 it?.xscp
                             }
                         }
-                             */
                     e.type.xscps = Triple(ups, e.type.xscps.second, emptyList())
                 }
             }
