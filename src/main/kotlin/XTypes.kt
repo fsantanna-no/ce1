@@ -40,15 +40,15 @@ fun Expr.xinfTypes (inf: Type?) {
                     }
                 } ?: "GLOBAL"
                 val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,lbl)
-                Type.Pointer(this.tk_, Scope(scp1,TODO()), it).clone(this, this.tk.lin, this.tk.col)
+                Type.Pointer(this.tk_, Scope(scp1,null), it).clone(this, this.tk.lin, this.tk.col)
             }
         }
         is Expr.Dnref -> {
             this.ptr.xinfTypes(inf?.let {
-                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,"LOCAL")
+                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,this.localBlock())
                 Type.Pointer (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
-                    Scope(scp1,TODO()),
+                    Scope(scp1,null),
                     inf
                 ).clone(this, this.tk.lin, this.tk.col)
             })
@@ -105,7 +105,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 if (inf is Type.Pointer) {
                     this.xscp = inf.xscp
                 } else {
-                    this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, "LOCAL"), TODO())
+                    this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, this.localBlock()), null)
                 }
             }
             Type.Pointer (
@@ -192,7 +192,7 @@ fun Expr.xinfTypes (inf: Type?) {
                         val e = this
 
                         // TODO: remove after change increasing?
-                        this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")))
+                        this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,this.localBlock())))
 
                         // Calculates type scopes {...}:
                         //  call f @[...] arg
@@ -221,7 +221,7 @@ fun Expr.xinfTypes (inf: Type?) {
                                 ft.out.flattenLeft()
                                     .map { it.toScp1s() }
                                     .flatten()
-                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, "LOCAL") }
+                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, ft.localBlock()) }
                             } else {
                                 inf.flattenLeft()
                                     .map { it.toScp1s() }

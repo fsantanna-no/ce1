@@ -14,11 +14,12 @@ class TInfer {
         try {
             val s = XParser().stmts()
             s.setUps(null)
+            s.setScp1s()
             s.setEnvs(null)
             s.xinfScp1s()
             check_01_before_tps(s)
-            s.setScp2s()
             s.xinfTypes(null)
+            s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {
             //throw e
@@ -62,7 +63,7 @@ class TInfer {
         assert(out == """
             var y: _int
             set y = (_10: _int)
-            var x: /_int @LOCAL
+            var x: /_int @GLOBAL
             set x = (/(_y: _int))
             output std (x\)
             
@@ -76,10 +77,10 @@ class TInfer {
             output std x\
         """.trimIndent())
         assert(out == """
-            var y: /_int @LOCAL
-            set y = (_10: /_int @LOCAL)
+            var y: /_int @GLOBAL
+            set y = (_10: /_int @GLOBAL)
             var x: _int
-            set x = ((_y: /_int @LOCAL)\)
+            set x = ((_y: /_int @GLOBAL)\)
             output std (x\)
             
         """.trimIndent()) { out }
@@ -133,9 +134,9 @@ class TInfer {
             output std l
         """.trimIndent())
         assert(out == """
-            type List @[] = </List @LOCAL>
-            var l: /List @LOCAL
-            set l = <.0>: /List @LOCAL
+            type List @[] = </List @GLOBAL>
+            var l: /List @GLOBAL
+            set l = <.0>: /List @GLOBAL
             output std l
             
         """.trimIndent()) { out }
@@ -149,8 +150,8 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var l: /List @[LOCAL] @LOCAL
-            set l = <.0>: /List @[LOCAL] @LOCAL
+            var l: /List @[GLOBAL] @GLOBAL
+            set l = <.0>: /List @[GLOBAL] @GLOBAL
             output std l
 
         """.trimIndent()) { out }
@@ -164,8 +165,8 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var l: /List @[LOCAL] @LOCAL
-            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>: @LOCAL)
+            var l: /List @[GLOBAL] @GLOBAL
+            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>: @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -179,8 +180,8 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var l: /List @[LOCAL] @LOCAL
-            set l = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            var l: /List @[GLOBAL] @GLOBAL
+            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: List @[GLOBAL]: @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -248,7 +249,7 @@ class TInfer {
     @Test
     fun b03 () {
         val out = all("""
-            var x: /</<[/^^ @LOCAL,/^ @LOCAL]> @LOCAL> @LOCAL
+            var x: /</<[/^^ @GLOBAL,/^ @GLOBAL]> @GLOBAL> @GLOBAL
             set x = new <.1 <.1 [<.0>,<.0>]>>
         """.trimIndent())
         assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
@@ -419,6 +420,7 @@ class TInfer {
             set ((arg\)!1) = (new <.1 <.0>: /List @[j] @j>: </List @[j] @j>: @j)
             }
 
+
         """.trimIndent()) { out }
     }
     @Test
@@ -436,8 +438,8 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
-            var v: /List @[LOCAL] @LOCAL
-            set v = <.0>: /List @[LOCAL] @LOCAL
+            var v: /List @[GLOBAL] @GLOBAL
+            set v = <.0>: /List @[GLOBAL] @GLOBAL
 
         """.trimIndent()) { out }
     }
@@ -451,7 +453,7 @@ class TInfer {
         assert(out == """
             type List @[i] = /</List @[i] @i> @i
             var f: func @[i] -> List @[i] -> ()
-            call (f @[LOCAL] <.0>: List @[LOCAL])
+            call (f @[GLOBAL] <.0>: List @[GLOBAL])
 
         """.trimIndent()) { out }
     }
@@ -465,7 +467,7 @@ class TInfer {
         assert(out == """
             type List @[i,j] = /</List @[i,j] @j> @i
             var f: func @[i,j] -> List @[i,j] -> ()
-            call (f @[LOCAL,LOCAL] <.0>: List @[LOCAL,LOCAL])
+            call (f @[GLOBAL,GLOBAL] <.0>: List @[GLOBAL,GLOBAL])
 
         """.trimIndent()) { out }
     }
@@ -480,9 +482,9 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var f: func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k
-            var v: /List @[LOCAL] @LOCAL
-            set v = (f @[LOCAL,LOCAL,LOCAL,LOCAL] <.0>: /List @[LOCAL] @LOCAL: @LOCAL)
-            output std (f @[LOCAL,LOCAL,LOCAL,LOCAL] v: @LOCAL)
+            var v: /List @[GLOBAL] @GLOBAL
+            set v = (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] <.0>: /List @[GLOBAL] @GLOBAL: @GLOBAL)
+            output std (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] v: @GLOBAL)
 
         """.trimIndent()) { out }
     }
@@ -503,7 +505,7 @@ class TInfer {
         assert(out == """
             { @SS
             var pa: /</^@LOCAL>@LOCAL
-            set pa = (new <.1 <.0>: /</^@LOCAL>@LOCAL>: </^@LOCAL>: @LOCAL)
+            set pa = (new <.1 <.0>: /</^@LOCAL>@LOCAL>: </^@GLOBAL>: @LOCAL)
             var f: func @SS -> @[] -> () -> ()
             set f = func @SS -> @[] -> () -> () [pa] {
 
@@ -532,7 +534,7 @@ class TInfer {
         """.trimIndent()
         )
         assert(out == """
-            var f: func @LOCAL -> @[] -> () -> ()
+            var f: func @GLOBAL -> @[] -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -545,7 +547,7 @@ class TInfer {
         )
         assert(out == """
             var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @LOCAL -> @[] -> () -> ()
+            var f: func @GLOBAL -> @[] -> () -> ()
             
         """.trimIndent()) { out }
     }
@@ -559,8 +561,8 @@ class TInfer {
         )
         assert(out == """
             var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @LOCAL -> @[] -> () -> ()
-            set f = (g @[LOCAL] ())
+            var f: func @GLOBAL -> @[] -> () -> ()
+            set f = (g @[GLOBAL] ())
             
         """.trimIndent()) { out }
     }
@@ -575,8 +577,8 @@ class TInfer {
         )
         assert(out == """
             var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @LOCAL -> @[] -> () -> ()
-            set f = (g @[LOCAL] ())
+            var f: func @GLOBAL -> @[] -> () -> ()
+            set f = (g @[GLOBAL] ())
             call (f @[] ())
             
         """.trimIndent()) { out }
@@ -618,10 +620,10 @@ class TInfer {
         assert(out == """
             var g: func @[a] -> /_int@a -> func @a -> @[a] -> () -> /_int@a
             var five: _int
-            var f: func @LOCAL -> @[] -> () -> /_int@LOCAL
-            set f = (g @[LOCAL] (/five))
-            var v: /_int@LOCAL
-            set v = (f @[LOCAL] (): @LOCAL)
+            var f: func @GLOBAL -> @[] -> () -> /_int@GLOBAL
+            set f = (g @[GLOBAL] (/five))
+            var v: /_int@GLOBAL
+            set v = (f @[GLOBAL] (): @GLOBAL)
 
         """.trimIndent()) { out }
     }
@@ -653,8 +655,9 @@ class TInfer {
     @Test
     fun e01_clone () {
         val out = all("""
-            var clone : func /</^> -> /</^>
-            set clone = func /</^> -> /</^> {
+            type List = </List>
+            var clone : func /List -> /List
+            set clone = func /List -> /List {
                 if arg\?0 {
                     return <.0>
                 } else {
@@ -663,16 +666,17 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var clone: func @[@i1,@j1] -> /</^@i1>@i1 -> /</^@j1>@j1
-            set clone = func @[@i1,@j1] -> /</^@i1>@i1 -> /</^@j1>@j1 {
+            type List @[i] = </List @[i] @i>
+            var clone: func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k
+            set clone = func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k {
             if ((arg\)?0){
             {
-            set ret = <.0>: /</^@j1>@j1
+            set ret = <.0>: /List @[l] @k
             return
             }
             } else {
             {
-            set ret = (new <.1 (clone @[@i1,@j1] ((arg\)!1): @j1)>: </^@j1>: @j1)
+            set ret = (new <.1 (clone @[j,j,l,l] ((arg\)!1): @l)>: </List @[l] @l>: @k)
             return
             }
             }
@@ -684,12 +688,14 @@ class TInfer {
     @Test
     fun e02_ff () {
         val out = all("""
-            var f : func /</^> -> /</^>
+            type List = </List>
+            var f : func /List -> /List
             output std f (f <.0>)
         """.trimIndent())
         assert(out == """
-            var f: func @[@i1,@j1] -> /</^@i1>@i1 -> /</^@j1>@j1
-            output std (f @[@LOCAL,@LOCAL] (f @[@LOCAL,@LOCAL] <.0>: /</^@LOCAL>@LOCAL: @LOCAL): @LOCAL)
+            type List @[i] = </List @[i] @i>
+            var f: func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k
+            output std (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] <.0>: /List @[GLOBAL] @GLOBAL: @GLOBAL): @GLOBAL)
 
         """.trimIndent()) { out }
     }

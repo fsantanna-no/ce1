@@ -8,6 +8,7 @@ fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
     try {
         val s = XParser().stmts()
         s.setUps(null)
+        s.setScp1s()
         s.setEnvs(null)
         s.xinfScp1s()
         check_01_before_tps(s)

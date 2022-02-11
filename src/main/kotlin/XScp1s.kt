@@ -60,7 +60,7 @@ fun Stmt.xinfScp1s () {
                 if (tp.xscps==null && tp.ups_first { it is Stmt.Typedef || it is Type.Func }==null) {
                     val def = tp.env(tp.tk_.id) as Stmt.Typedef
                     val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
-                    tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL"), null) }
+                    tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null) }
                 } else {
                     // do not infer inside func/typedef declaration (it is inferred there)
                 }
@@ -68,7 +68,7 @@ fun Stmt.xinfScp1s () {
             is Type.Pointer -> {
                 // do not infer to LOCAL if inside function/typedef declaration
                 if (tp.xscp==null && tp.ups_first { it is Type.Func || it is Stmt.Typedef }==null) {
-                    tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL"), null)
+                    tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null)
                 }
             }
             is Type.Func -> {
@@ -76,7 +76,7 @@ fun Stmt.xinfScp1s () {
 
                 // task needs to add implicit closure @LOCAL if absent
                 val first = tp.xscps.first ?: if (tp.tk.enu==TK.FUNC) null else {
-                    Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, "LOCAL"), null)
+                    Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null)
                 }
 
                 // {closure} + {explicit scopes} + implicit inp_out
@@ -124,7 +124,7 @@ fun Stmt.xinfScp1s () {
                             }
                         }
                              */
-                    e.type.xscps = Triple(ups, e.type.xscps.second, TODO())
+                    e.type.xscps = Triple(ups, e.type.xscps.second, emptyList())
                 }
             }
         }

@@ -36,7 +36,7 @@ fun Stmt.tostr (): String {
         is Stmt.Output  -> "output " + this.lib.id + " " + this.arg.tostr() + "\n"
         is Stmt.If      -> "if " + this.tst.tostr() + "{\n" + this.true_.tostr() + "} else {\n" + this.false_.tostr() + "}\n"
         is Stmt.Loop    -> "loop " + this.block.tostr()
-        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (this.scp1.let { if (it == null) "" else " @"+it.id }) + "\n" + this.body.tostr() + "}\n"
+        is Stmt.Block   -> (if (this.iscatch) "catch " else "") + "{" + (this.scp1.let { if (it==null || it.id[0]=='B'&&it.id[1].isDigit()) "" else " @"+it.id }) + "\n" + this.body.tostr() + "}\n"
         is Stmt.SSpawn  -> "set " + this.dst.tostr() + " = spawn " + this.call.tostr() + "\n"
         is Stmt.DSpawn  -> "spawn " + this.call.tostr() + " in " + this.dst.tostr() + "\n"
         is Stmt.Await   -> "await " + this.e.tostr() + "\n"
