@@ -267,36 +267,7 @@ fun Expr.xinfTypes (inf: Type?) {
                             // TODO: may fail before check2, return anything
                             Type.Nat(Tk.Nat(TK.NATIVE, this.tk.lin, this.tk.col, null,"ERR")).clone(this,this.tk.lin,this.tk.col)
                         } else {
-                            val MAP: List<Pair<Scope,Scope>> =
-                                ft.xscps.second!!.zip(this.xscps.first!!)
-
-                            fun Scope.get(): Scope {
-                                return MAP.find {
-                                    it.first.let { it.scp1.id == this.scp1.id }
-                                }?.second ?: this
-                            }
-
-                            fun Type.map(): Type {
-                                return when (this) {
-                                    is Type.Pointer -> Type.Pointer(this.tk_, this.xscp!!.get(), this.pln.map())
-                                    is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.map() })
-                                    is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.map() })
-                                    is Type.Alias   -> Type.Alias(this.tk_, this.xisrec, this.xscps!!.map { it.get() })
-                                    is Type.Func -> {
-                                        val clo = this.xscps.first?.get()
-                                        val inp = this.xscps.second!!.map { it.get() }
-                                        Type.Func (
-                                            this.tk_,
-                                            Triple(clo, inp, this.xscps.third),
-                                            this.inp.map(),
-                                            this.pub?.map(),
-                                            this.out.map()
-                                        )
-                                    }
-                                    else -> this
-                                }
-                            }
-                            ft.out.map().clone(this, this.tk.lin, this.tk.col)
+                            ft.out.map_arg_to_inp_to_out(this.xscps.first!!, ft.xscps.second!!).clone(this, this.tk.lin, this.tk.col)
                         }
                     }
                     else -> {
