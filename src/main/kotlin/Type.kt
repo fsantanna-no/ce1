@@ -93,7 +93,7 @@ fun Type.clone (up: Any, lin: Int, col: Int): Type {
 }
 
 fun Type.isrec (): Boolean {
-    return (this is Type.Alias && this.xisrec)
+    return this.flattenLeft().any { it is Type.Alias && it.xisrec }
 }
 
 fun Type.noalias (): Type {
@@ -112,15 +112,6 @@ fun Type.noalias (): Type {
         def.toType().mapScps(false,
             def.xscp1s.first!!.map { it.id }.zip(this.xscps!!).toMap()
         ).clone(this,this.tk.lin,this.tk.col)
-    }
-}
-
-fun Type.containsRec (): Boolean {
-    return when (this) {
-        is Type.Alias -> TODO()
-        is Type.Unit, is Type.Nat, is Type.Pointer, is Type.Func, is Type.Spawn, is Type.Spawns -> false
-        is Type.Tuple -> this.vec.any { it.containsRec() }
-        is Type.Union -> this.vec.any { it.containsRec() }
     }
 }
 

@@ -7,20 +7,21 @@ import java.io.PushbackReader
 import java.io.StringReader
 
 private val nums = """
-    type Num = </Num>    
-    var zero:  /Num = <.0>
-    var one:   /Num = new <.1 zero>
-    var two:   /Num = new <.1 one>
-    var three: /Num = new <.1 two>
-    var four:  /Num = new <.1 three>
-    var five:  /Num = new <.1 four>
+    type Num = /<Num>    
+    var zero:  Num = <.0>
+    var one:   Num = new <.1 zero>
+    var two:   Num = new <.1 one>
+    var three: Num = new <.1 two>
+    var four:  Num = new <.1 three>
+    var five:  Num = new <.1 four>
 """.trimIndent()
 
 private fun Num (ptr: Boolean, scope: String): String {
     val ret = "(Num @[$scope])"
-    return if (!ptr) ret else "/"+ret+"@"+scope
+    return if (ptr) ret else "<"+ret+">"
 }
-private val Num    = "/Num"
+
+private val Num    = "Num"
 private val NumTL  = Num(true,  "LOCAL")
 private val NumA1  = Num(true,  "a1")
 private val NumA2  = Num(true,  "a2")
@@ -139,7 +140,7 @@ private val lte = """
 """.trimIndent()
 
 @TestMethodOrder(Alphanumeric::class)
-class TBook {
+class TBookPtr {
 
     fun all (inp: String): String {
         println("nums:  ${nums.count  { it == '\n' }}")
@@ -474,6 +475,46 @@ class TBook {
             }
             var addc = curry add
             output std (addc  one) two
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
+    }
+    @Test
+    fun ch_01_04_uncurry_pg13() {
+        val fadd  = "func [$NumA1,$NumB1] -> $NumR1"
+        val fadd2 = "func @GLOBAL -> [$NumA1,$NumB1] -> $NumR1"
+        val ret2  = "func @a1 -> $NumB1 -> $NumR1"
+        val ret1  = "func @GLOBAL -> $NumA1 -> $ret2"
+        val out = all(
+            """
+            $nums
+            $clone
+            $add
+            -- 25
+            var curry : func $fadd -> $ret1
+            set curry = func $fadd -> $ret1 {
+                var f = arg
+                return $ret1 [f] {
+                    var x = arg
+                    var ff = f
+                    return $ret2 [ff,x] {
+                        var y = arg
+                        return ff [x,y]
+                    }
+                }
+            }
+
+            var uncurry : func $ret1 -> $fadd2
+            set uncurry = func $ret1 -> $fadd2 {
+                var f = arg
+                return $fadd2 [f] {
+                    return (f arg.1) arg.2
+                }
+            }
+            
+            var addc = curry add
+            var addu = uncurry addc
+            output std addu [one,two]
         """.trimIndent()
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }

@@ -718,4 +718,33 @@ class TInfer {
         )
         assert(out == "var smaller: func @[a1,a2: a2>a1] -> [/_int @a1,/_int @a2] -> /_int @a2\n") { out }
     }
+    @Test
+    fun e05_notype() {
+        val out = all(
+            """
+            var zero: /Num = <.0>
+            var one:   Num = <.1 zero>
+        """.trimIndent()
+        )
+        assert(out == "(ln 1, col 12): undeclared type \"Num\"") { out }
+    }
+    @Test
+    fun e06_type() {
+        val out = all("""
+            type List = /<List>
+            var l1: List = <.0>
+            var l2: List = new <.1 <.0>>
+            var l3: List = new <.1 l2>
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = /<List @[i]> @i
+            var l1: List @[GLOBAL]
+            set l1 = <.0>: List @[GLOBAL]
+            var l2: List @[GLOBAL]
+            set l2 = (new <.1 <.0>: List @[GLOBAL]>: <List @[GLOBAL]>: @GLOBAL)
+            var l3: List @[GLOBAL]
+            set l3 = (new <.1 l2>: <List @[GLOBAL]>: @GLOBAL)
+
+        """.trimIndent()) { out }
+    }
 }

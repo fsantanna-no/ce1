@@ -58,9 +58,13 @@ fun Stmt.xinfScp1s () {
         when (tp) {
             is Type.Alias -> {
                 if (tp.xscps==null && tp.ups_first { it is Stmt.Typedef || it is Type.Func }==null) {
-                    val def = tp.env(tp.tk_.id) as Stmt.Typedef
-                    val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
-                    tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null) }
+                    val def = tp.env(tp.tk_.id)
+                    if (def is  Stmt.Typedef) {
+                        val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
+                        tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null) }
+                    } else {
+                        // will be an error in Check_01
+                    }
                 } else {
                     // do not infer inside func/typedef declaration (it is inferred there)
                 }

@@ -54,10 +54,10 @@ fun Expr.xinfTypes (inf: Type?) {
             })
             this.ptr.wtype!!.let {
                 if (it is Type.Nat) it else {
-                    All_assert_tk(this.tk, it is Type.Pointer) {
+                    All_assert_tk(it.tk, it.noalias() is Type.Pointer) {
                         "invalid operand to `\\´ : not a pointer"
                     }
-                    (it as Type.Pointer).pln
+                    (it.noalias() as Type.Pointer).pln
                 }
             }
         }
@@ -94,13 +94,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 //.mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
         }
         is Expr.New   -> {
-            All_assert_tk(this.tk, inf==null || inf is Type.Pointer) {
+            val xinf = inf?.noalias()
+            All_assert_tk(this.tk, inf==null || xinf is Type.Pointer) {
                 "invalid inference : type mismatch"
             }
-            this.arg.xinfTypes((inf as Type.Pointer?)?.pln)
+            this.arg.xinfTypes((xinf as Type.Pointer?)?.pln)
             if (this.xscp == null) {
-                if (inf is Type.Pointer) {
-                    this.xscp = inf.xscp
+                if (xinf is Type.Pointer) {
+                    this.xscp = xinf.xscp
                 } else {
                     this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, this.localBlock()), null)
                 }
