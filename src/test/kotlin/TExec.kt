@@ -838,4 +838,21 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
+    @Test
+    fun e07_type () {
+        val out = all("""
+            native _{
+                void output_pico (TPico arg) {}
+            }
+            type THAnchor = <(),(),()>
+            type TVAnchor = <(),(),()>
+            type TPico = <
+                [THAnchor,TVAnchor]
+            >            
+            var x = <.1 [<.1>,<.1>]>: TPico
+            output std /x
+            output pico x
+        """.trimIndent())
+        assert(out == "<.1 [<.1>,<.1>]>\n") { out }
+    }
 }
