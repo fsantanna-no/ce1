@@ -48,7 +48,7 @@ fun Any.env (id: String, upval: Boolean=false): Any? {
                 "arg" -> it.type.inp
                 "pub" -> it.type.pub!!
                 "ret" -> it.type.out
-                "evt" -> Type.Nat(Tk.Nat(TK.XNAT, it.tk.lin, it.tk.col, null, "int")).clone(it,it.tk.lin,it.tk.col)
+                "evt" -> Type.Alias(Tk.Id(TK.XID, it.tk.lin, it.tk.col,"Event"), false, emptyList()).clone(it,it.tk.lin,it.tk.col)
                 //else  -> error("bug found")
                 else  -> (it.env(id) as Stmt.Var).xtype!!.clone(it,it.tk.lin,it.tk.col)
             }
@@ -86,7 +86,7 @@ fun Stmt.setEnvs (env: Any?): Any? {
         is Stmt.SSpawn -> { this.dst.visit(null,::fe,::ft,null) ; this.call.visit(null,::fe,::ft,null) ; env }
         is Stmt.DSpawn -> { this.dst.visit(null,::fe,::ft,null) ; this.call.visit(null,::fe,::ft,null) ; env }
         is Stmt.Await  -> { this.e.visit(null,::fe,::ft,null) ; env }
-        is Stmt.Bcast  -> { this.e.visit(null,::fe,::ft,null) ; env }
+        is Stmt.Emit  -> { this.e.visit(null,::fe,::ft,null) ; env }
         is Stmt.Input  -> { this.dst?.visit(null,::fe,::ft,null) ; this.arg.visit(null,::fe,::ft,null) ; this.xtype?.visit(::ft,null) ; env }
         is Stmt.Output -> { this.arg.visit(null,::fe,::ft,null) ; env }
         is Stmt.Seq -> {

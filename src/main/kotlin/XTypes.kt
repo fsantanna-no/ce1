@@ -230,10 +230,10 @@ fun Expr.xinfTypes (inf: Type?) {
                                 inf.flattenLeft()
                                     .map { it.toScp1s() }
                                     .flatten()
-                            }.filter { it.isscopepar() }  // ignore constant labels (they not args)
+                            }//.filter { it.isscopepar() }  // ignore constant labels (they not args)
 
                             val inp_out = let {
-                                assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
+                                //assert(ret1s.distinctBy { it.id }.size <= 1) { "TODO: multiple pointer returns" }
                                 val arg1s: List<Tk.Id> = this.arg.wtype!!.flattenLeft()
                                     .map { it.toScp1s() }
                                     .flatten()
@@ -309,7 +309,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
             this.call.xinfTypes(null)
         }
         is Stmt.Await -> this.e.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
-        is Stmt.Bcast -> this.e.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
+        is Stmt.Emit  -> this.e.xinfTypes(Type.Alias(Tk.Id(TK.XID, this.tk.lin, this.tk.col,"Event"), false, emptyList()).clone(this,this.tk.lin,this.tk.col))
         is Stmt.Input -> {
             //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
             //    "invalid inference : undetermined type"
