@@ -43,6 +43,11 @@ class TInfer {
         assert(out == "var x: <(),()>\nset x = <.1 ()>: <(),()>\n") { out }
     }
     @Test
+    fun a03_var () {
+        val out = all("var rct = [_1]")
+        assert(out == "(ln 1, col 12): invalid inference : undetermined type") { out }
+    }
+    @Test
     fun a03_input () {
         val out = all("var x: _int = input std ()")
         assert(out == "var x: _int\nset x = input std (): _int\n") { out }
