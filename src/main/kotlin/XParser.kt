@@ -1,3 +1,6 @@
+import java.io.PushbackReader
+import java.io.StringReader
+
 class XParser: Parser()
 {
     override fun type(tasks: Boolean): Type {
@@ -217,6 +220,36 @@ class XParser: Parser()
                 all.accept_err(TK.CHAR, '=')
                 val tp = this.type(false)
                 Stmt.Typedef(id, scps, tp)
+            }
+            all.accept(TK.SPAWN) -> {
+                val tk0 = all.tk0 as Tk.Key
+                if (all.check(TK.CHAR,'{')) {
+                    val block = this.block()
+                    val old = all
+                    val src = """
+                        spawn task () -> () -> () {
+                            ${block.body.xtostr()}
+                        } ()
+                        
+                    """.trimIndent()
+                    println(src)
+                    All_new(PushbackReader(StringReader(src), 2))
+                    all.lin = old.lin
+                    all.col = old.col
+                    Lexer.lex()
+                    val ret = this.stmt()
+                    all = old
+                    ret
+                } else {
+                    val e = this.expr()
+                    All_assert_tk(tk0, e is Expr.Call) { "expected call expression" }
+                    if (all.accept(TK.IN)) {
+                        val tsks = this.expr()
+                        Stmt.DSpawn(tk0, tsks, e as Expr.Call)
+                    } else {
+                        Stmt.SSpawn(tk0, null, e as Expr.Call)
+                    }
+                }
             }
             else -> super.stmt()
         }
