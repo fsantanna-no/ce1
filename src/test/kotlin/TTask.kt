@@ -563,6 +563,16 @@ class TTask {
     // SPAWN / DYNAMIC
 
     @Test
+    fun e01_spawn () {
+        val out = all("""
+            spawn task @LOCAL->@[]->()->()->() {
+                output std ()
+            } ()
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n") { out }
+    }
+    @Test
     fun e01_spawn_err2 () {
         val out = all("""
             var f : func ()->()
