@@ -301,7 +301,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         }
         is Stmt.SCall -> this.e.xinfTypes(unit())
         is Stmt.SSpawn -> {
-            this.dst.xinfTypes(null)
+            this.dst?.xinfTypes(null)
             this.call.xinfTypes(null)
         }
         is Stmt.DSpawn -> {
@@ -356,7 +356,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                                         it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col) as Type.Func
                                     )
                                 )
-                                this.s2.dst.xinfTypes(null) //it
+                                this.s2.dst?.xinfTypes(null) //it
                             }
                         }
                         is Stmt.Set -> {

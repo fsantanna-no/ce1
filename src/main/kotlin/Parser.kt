@@ -182,19 +182,7 @@ open class Parser
             all.check(TK.TASK) || all.check(TK.FUNC) -> {
                 val tk = all.tk1 as Tk.Key
                 val tp = this.type(false) as Type.Func
-
-                val ups: List<Tk.Id> = if (!all.accept(TK.CHAR, '[')) emptyList() else {
-                    val ret = mutableListOf<Tk.Id>()
-                    while (all.accept(TK.XID)) {
-                        ret.add(all.tk0 as Tk.Id)
-                        if (!all.accept(TK.CHAR, ',')) {
-                            break
-                        }
-                    }
-                    all.accept_err(TK.CHAR, ']')
-                    ret
-                }
-
+                val ups = if (all.check(TK.CHAR, '[')) this.ups() else emptyList()
                 val block = this.block()
                 Expr.Func(tk, tp, ups, block)
             }
@@ -313,9 +301,12 @@ open class Parser
                 val tk0 = all.tk0 as Tk.Key
                 val e = this.expr()
                 All_assert_tk(tk0, e is Expr.Call) { "expected call expression" }
-                all.accept_err(TK.IN)
-                val tsks = this.expr()
-                Stmt.DSpawn(tk0, tsks, e as Expr.Call)
+                if (all.accept(TK.IN)) {
+                    val tsks = this.expr()
+                    Stmt.DSpawn(tk0, tsks, e as Expr.Call)
+                } else {
+                    Stmt.SSpawn(tk0, null, e as Expr.Call)
+                }
             }
             all.accept(TK.AWAIT) -> {
                 val tk0 = all.tk0 as Tk.Key
@@ -566,6 +557,19 @@ open class Parser
                 break
             }
         }
+        return ret
+    }
+
+    fun ups (): List<Tk.Id> {
+        all.accept_err(TK.CHAR, '[')
+        val ret = mutableListOf<Tk.Id>()
+        while (all.accept(TK.XID)) {
+            ret.add(all.tk0 as Tk.Id)
+            if (!all.accept(TK.CHAR, ',')) {
+                break
+            }
+        }
+        all.accept_err(TK.CHAR, ']')
         return ret
     }
 }

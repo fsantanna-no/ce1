@@ -57,7 +57,6 @@ class XTostr: Tostr()
             is Stmt.Typedef -> if (s.xscp1s.first!=null) super.tostr(s) else {
                 "type " + s.tk_.id + " = " + this.tostr(s.type) + "\n"
             }
-            is Stmt.XSpawn -> "spawn " + this.tostr(s.block) + "\n"
             else -> super.tostr(s)
         }
     }
