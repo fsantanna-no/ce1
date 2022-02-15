@@ -364,6 +364,7 @@ class TBookPtr {
 
     // CHAPTER 1.4
 
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_currying_pg11() {
         val out = all(
@@ -374,7 +375,7 @@ class TBookPtr {
             -- 19
             var smallerc = func $NumA1 -> (func @a1 -> $Num->$Num) {
                 var x = arg
-                return func @a1 -> $Num -> $Num [x] {
+                return func @a1 -> $Num -> $Num {
                     if (lt [x,arg]) {
                         return clone x     -- TODO: remove clone
                     } else {
@@ -410,6 +411,7 @@ class TBookPtr {
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
     }
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_addc_pg12() {
         val out = all("""
@@ -419,7 +421,7 @@ class TBookPtr {
             -- 25
             var plusc = func $NumA1 -> (func @a1->$Num->$Num) {
                 var x = arg
-                return func @a1->$Num->$Num [x] {
+                return func @a1->$Num->$Num {
                     return add [x,arg]
                 }
             }
@@ -431,6 +433,7 @@ class TBookPtr {
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.0>>>\n<.1 <.0>>\n") { out }
     }
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_quad_pg12() {
         val out = all(
@@ -445,7 +448,7 @@ class TBookPtr {
             }
             var twicec = func (func $Num->$Num) -> (func @GLOBAL->$Num->$Num) {
                 var f = arg
-                return func @GLOBAL->$Num->$Num [f] {
+                return func @GLOBAL->$Num->$Num {
                     return f (f arg)
                 }
             }
@@ -455,6 +458,7 @@ class TBookPtr {
         )
         assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
     }
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_curry_pg13() {
         val out = all(
@@ -464,10 +468,10 @@ class TBookPtr {
             $add
             var curry = func (func [$Num,$Num] -> $Num) -> (func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num)) {
                 var f = arg
-                return func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num) [f] {
+                return func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num) {
                     var x = arg
                     var ff = f
-                    return func @a1->$Num->$Num [ff,x] {
+                    return func @a1->$Num->$Num {
                         var y = arg
                         return ff [x,y]
                     }
@@ -479,6 +483,7 @@ class TBookPtr {
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
     }
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_uncurry_pg13() {
         val fadd  = "func [$NumA1,$NumB1] -> $NumR1"
@@ -494,10 +499,10 @@ class TBookPtr {
             var curry : func $fadd -> $ret1
             set curry = func $fadd -> $ret1 {
                 var f = arg
-                return $ret1 [f] {
+                return $ret1 {
                     var x = arg
                     var ff = f
-                    return $ret2 [ff,x] {
+                    return $ret2 {
                         var y = arg
                         return ff [x,y]
                     }
@@ -507,7 +512,7 @@ class TBookPtr {
             var uncurry : func $ret1 -> $fadd2
             set uncurry = func $ret1 -> $fadd2 {
                 var f = arg
-                return $fadd2 [f] {
+                return $fadd2 {
                     return (f arg.1) arg.2
                 }
             }
@@ -532,6 +537,7 @@ class TBookPtr {
         )
         assert(out == "()\n") { out }
     }
+    @Disabled   // no more full closures
     @Test
     fun ch_01_04_composition_pg15() {
         val out = all(
@@ -548,7 +554,7 @@ class TBookPtr {
             var compose = func [func $Num->$Num,func $Num->$Num] -> (func @GLOBAL->$Num->$Num) {
                 var f = arg.1
                 var g = arg.2
-                return func @GLOBAL->$Num->$Num [f,g] {
+                return func @GLOBAL->$Num->$Num {
                     var v = f arg
                     return g v
                 }

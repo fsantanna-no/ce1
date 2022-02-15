@@ -683,14 +683,18 @@ class TExec {
     // CLOSURE
 
     @Test
-    fun d01_clo () {
+    fun d01 () {
         val out = all("""
             type List = </List>
             { @A
-                var pa: /List = new <.1 <.0>>
-                var f = func ()->() [pa] {
-                    var pf: /(List @[A])@A = new <.1 <.0>>
+                var pa: /List @[LOCAL] @LOCAL
+                set pa = new <.1 <.0>: /(List @[A]) @A>:List @[A]: @A
+                var f: func @A-> ()->()
+                set f = func@A-> @[]-> ()->() {
+                    var pf: /List @[A] @A
+                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
                     set pa\!1 = pf
+                    --output std pa
                 }
                 call f ()
                 output std pa
@@ -699,60 +703,24 @@ class TExec {
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
     @Test
-    fun d02_clo () {
-        val out = all(
-            """
+    fun d02 () {
+        val out = all("""
             type List = </List>
-            var g = func @[a1] -> () -> (func @a1->()->()) {
-                var x: /(List @[a1])@a1 = new <.1 <.0>>
-                return func @a1->()->() [x] {
-                    output std x
+            { @A
+                var pa: /List @[LOCAL] @LOCAL
+                set pa = new <.1 <.0>>
+                var f: func @A-> ()->()
+                set f = func@A-> @[]-> ()->() {
+                    var pf: /List @[A] @A
+                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                    set pa\!1 = pf
+                    --output std pa
                 }
+                call f ()
+                output std pa
             }
-            var f: (func @LOCAL->()->()) = g ()
-            call f ()
-        """.trimIndent()
-        )
-        assert(out == "<.1 <.0>>\n") { out }
-    }
-    @Test
-    fun d03_clo () {
-        val out = all(
-            """
-            var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
-                var x: /_int@a1 = arg
-                return func @a1->()->/_int@a1 [x] {
-                    return x
-                }
-            }
-            {
-                var five = _5: _int
-                var f: func @LOCAL -> () -> /_int@LOCAL = cnst /five
-                var v: /_int = f ()
-                output std v\
-            }
-        """.trimIndent()
-        )
-        assert(out == "5\n") { out }
-    }
-    @Test
-    fun d04_clo () {
-        val out = all(
-            """
-            var f = func (func ()->()) -> (func @GLOBAL->()->()) {
-                var ff = arg
-                return func @GLOBAL->()->() [ff] {
-                    call ff ()
-                }
-            }
-            var u = func ()->() {
-                output std ()
-            }
-            var ff = f u
-            call ff ()
-        """.trimIndent()
-        )
-        assert(out == "()\n") { out }
+        """.trimIndent())
+        assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
 
     // TYPE / ALIAS
@@ -797,46 +765,6 @@ class TExec {
         """.trimIndent())
         //assert(out == "(ln 1, col 21): invalid assignment : type mismatch") { out }
         assert(out == "<.1 <.0>>\n") { out }
-    }
-    @Test
-    fun e05_type () {
-        val out = all("""
-            type List = </List>
-            { @A
-                var pa: /List @[LOCAL] @LOCAL
-                set pa = new <.1 <.0>: /(List @[A]) @A>:List @[A]: @A
-                var f: func @A-> ()->()
-                set f = func@A-> @[]-> ()->()[pa]{
-                    var pf: /List @[A] @A
-                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
-                    set pa\!1 = pf
-                    --output std pa
-                }
-                call f ()
-                output std pa
-            }
-        """.trimIndent())
-        assert(out == "<.1 <.1 <.0>>>\n") { out }
-    }
-    @Test
-    fun e06_type () {
-        val out = all("""
-            type List = </List>
-            { @A
-                var pa: /List @[LOCAL] @LOCAL
-                set pa = new <.1 <.0>>
-                var f: func @A-> ()->()
-                set f = func@A-> @[]-> ()->()[pa]{
-                    var pf: /List @[A] @A
-                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
-                    set pa\!1 = pf
-                    --output std pa
-                }
-                call f ()
-                output std pa
-            }
-        """.trimIndent())
-        assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
     @Test
     fun e07_type () {

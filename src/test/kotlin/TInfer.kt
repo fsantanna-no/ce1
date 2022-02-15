@@ -497,6 +497,32 @@ class TInfer {
     // CLOSURE
 
     @Test
+    fun d00_clo () {
+        val out = all("""
+            {
+                var x = ()
+                var f = func () -> () {
+                    output std x
+                }
+                call f ()
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            {
+            var pa: /List @[LOCAL] @LOCAL
+            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            var f: func @LOCAL -> @[] -> () -> ()
+            set f = func @LOCAL -> @[] -> () -> () [pa] {
+
+            }
+            
+            call (f @[] ())
+            }
+            
+        """.trimIndent()) { out }
+    }
+    @Test
     fun d01_clo () {
         val out = all("""
             type List = </List>
@@ -751,5 +777,115 @@ class TInfer {
             set l3 = (new <.1 l2>: <List @[GLOBAL]>: @GLOBAL)
 
         """.trimIndent()) { out }
+    }
+
+    // CLOSURE ERRORS
+
+    @Test
+    fun f01 () {
+        val out = all("""
+            type List = </List>
+            { @A
+                var pa: /List = new <.1 <.0>>
+                var f = func ()->() {
+                    var pf: /(List @[A])@A = new <.1 <.0>>
+                    set pa\!1 = pf
+                }
+                call f ()
+                output std pa
+            }
+        """.trimIndent())
+        //assert(out == "<.1 <.1 <.0>>>\n") { out }
+        assert(out == "(ln 6, col 13): undeclared variable \"pa\"") { out }
+    }
+    @Test
+    fun f02 () {
+        val out = all(
+            """
+            type List = </List>
+            var g = func @[a1] -> () -> (func @a1->()->()) {
+                var x: /(List @[a1])@a1 = new <.1 <.0>>
+                return func @a1->()->() {
+                    output std x
+                }
+            }
+            var f: (func @LOCAL->()->()) = g ()
+            call f ()
+        """.trimIndent()
+        )
+        //assert(out == "<.1 <.0>>\n") { out }
+        assert(out == "(ln 5, col 20): undeclared variable \"x\"") { out }
+    }
+    @Test
+    fun f03 () {
+        val out = all(
+            """
+            var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
+                var x: /_int@a1 = arg
+                return func @a1->()->/_int@a1 {
+                    return x
+                }
+            }
+            {
+                var five = _5: _int
+                var f: func @LOCAL -> () -> /_int@LOCAL = cnst /five
+                var v: /_int = f ()
+                output std v\
+            }
+        """.trimIndent()
+        )
+        //assert(out == "5\n") { out }
+        assert(out == "5\n") { out }
+    }
+    @Test
+    fun f04 () {
+        val out = all(
+            """
+            var f = func (func ()->()) -> (func @GLOBAL->()->()) {
+                var ff = arg
+                return func @GLOBAL->()->() {
+                    call ff ()
+                }
+            }
+            var u = func ()->() {
+                output std ()
+            }
+            var ff = f u
+            call ff ()
+        """.trimIndent()
+        )
+        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
+    }
+    @Test
+    fun f05 () {
+        val out = all("""
+            var f: func () -> _int          -- 1. `f` is a reference to a function
+            {
+                var x: _int = _10
+                set f = func () -> _int {   -- 2. `f` is created
+                    return x                -- 3. `f` needs access to `x`
+                }
+            }                               -- 4. `x` goes out of scope
+            call f ()                       -- 5. `f` still wants to access `x`
+        """.trimIndent()
+        )
+        //assert(out == "()\n") { out }
+        assert(out == "(ln 5, col 16): undeclared variable \"x\"") { out }
+    }
+    @Test
+    fun f06 () {
+        val out = all("""
+            var f: func () -> _int          -- 1. `f` is a reference to a function
+            {
+                var x = _10: _int
+                set f = func () -> _int {   -- 2. `f` is created
+                    return x                -- 3. `f` needs access to `x`
+                }
+            }                               -- 4. `x` goes out of scope
+            call f ()                       -- 5. `f` still wants to access `x`
+        """.trimIndent()
+        )
+        //assert(out == "()\n") { out }
+        assert(out == "(ln 5, col 16): undeclared variable \"x\"") { out }
     }
 }
