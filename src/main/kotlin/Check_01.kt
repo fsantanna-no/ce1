@@ -44,7 +44,7 @@ fun check_01_before_tps (s: Stmt) {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Alias -> {
-                val def = tp.env(tp.tk_.id)
+                val def = tp.env(tp.tk_.id,true)
                 All_assert_tk(tp.tk, def is Stmt.Typedef) {
                     "undeclared type \"${tp.tk_.id}\""
                 }
@@ -111,11 +111,6 @@ fun check_01_before_tps (s: Stmt) {
                 val err = outers.find { out -> e.type.xscps.second!!.any { it.scp1.id==out.scp1.id } }
                 All_assert_tk(e.tk, err==null) {
                     "invalid scope : \"${err!!.scp1.id}\" is already declared (ln ${err!!.scp1.lin})"
-                }
-                e.ups.forEach {
-                    All_assert_tk(e.tk, e.env(it.id) != null) {
-                        "undeclared variable \"${it.id}\""
-                    }
                 }
             }
 
