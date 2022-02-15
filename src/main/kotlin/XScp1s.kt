@@ -116,27 +116,38 @@ fun Stmt.xinfScp1s () {
     fun fe (e: Expr) {
         when (e) {
             is Expr.Func -> {
-                if (e.type.xscps.first==null && e.ups.size>0) {
-                    // take the largest scope among ups
-                    val ups = e.ups
-                        // Type.Ptr of all ups, find the one with deepest scope, return its scp1
-                        .map { (e.env(it.id)!!.toType() as Type.Pointer?) }
-                        .filterNotNull()
-                        //.let { it }
-                        .minByOrNull { it.xscp!!.toScp2(it).third!! }
-                        .let {
-                            if (it?.xscp?.scp1?.id == "LOCAL") {
-                                val blk =  it.ups_first { it is Stmt.Block } as Stmt.Block?
-                                if (blk?.scp1 == null) {
-                                    // if necessary, add label to enclosing block
-                                    blk?.scp1 = Tk.Id(TK.XID, this.tk.lin, this.tk.col, "SS")
-                                }
-                                Scope(blk?.scp1 ?: Tk.Id(TK.XID, this.tk.lin, this.tk.col, "GLOBAL"), null)
-                            } else {
-                                it?.xscp
+                if (e.type.xscps.first != null) {
+                    return
+                }
+                val lvlF = 1 + e.ups_tolist().count { it is Stmt.Block }
+                var lvlM  = Int.MAX_VALUE
+                var scp: Tk.Id? = null
+                fun fx (x: Expr) {
+                    when (x) {
+                        is Expr.Var -> {
+                            if (x.tk_.id in arrayOf("arg","pub","ret","evt")) {
+                                return
+                            }
+                            val env = x.env(x.tk_.id,true)!!
+                            val lvlV = env.ups_tolist().count { it is Stmt.Block }
+                            //println(x.tk_.id + ": $lvlF > $lvlV")
+                            if (lvlV>0 && lvlF>lvlV && lvlV<lvlM) {
+                                lvlM = lvlV
+                                scp = env.ups_first { it is Stmt.Block }
+                                    .let { it as Stmt.Block }
+                                    .let {
+                                        if (it.scp1.isanon()) {
+                                            it.scp1 = Tk.Id(TK.XID, it.tk.lin, it.tk.col, "X${it.n}")
+                                        }
+                                        it.scp1!!
+                                    }
                             }
                         }
-                    e.type.xscps = Triple(ups, e.type.xscps.second, e.type.xscps.third)
+                    }
+                }
+                e.visit(null, ::fx, null, null)
+                if (scp != null) {
+                    e.type.xscps = Triple(Scope(scp!!,null), e.type.xscps.second, e.type.xscps.third)
                 }
             }
         }

@@ -10,6 +10,7 @@ class TInfer {
 
     fun all (inp: String): String {
         All_new(PushbackReader(StringReader(inp), 2))
+        N = 1
         Lexer.lex()
         try {
             val s = XParser().stmts()
@@ -508,18 +509,17 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            type List @[i] = </List @[i] @i>
-            {
-            var pa: /List @[LOCAL] @LOCAL
-            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
-            var f: func @LOCAL -> @[] -> () -> ()
-            set f = func @LOCAL -> @[] -> () -> () [pa] {
-
+            { @X15
+            var x: ()
+            set x = ()
+            var f: func @X15 -> @[] -> () -> ()
+            set f = func @X15 -> @[] -> () -> () {
+            output std x
             }
             
             call (f @[] ())
             }
-            
+
         """.trimIndent()) { out }
     }
     @Test
@@ -528,7 +528,7 @@ class TInfer {
             type List = </List>
             {
                 var pa: /List = new <.1 <.0>>
-                var f = func () -> () [pa] {
+                var f = func () -> () {
                 }
                 call f ()
             }
@@ -538,8 +538,8 @@ class TInfer {
             {
             var pa: /List @[LOCAL] @LOCAL
             set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
-            var f: func @LOCAL -> @[] -> () -> ()
-            set f = func @LOCAL -> @[] -> () -> () [pa] {
+            var f: func @[] -> () -> ()
+            set f = func @[] -> () -> () {
 
             }
             
@@ -620,17 +620,19 @@ class TInfer {
         val out = all("""
             var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
                 var x: /_int@a1 = arg
-                return func @a1->()->/_int@a1 [x] {
+                return func @a1->()->/_int@a1 {
                     return x
                 }
             }
         """.trimIndent())
+        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
+        /*
         assert(out == """
             var cnst: func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1
             set cnst = func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1 {
             var x: /_int @a1
             set x = arg
-            set ret = func @a1 -> @[] -> () -> /_int @a1 [x] {
+            set ret = func @a1 -> @[] -> () -> /_int @a1 {
             set ret = x
             return
             }
@@ -640,6 +642,7 @@ class TInfer {
             
             
         """.trimIndent()) { out }
+         */
     }
     @Test
     fun d08_clo () {
@@ -677,6 +680,35 @@ class TInfer {
             set f = (g @[LOCAL] (/five): @LOCAL)
             var v: /_int @LOCAL
             set v = (f @[] (): @LOCAL)
+            }
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun d10_clo () {
+        val out = all("""
+            { --@Y
+                var x = ()
+                {
+                    var f = func () -> () {
+                        output std x
+                    }
+                    call f ()
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            { @X17
+            var x: ()
+            set x = ()
+            {
+            var f: func @X17 -> @[] -> () -> ()
+            set f = func @X17 -> @[] -> () -> () {
+            output std x
+            }
+            
+            call (f @[] ())
+            }
             }
 
         """.trimIndent()) { out }
@@ -796,7 +828,24 @@ class TInfer {
             }
         """.trimIndent())
         //assert(out == "<.1 <.1 <.0>>>\n") { out }
-        assert(out == "(ln 6, col 13): undeclared variable \"pa\"") { out }
+        //assert(out == "(ln 6, col 13): undeclared variable \"pa\"") { out }
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            { @A
+            var pa: /List @[A] @A
+            set pa = (new <.1 <.0>: /List @[A] @A>: List @[A]: @A)
+            var f: func @A -> @[] -> () -> ()
+            set f = func @A -> @[] -> () -> () {
+            var pf: /List @[A] @A
+            set pf = (new <.1 <.0>: /List @[A] @A>: List @[A]: @A)
+            set ((pa\)!1) = pf
+            }
+            
+            call (f @[] ())
+            output std pa
+            }
+           
+        """.trimIndent()) { out }
     }
     @Test
     fun f02 () {
@@ -835,7 +884,7 @@ class TInfer {
         """.trimIndent()
         )
         //assert(out == "5\n") { out }
-        assert(out == "5\n") { out }
+        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
     }
     @Test
     fun f04 () {
@@ -854,7 +903,7 @@ class TInfer {
             call ff ()
         """.trimIndent()
         )
-        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
+        assert(out == "(ln 4, col 14): undeclared variable \"ff\"") { out }
     }
     @Test
     fun f05 () {
@@ -870,22 +919,19 @@ class TInfer {
         """.trimIndent()
         )
         //assert(out == "()\n") { out }
-        assert(out == "(ln 5, col 16): undeclared variable \"x\"") { out }
-    }
-    @Test
-    fun f06 () {
-        val out = all("""
-            var f: func () -> _int          -- 1. `f` is a reference to a function
-            {
-                var x = _10: _int
-                set f = func () -> _int {   -- 2. `f` is created
-                    return x                -- 3. `f` needs access to `x`
-                }
-            }                               -- 4. `x` goes out of scope
-            call f ()                       -- 5. `f` still wants to access `x`
-        """.trimIndent()
-        )
-        //assert(out == "()\n") { out }
-        assert(out == "(ln 5, col 16): undeclared variable \"x\"") { out }
+        assert(out == """
+            var f: func @[] -> () -> _int
+            { @X14
+            var x: _int
+            set x = (_10: _int)
+            set f = func @X14 -> @[] -> () -> _int {
+            set ret = x
+            return
+            }
+            
+            }
+            call (f @[] ())
+            
+        """.trimIndent()) { out }
     }
 }

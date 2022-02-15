@@ -722,6 +722,22 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
+    @Test
+    fun d03_err () {
+        val out = all("""
+            var f: func () -> _int          -- 1. `f` is a reference to a function
+            {
+                var x: _int = _10
+                set f = func () -> _int {   -- 2. `f` is created
+                    return x                -- 3. `f` needs access to `x`
+                }
+            }                               -- 4. `x` goes out of scope
+            call f ()                       -- 5. `f` still wants to access `x`
+        """.trimIndent()
+        )
+        //assert(out == "()\n") { out }
+        assert(out.startsWith("(ln 5, col 7): invalid assignment : type mismatch :")) { out }
+    }
 
     // TYPE / ALIAS
 
