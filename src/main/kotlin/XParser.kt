@@ -225,18 +225,12 @@ class XParser: Parser()
                 val tk0 = all.tk0 as Tk.Key
                 if (all.check(TK.CHAR,'{')) {
                     val block = this.block()
-                    val old = all
-                    val src = """
+                    val old = All_nest("""
                         spawn task () -> () -> () {
                             ${block.body.xtostr()}
                         } ()
                         
-                    """.trimIndent()
-                    println(src)
-                    All_new(PushbackReader(StringReader(src), 2))
-                    all.lin = old.lin
-                    all.col = old.col
-                    Lexer.lex()
+                    """.trimIndent())
                     val ret = this.stmt()
                     all = old
                     ret

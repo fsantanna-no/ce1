@@ -934,4 +934,75 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+
+    // PAR
+
+    @Test
+    fun g01_spawn () {
+        val out = all("""
+            spawn {
+                var x = ()
+                spawn {
+                    output std x
+                }
+                spawn {
+                    output std x
+                }
+            }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            var x: ()
+            set x = ()
+            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            output std x
+            }
+             @[] ())
+            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            output std x
+            }
+             @[] ())
+            }
+             @[] ())
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun g02_spawn_spawn () {
+        val out = all("""
+            spawn {
+                var x = ()
+                spawn {
+                    spawn {
+                        output std x
+                    }
+                }
+                spawn {
+                    output std x
+                }
+            }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            var x: ()
+            set x = ()
+            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            output std x
+            }
+             @[] ())
+            }
+             @[] ())
+            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            output std x
+            }
+             @[] ())
+            }
+             @[] ())
+
+        """.trimIndent()) { out }
+    }
+
 }

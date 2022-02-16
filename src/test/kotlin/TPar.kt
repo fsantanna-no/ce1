@@ -71,4 +71,22 @@ class TPar {
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n()\n") { out }
     }
+    @Test
+    fun a04_spawn_spawn_spawn_var () {
+        val out = all("""
+            spawn {
+                var x = ()
+                spawn {
+                    spawn {
+                        output std x
+                    }
+                }
+                spawn {
+                    output std x
+                }
+            }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n()\n") { out }
+    }
 }
