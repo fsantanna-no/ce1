@@ -221,6 +221,18 @@ class XParser: Parser()
                 val tp = this.type(false)
                 Stmt.Typedef(id, scps, tp)
             }
+            all.accept(TK.PAR) -> {
+                var pars = mutableListOf<Stmt.Block>()
+                pars.add(this.block())
+                while (all.accept(TK.WITH)) {
+                    pars.add(this.block())
+                }
+                var srcs = pars.map { "spawn { ${it.body.xtostr()} }" }.joinToString("\n")
+                val old = All_nest(srcs)
+                val ret = this.stmts()
+                all = old
+                ret
+            }
             all.accept(TK.SPAWN) -> {
                 val tk0 = all.tk0 as Tk.Key
                 if (all.check(TK.CHAR,'{')) {

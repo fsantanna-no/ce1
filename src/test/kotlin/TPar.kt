@@ -89,4 +89,20 @@ class TPar {
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n()\n") { out }
     }
+
+    // PAR
+
+    @Test
+    fun b01_par () {
+        val out = all("""
+            par {
+                output std ()
+            } with {
+                output std ()
+            }
+            output std ()
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n()\n") { out }
+    }
 }
