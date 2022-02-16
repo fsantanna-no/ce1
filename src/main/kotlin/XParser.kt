@@ -256,36 +256,36 @@ class XParser: Parser()
                 all = old
                 ret
             }
-            /*
             all.accept(TK.PARAND) -> {
                 var pars = mutableListOf<Stmt.Block>()
                 pars.add(this.block())
                 while (all.accept(TK.WITH)) {
                     pars.add(this.block())
                 }
-                val spws = pars.mapIndexed { i,it -> "var tk_$i = spawn { ${it.body.xtostr()} }" }.joinToString("\n")
-                val oks  = pars.mapIndexed { i,_ -> "var ok_$i: _int = 0" }.joinToString { "\n" }
-                val awts = xxx
-                val chks = xxx
+                val spws = pars.mapIndexed { i,x -> "var tk_$i = spawn { ${x.body.xtostr()} }" }.joinToString("\n")
+                val oks  = pars.mapIndexed { i,_ -> "var ok_$i: _int = _((${D}tk_$i->task0.state == TASK_DEAD))" }.joinToString("\n")
+                val sets = pars.mapIndexed { i,_ -> "set ok_$i = _(${D}ok_$i || (((uint64_t)${D}tk_$i)==${D}tk_x))" }.joinToString("\n")
+                val chks = pars.mapIndexed { i,_ -> "${D}ok_$i" }.joinToString(" && ")
 
                 val old = All_nest("""
                     {
                         $spws
                         $oks
                         loop {
-                            await $awts
-                            if ($chks) {
+                            await evt?2
+                            var tk_x = evt!2
+                            $sets
+                            if _($chks) {
                                 break
                             }
                         }
                     }
 
-                """.trimIndent())
-                val ret = this.stmts()
+                """.trimIndent()) //.let{println(it);it})
+                val ret = this.stmt()
                 all = old
                 ret
             }
-             */
             else -> super.stmt()
         }
     }

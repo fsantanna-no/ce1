@@ -45,8 +45,11 @@ class XTostr: Tostr()
         return when (s) {
             is Stmt.Seq -> s.s1.let {
                 if (it is Stmt.Var && it.xtype==null) {
-                    assert(s.s2 is Stmt.Set)
-                    "var " + it.tk_.id + " = " + this.tostr((s.s2 as Stmt.Set).src) + "\n"
+                    "var " + it.tk_.id + " = " + when (s.s2) {
+                        is Stmt.Set    -> this.tostr(s.s2.src)
+                        is Stmt.SSpawn -> "spawn " + this.tostr(s.s2.call)
+                        else -> error("bug found")
+                    } + "\n"
                 } else {
                     super.tostr(s)
                 }

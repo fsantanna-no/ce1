@@ -118,4 +118,24 @@ class TPar {
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n()\n") { out }
     }
+    @Test
+    fun b02_parand () {
+        val out = all("""
+            type Event = <(),_uint64_t,()>
+            spawn {
+                parand {
+                    await evt?3
+                    output std _1:_int
+                } with {
+                    output std _2:_int
+                    await evt?3
+                }
+                output std _3:_int
+            }
+            emit <.3 ()>
+            output std _4:_int
+            
+        """.trimIndent())
+        assert(out == "2\n1\n3\n4\n") { out }
+    }
 }

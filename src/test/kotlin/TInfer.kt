@@ -1021,5 +1021,4 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
-
 }
