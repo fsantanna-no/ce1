@@ -158,11 +158,10 @@ class XParser: Parser()
                             Stmt.Input(tk, inp, dst, lib, arg)
                         }
                         all.check(TK.SPAWN) -> {
-                            all.accept(TK.SPAWN)
-                            val tk = all.tk0 as Tk.Key
-                            val e = this.expr()
-                            All_assert_tk(tk, e is Expr.Call) { "expected call expression" }
-                            Stmt.SSpawn(tk, dst, e as Expr.Call)
+                            val s = this.stmt()
+                            All_assert_tk(s.tk, s is Stmt.SSpawn) { "unexpected dynamic `spawn`" }
+                            val ss = s as Stmt.SSpawn
+                            Stmt.SSpawn(ss.tk_, dst, ss.call)
                         }
                         else -> {
                             val src = this.expr()
@@ -221,18 +220,6 @@ class XParser: Parser()
                 val tp = this.type(false)
                 Stmt.Typedef(id, scps, tp)
             }
-            all.accept(TK.PAR) -> {
-                var pars = mutableListOf<Stmt.Block>()
-                pars.add(this.block())
-                while (all.accept(TK.WITH)) {
-                    pars.add(this.block())
-                }
-                var srcs = pars.map { "spawn { ${it.body.xtostr()} }" }.joinToString("\n")
-                val old = All_nest(srcs + "await _0\n")
-                val ret = this.stmts()
-                all = old
-                ret
-            }
             all.accept(TK.SPAWN) -> {
                 val tk0 = all.tk0 as Tk.Key
                 if (all.check(TK.CHAR,'{')) {
@@ -257,6 +244,48 @@ class XParser: Parser()
                     }
                 }
             }
+            all.accept(TK.PAR) -> {
+                var pars = mutableListOf<Stmt.Block>()
+                pars.add(this.block())
+                while (all.accept(TK.WITH)) {
+                    pars.add(this.block())
+                }
+                val srcs = pars.map { "spawn { ${it.body.xtostr()} }" }.joinToString("\n")
+                val old = All_nest(srcs + "await _0\n")
+                val ret = this.stmts()
+                all = old
+                ret
+            }
+            /*
+            all.accept(TK.PARAND) -> {
+                var pars = mutableListOf<Stmt.Block>()
+                pars.add(this.block())
+                while (all.accept(TK.WITH)) {
+                    pars.add(this.block())
+                }
+                val spws = pars.mapIndexed { i,it -> "var tk_$i = spawn { ${it.body.xtostr()} }" }.joinToString("\n")
+                val oks  = pars.mapIndexed { i,_ -> "var ok_$i: _int = 0" }.joinToString { "\n" }
+                val awts = xxx
+                val chks = xxx
+
+                val old = All_nest("""
+                    {
+                        $spws
+                        $oks
+                        loop {
+                            await $awts
+                            if ($chks) {
+                                break
+                            }
+                        }
+                    }
+
+                """.trimIndent())
+                val ret = this.stmts()
+                all = old
+                ret
+            }
+             */
             else -> super.stmt()
         }
     }

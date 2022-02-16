@@ -89,6 +89,16 @@ class TPar {
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n()\n") { out }
     }
+    @Test
+    fun a05_spawn_task () {
+        val out = all("""
+            var t = spawn {
+                output std ()
+            }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n") { out }
+    }
 
     // PAR
 

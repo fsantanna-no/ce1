@@ -1004,5 +1004,22 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun g03_spawn_task () {
+        val out = all("""
+            var t = spawn {
+                output std ()
+            }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            var t: active task @GLOBAL -> @[] -> () -> () -> ()
+            set t = spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            output std ()
+            }
+             @[] ())
+            
+        """.trimIndent()) { out }
+    }
 
 }

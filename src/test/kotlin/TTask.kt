@@ -195,35 +195,35 @@ class TTask {
     @Test
     fun a07_emit () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var f = task ()->()->() {
-                await evt?2
-                var e = evt!2
+                await evt?3
+                var e = evt!3
                 output std _(${D}e+0):_int
             }
             var x = spawn f ()
             
             var g = task @LOCAL->@[]->()->()->() {
-                await evt?2
-                var e1 = evt!2
+                await evt?3
+                var e1 = evt!3
                 output std _(${D}e1+10):_int
-                await evt?2
-                var e2 = evt!2
+                await evt?3
+                var e2 = evt!3
                 output std _(${D}e2+10):_int
             }
             var y = spawn g ()
             
-            emit <.2 _1>
-            emit <.2 _2>
+            emit <.3 _1>
+            emit <.3 _2>
         """.trimIndent())
         assert(out == "1\n11\n12\n") { out }
     }
     @Test
     fun a08_emit_block () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var f = task ()->()->() {
-                await _1
+                await evt?1
                 var e = evt!1
                 output std _0:_int    -- only on kill
             }
@@ -231,16 +231,16 @@ class TTask {
             
             {
                 var g = task ()->()->() {
-                    await evt?2
-                    var e1 = evt!2
+                    await evt?3
+                    var e1 = evt!3
                     output std _(${D}e1+10):_int
-                    await evt?2
-                    var e2 = evt!2
+                    await evt?3
+                    var e2 = evt!3
                     output std _(${D}e2+10):_int
                 }
                 var y = spawn g ()
-                emit @LOCAL <.2 _1>
-                emit @LOCAL <.2 _2>
+                emit @LOCAL <.3 _1>
+                emit @LOCAL <.3 _2>
             }            
         """.trimIndent())
         assert(out == "11\n12\n0\n") { out }
@@ -438,11 +438,11 @@ class TTask {
     @Test
     fun c01_throw () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var h = task ()->()->() {
                 catch {
                     var f = task ()->()->() {
-                        await evt?2
+                        await evt?3
                         output std _999:_int
                     }
                     var g = task ()->()->() {
@@ -465,18 +465,18 @@ class TTask {
     @Test
     fun c02_throw_par2 () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var main = task ()->()->() {
                 var fg = task ()->()->() {
                     var f = task ()->()->() {
-                        await evt?2
+                        await evt?3
                         output std _999:_int
                     }
                     var g = task ()->()->() {
                         await evt?1
                         output std _2:_int
                     }
-                    await evt?2
+                    await evt?3
                     var xf = spawn f ()
                     var xg = spawn g ()
                     throw
@@ -490,7 +490,7 @@ class TTask {
                 catch {
                     set xfg = spawn fg ()
                     set xh = spawn h ()
-                    emit <.2 _5>
+                    emit <.3 _5>
                     output std _999:_int
                 }
             }
@@ -674,7 +674,7 @@ class TTask {
     @Test
     fun f06_pub () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var f = task ()->_int->() {
                 set pub = _3
                 output std _1:_int
@@ -711,7 +711,7 @@ class TTask {
     @Test
     fun f08_natural () {
         val out = all("""
-            type Event = <(),_int>
+            type Event = <(),_int,_int>
             var f = task _int->_int->() {
                 set pub = arg
                 output std pub
@@ -733,7 +733,7 @@ class TTask {
                 output std x.pub
             }
             
-            emit <.2 _10>
+            emit <.3 _10>
             
             loop x in xs {
                 output std x.pub
