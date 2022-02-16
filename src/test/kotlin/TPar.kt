@@ -95,12 +95,15 @@ class TPar {
     @Test
     fun b01_par () {
         val out = all("""
-            par {
-                output std ()
-            } with {
-                output std ()
+            type Event = <(),_int>
+            spawn {
+                par {
+                    output std ()
+                } with {
+                    output std ()
+                }
+                output std ()   -- never printed
             }
-            output std ()
         """.trimIndent())
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n()\n") { out }

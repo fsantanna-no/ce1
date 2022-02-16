@@ -228,7 +228,7 @@ class XParser: Parser()
                     pars.add(this.block())
                 }
                 var srcs = pars.map { "spawn { ${it.body.xtostr()} }" }.joinToString("\n")
-                val old = All_nest(srcs)
+                val old = All_nest(srcs + "await _0\n")
                 val ret = this.stmts()
                 all = old
                 ret
