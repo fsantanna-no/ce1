@@ -138,4 +138,25 @@ class TPar {
         """.trimIndent())
         assert(out == "2\n1\n3\n4\n") { out }
     }
+    @Test
+    fun b03_paror () {
+        val out = all("""
+            type Event = <(),_uint64_t,()>
+            spawn {
+                paror {
+                    await evt?3
+                    await evt?3
+                    output std _1:_int
+                } with {
+                    await evt?3
+                    output std _2:_int
+                }
+                output std _3:_int
+            }
+            emit <.3 ()>
+            output std _4:_int
+            
+        """.trimIndent())
+        assert(out == "2\n3\n4\n") { out }
+    }
 }

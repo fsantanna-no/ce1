@@ -256,7 +256,8 @@ class XParser: Parser()
                 all = old
                 ret
             }
-            all.accept(TK.PARAND) -> {
+            all.accept(TK.PARAND) || all.accept(TK.PAROR) -> {
+                val op = if (all.tk0.enu==TK.PARAND) "&&" else "||"
                 var pars = mutableListOf<Stmt.Block>()
                 pars.add(this.block())
                 while (all.accept(TK.WITH)) {
@@ -265,19 +266,19 @@ class XParser: Parser()
                 val spws = pars.mapIndexed { i,x -> "var tk_$i = spawn { ${x.body.xtostr()} }" }.joinToString("\n")
                 val oks  = pars.mapIndexed { i,_ -> "var ok_$i: _int = _((${D}tk_$i->task0.state == TASK_DEAD))" }.joinToString("\n")
                 val sets = pars.mapIndexed { i,_ -> "set ok_$i = _(${D}ok_$i || (((uint64_t)${D}tk_$i)==${D}tk_x))" }.joinToString("\n")
-                val chks = pars.mapIndexed { i,_ -> "${D}ok_$i" }.joinToString(" && ")
+                val chks = pars.mapIndexed { i,_ -> "${D}ok_$i" }.joinToString(" $op ")
 
                 val old = All_nest("""
                     {
                         $spws
                         $oks
                         loop {
-                            await evt?2
-                            var tk_x = evt!2
-                            $sets
                             if _($chks) {
                                 break
                             }
+                            await evt?2
+                            var tk_x = evt!2
+                            $sets
                         }
                     }
 
