@@ -195,8 +195,8 @@ class TInfer {
     @Test
     fun a12_ucons () {
         val out = all("""
-            type X = <()>
-            var y = <.2 ()>: X
+            type Xx = <()>
+            var y = <.2 ()>: Xx
         """.trimIndent())
         assert(out == "(ln 2, col 11): invalid union constructor : out of bounds") { out }
     }
@@ -229,7 +229,6 @@ class TInfer {
         val out = all("var x: _int ; set x = _10")
         assert(out == "var x: _int\nset x = (_10: _int)\n") { out }
     }
-
 
     // inference error
 
@@ -1067,4 +1066,47 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+
+    // TUPLES / TYPE
+
+    @Test
+    fun j01_point () {
+        val out = all("""
+            type Point = [_int,_int]
+            var xy: Point = [_1,_2]
+            var x = xy.1
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            type Point @[] = [_int,_int]
+            var xy: Point
+            set xy = [(_1: _int),(_2: _int)]
+            var x: _int
+            set x = (xy.1)
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun j02 () {
+        val out = all("""
+            type Point = [_int,_int]
+            type Dims  = [_int,_int]
+            type Rect  = [Point,Dims]
+            var r: Rect = [[_1,_2],[_1,_2]]
+            var h = r.2.2
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            type Point @[] = [_int,_int]
+            type Dims @[] = [_int,_int]
+            type Rect @[] = [Point,Dims]
+            var r: Rect
+            set r = [[(_1: _int),(_2: _int)],[(_1: _int),(_2: _int)]]
+            var h: _int
+            set h = ((r.2).2)
+            
+        """.trimIndent()) { out }
+    }
+
+
 }
