@@ -1022,19 +1022,41 @@ class TInfer {
         """.trimIndent()) { out }
     }
 
-    // EXPR / WHERE
+    // WHERE
 
     @Test
-    fun h01 () {
+    fun h01_err () {
         val out = all("""
-            var x: () = call {
-                return ()
+            var x: ()
+            set x = y where {
+                var y = ()
             }
             output std x
         """.trimIndent())
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
-            var x: () = (func () -> ? { return () }) ()
+            var x: ()
+            {
+            var y: ()
+            set y = ()
+            set x = y
+            }
+            output std x
+
+        """.trimIndent()) { out }
+    }
+
+    @Test
+    fun h02_var () {
+        val out = all("""
+            var x = y where {
+                var y = ()
+            }
+            output std x
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            
         """.trimIndent()) { out }
     }
 }

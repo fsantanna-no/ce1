@@ -107,11 +107,6 @@ class XParser: Parser()
                 }
                 Expr.New(tk0 as Tk.Key, if (scp==null) null else Scope(scp,null), e as Expr.UCons)
             }
-            all.accept(TK.CALL) -> {
-                val tk0 = all.tk0
-                val block = this.block()
-                Expr.Func(Tk.Key(TK.FUNC,tk0.lin,tk0.col,"func"), null, block)
-            }
             else -> super.expr_one()
         }
     }
@@ -293,6 +288,46 @@ class XParser: Parser()
                 ret
             }
             else -> super.stmt()
+        }.let {
+            if (!all.accept(TK.WHERE)) it else {
+                val tk0 = all.tk0
+                val blk = this.block()
+                when {
+                    (it !is Stmt.Seq) -> {
+                        // set x = y where { ys }
+                        //      {
+                        //          ys
+                        //          set x = y
+                        //      }
+                        Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
+                            Stmt.Seq(tk0, blk.body, it))
+                    }
+                    (it.s1 is Stmt.Var) -> {
+                        // var x = y where { ys }
+                        //      var x: ?
+                        //      {
+                        //          ys
+                        //          set x = y
+                        //      }
+                        Stmt.Seq(tk0, it.s1,
+                            Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
+                                Stmt.Seq(tk0, blk.body, it.s2)))
+                    }
+                    (it.s2 is Stmt.Return) -> {
+                        // return x where { ys }
+                        //      {
+                        //          ys
+                        //          set ret = x
+                        //      }
+                        //      return
+                        Stmt.Seq(tk0,
+                            Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
+                                Stmt.Seq(tk0, blk.body, it.s1)),
+                            it.s2)
+                    }
+                    else -> error("bug found")
+                }
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ let s:ft = matchstr(&ft, '^\([^.]\)\+')
 
 syn keyword Statement   active await awake break call catch else emit func if
 syn keyword Statement   in input loop native new output par parand paror return
-syn keyword Statement   set spawn type task tasks throw type var with
+syn keyword Statement   set spawn type task tasks throw type var with where
 syn keyword cType       arg pub ret evt
 syn keyword cType       std pico
 syn keyword cType       not and or

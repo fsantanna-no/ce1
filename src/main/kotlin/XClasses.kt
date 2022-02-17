@@ -6,7 +6,7 @@ enum class TK {
     UNIT, ARROW, ATBRACK,
     ACTIVE, AWAIT, BREAK, CALL, CATCH, ELSE, EMIT, FUNC, IF, IN, INPUT,
     LOOP, NATIVE, NEW, OUTPUT, PAR, PARAND, PAROR, RETURN, SET, SPAWN, TASK, TASKS,
-    THROW, TYPE, VAR, WITH
+    THROW, TYPE, VAR, WHERE, WITH
 }
 
 val key2tk: HashMap<String, TK> = hashMapOf (
@@ -36,6 +36,7 @@ val key2tk: HashMap<String, TK> = hashMapOf (
     "throw"  to TK.THROW,
     "type"   to TK.TYPE,
     "var"    to TK.VAR,
+    "where"  to TK.WHERE,
     "with"   to TK.WITH,
 )
 
@@ -87,7 +88,7 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
     data class New   (val tk_: Tk.Key, var xscp: Scope?, val arg: Expr.UCons): Expr(tk_, null, null, null)
     data class Dnref (val tk_: Tk,     val ptr: Expr): Expr(tk_, null, null, null)
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null, null)
-    data class Func  (val tk_: Tk.Key, var xtype: Type.Func?, val block: Stmt.Block) : Expr(tk_, null, null, xtype)
+    data class Func  (val tk_: Tk.Key, val type: Type.Func, val block: Stmt.Block) : Expr(tk_, null, null, type)
     data class Call (
         val tk_: Tk,
         val f: Expr,
