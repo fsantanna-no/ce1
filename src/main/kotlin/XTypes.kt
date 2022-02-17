@@ -119,7 +119,7 @@ fun Expr.xinfTypes (inf: Type?) {
         }
         is Expr.Func -> {
             this.block.xinfTypes(null)
-            this.xtype
+            this.type
         }
         is Expr.TDisc -> {
             this.tup.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
@@ -285,7 +285,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 }
             }
         }
-    }!!.clone(this, this.tk.lin, this.tk.col)
+    }.clone(this, this.tk.lin, this.tk.col)
 }
 
 fun Stmt.xinfTypes (inf: Type? = null) {

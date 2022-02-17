@@ -678,7 +678,7 @@ class TTask {
             var f = task ()->_int->() {
                 set pub = _3
                 output std _1:_int
-                await _1
+                await evt?3
             }
             var fs: active tasks ()->_int->()
             spawn f () in fs
@@ -715,13 +715,13 @@ class TTask {
             var f = task _int->_int->() {
                 set pub = arg
                 output std pub
-                await _1:_int
+                await evt?3
             }
             var g = task _int->_int->() {
                 set pub = arg
                 output std pub
-                await _1
-                await _1
+                await evt?3
+                await evt?3
             }
 
             var xs: active tasks _int->_int->()
