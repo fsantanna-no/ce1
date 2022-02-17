@@ -87,7 +87,7 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
     data class New   (val tk_: Tk.Key, var xscp: Scope?, val arg: Expr.UCons): Expr(tk_, null, null, null)
     data class Dnref (val tk_: Tk,     val ptr: Expr): Expr(tk_, null, null, null)
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null, null)
-    data class Func  (val tk_: Tk.Key, val type: Type.Func, val block: Stmt.Block) : Expr(tk_, null, null, type)
+    data class Func  (val tk_: Tk.Key, var xtype: Type.Func?, val block: Stmt.Block) : Expr(tk_, null, null, xtype)
     data class Call (
         val tk_: Tk,
         val f: Expr,

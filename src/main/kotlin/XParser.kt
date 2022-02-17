@@ -107,6 +107,11 @@ class XParser: Parser()
                 }
                 Expr.New(tk0 as Tk.Key, if (scp==null) null else Scope(scp,null), e as Expr.UCons)
             }
+            all.accept(TK.CALL) -> {
+                val tk0 = all.tk0
+                val block = this.block()
+                Expr.Func(Tk.Key(TK.FUNC,tk0.lin,tk0.col,"func"), null, block)
+            }
             else -> super.expr_one()
         }
     }

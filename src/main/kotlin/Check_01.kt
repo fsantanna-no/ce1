@@ -76,8 +76,8 @@ fun check_01_before_tps (s: Stmt) {
     }
     fun fe (e: Expr) {
         when (e) {
-            is Expr.Var -> {
-                All_assert_tk(e.tk, e.env(e.tk_.id) != null) {
+            is Expr.Var -> {                    // ret has no type in call {...}
+                All_assert_tk(e.tk, e.tk_.id=="ret" || e.env(e.tk_.id)!=null) {
                     "undeclared variable \"${e.tk_.id}\""
                 }
             }

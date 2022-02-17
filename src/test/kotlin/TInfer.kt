@@ -1021,4 +1021,20 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+
+    // EXPR / WHERE
+
+    @Test
+    fun h01 () {
+        val out = all("""
+            var x: () = call {
+                return ()
+            }
+            output std x
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == """
+            var x: () = (func () -> ? { return () }) ()
+        """.trimIndent()) { out }
+    }
 }
