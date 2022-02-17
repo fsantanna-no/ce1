@@ -13,9 +13,13 @@ set cpo&vim
 let s:ft = matchstr(&ft, '^\([^.]\)\+')
 
 syn keyword Statement   active await awake break call catch else emit func if
-syn keyword Statement   in input loop native new output par return set spawn
-syn keyword Statement   type tasks throw type var with
-syn keyword Statement   arg pub ret evt
+syn keyword Statement   in input loop native new output par parand paror return
+syn keyword Statement   set spawn type task tasks throw type var with
+syn keyword cType       arg pub ret evt
+syn keyword cType       std pico
+syn keyword cType       not and or
+syn keyword cType       eq neq gt lt gte lte
+syn keyword cType       add sub mul div rem
 
 syn keyword cTodo contained TODO FIXME XXX
 
