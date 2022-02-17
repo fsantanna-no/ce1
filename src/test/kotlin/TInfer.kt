@@ -373,7 +373,8 @@ class TInfer {
             }
         """.trimIndent()
         )
-        assert(out == "(ln 3, col 10): invalid inference : undetermined type") { out }
+        //assert(out == "(ln 3, col 10): invalid inference : undetermined type") { out }
+        assert(out == "(ln 3, col 15): invalid inference : type mismatch") { out }
     }
     @Test
     fun c06_new_return0 () {
@@ -1056,6 +1057,13 @@ class TInfer {
         """.trimIndent())
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
+            var x: ()
+            {
+            var y: ()
+            set y = ()
+            set x = y
+            }
+            output std x
             
         """.trimIndent()) { out }
     }

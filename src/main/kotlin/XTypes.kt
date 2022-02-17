@@ -175,10 +175,15 @@ fun Expr.xinfTypes (inf: Type?) {
         }
         is Expr.Var -> {
             val s = this.env(this.tk_.id)!!
-            All_assert_tk(this.tk, s !is Stmt.Var || s.xtype!=null) {
+            val ret = when {
+                (s !is Stmt.Var)  -> s.toType()
+                (s.xtype == null) -> inf
+                else              -> s.xtype!!
+            }
+            All_assert_tk(this.tk, ret != null) {
                 "invalid inference : undetermined type"
             }
-            s.toType()
+            ret!!
         }
         is Expr.Call -> {
             val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,""))
@@ -296,8 +301,13 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         is Stmt.Nop, is Stmt.Break, is Stmt.Return, is Stmt.Native, is Stmt.Throw, is Stmt.Typedef -> {}
         is Stmt.Var -> { this.xtype = this.xtype ?: inf!!.clone(this,this.tk.lin,this.tk.col) }
         is Stmt.Set -> {
-            this.dst.xinfTypes(null)
-            this.src.xinfTypes(this.dst.wtype!!)
+            try {
+                this.dst.xinfTypes(null)
+                this.src.xinfTypes(this.dst.wtype!!)
+            } catch (e: Throwable){
+                this.src.xinfTypes(null)
+                this.dst.xinfTypes(this.src.wtype!!)
+            }
         }
         is Stmt.SCall -> this.e.xinfTypes(unit())
         is Stmt.SSpawn -> {
@@ -368,6 +378,17 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                         this.s1.xinfTypes(it)
                         this.s2.dst.xinfTypes(null) //it
                     }
+                }
+                (this.s1 is Stmt.Var && this.s2 is Stmt.Block) -> {
+                    // var x = y where { var y=() }
+                    //      var x: ?
+                    //      {               // s2.body is Seq
+                    //          var y = ()  // s2.body.s1
+                    //          set x = y   // s2.body.s2 is Set
+                    //      }
+                    this.s2.xinfTypes(null)
+                    val set = (this.s2.body as Stmt.Seq).s2 as Stmt.Set
+                    this.s1.xinfTypes(set.src.wtype!!)
                 }
                 else -> {
                     this.s1.xinfTypes(null)
