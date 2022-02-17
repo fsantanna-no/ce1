@@ -288,32 +288,49 @@ class XParser: Parser()
                 ret
             }
             else -> super.stmt()
-        }.let {
-            if (!all.accept(TK.WHERE)) it else {
+        }.let { stmt ->
+            val until = if (!all.accept(TK.UNTIL)) stmt else {
+                val tk0 = all.tk0
+                //All_assert_tk(tk0, stmt !is Stmt.Var) { "unexpected `until`" }
+                val cnd = this.expr()
+                val old = All_nest("""
+                    loop {
+                        ${stmt.xtostr()}
+                        if ${cnd.xtostr()} {
+                            break
+                        }
+                    }
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old
+                ret
+            }
+            val where = if (!all.accept(TK.WHERE)) until else {
                 val tk0 = all.tk0
                 val blk = this.block()
                 when {
-                    (it !is Stmt.Seq) -> {
+                    (until !is Stmt.Seq) -> {
                         // set x = y where { ys }
                         //      {
                         //          ys
                         //          set x = y
                         //      }
                         Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                            Stmt.Seq(tk0, blk.body, it))
+                            Stmt.Seq(tk0, blk.body, until))
                     }
-                    (it.s1 is Stmt.Var) -> {
+                    (until.s1 is Stmt.Var) -> {
                         // var x = y where { ys }
                         //      var x: ?
                         //      {
                         //          ys
                         //          set x = y
                         //      }
-                        Stmt.Seq(tk0, it.s1,
+                        Stmt.Seq(tk0, until.s1,
                             Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                                Stmt.Seq(tk0, blk.body, it.s2)))
+                                Stmt.Seq(tk0, blk.body, until.s2)))
                     }
-                    (it.s2 is Stmt.Return) -> {
+                    (until.s2 is Stmt.Return) -> {
                         // return x where { ys }
                         //      {
                         //          ys
@@ -322,12 +339,13 @@ class XParser: Parser()
                         //      return
                         Stmt.Seq(tk0,
                             Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                                Stmt.Seq(tk0, blk.body, it.s1)),
-                            it.s2)
+                                Stmt.Seq(tk0, blk.body, until.s1)),
+                            until.s2)
                     }
                     else -> error("bug found")
                 }
             }
+            where
         }
     }
 }

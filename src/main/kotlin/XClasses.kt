@@ -6,7 +6,7 @@ enum class TK {
     UNIT, ARROW, ATBRACK,
     ACTIVE, AWAIT, BREAK, CALL, CATCH, ELSE, EMIT, FUNC, IF, IN, INPUT,
     LOOP, NATIVE, NEW, OUTPUT, PAR, PARAND, PAROR, RETURN, SET, SPAWN, TASK, TASKS,
-    THROW, TYPE, VAR, WHERE, WITH
+    THROW, TYPE, UNTIL, VAR, WHERE, WITH
 }
 
 val key2tk: HashMap<String, TK> = hashMapOf (
@@ -35,6 +35,7 @@ val key2tk: HashMap<String, TK> = hashMapOf (
     "tasks"  to TK.TASKS,
     "throw"  to TK.THROW,
     "type"   to TK.TYPE,
+    "until"  to TK.UNTIL,
     "var"    to TK.VAR,
     "where"  to TK.WHERE,
     "with"   to TK.WITH,

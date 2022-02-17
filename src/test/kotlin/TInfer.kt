@@ -733,16 +733,15 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             var clone: func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k
             set clone = func @[i,j,k,l] -> /List @[j] @i -> /List @[l] @k {
-            if ((arg\)?0){
+            if ((arg\)?0)
             {
             set ret = <.0>: /List @[l] @k
             return
             }
-            } else {
+            else
             {
             set ret = (new <.1 (clone @[j,j,l,l] ((arg\)!1): @l)>: List @[l]: @k)
             return
-            }
             }
             }
 
@@ -950,7 +949,6 @@ class TInfer {
                 }
             }
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             spawn (task @GLOBAL -> @[] -> () -> () -> () {
             var x: ()
@@ -983,7 +981,6 @@ class TInfer {
                 }
             }
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             spawn (task @GLOBAL -> @[] -> () -> () -> () {
             var x: ()
@@ -1011,7 +1008,6 @@ class TInfer {
                 output std ()
             }
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             var t: active task @GLOBAL -> @[] -> () -> () -> ()
             set t = spawn (task @GLOBAL -> @[] -> () -> () -> () {
@@ -1022,7 +1018,7 @@ class TInfer {
         """.trimIndent()) { out }
     }
 
-    // WHERE
+    // WHERE / UNTIL
 
     @Test
     fun h01_err () {
@@ -1033,7 +1029,6 @@ class TInfer {
             }
             output std x
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             var x: ()
             {
@@ -1054,7 +1049,6 @@ class TInfer {
             }
             output std x
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             var x: ()
             {
@@ -1065,6 +1059,67 @@ class TInfer {
             output std x
             
         """.trimIndent()) { out }
+    }
+
+    @Test
+    fun h03_until () {
+        val out = all("""
+            output std () until _0
+        """.trimIndent())
+        assert(out == """
+            loop {
+            output std ()
+            if (_0: _int)
+            {
+            break
+            }
+            else
+            {
+            
+            }
+            }
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun h04_until_where () {
+        val out = all("""
+            output std () until x where { var x = () }
+        """.trimIndent())
+        assert(out == """
+            {
+            var x: ()
+            set x = ()
+            loop {
+            output std ()
+            if x
+            {
+            break
+            }
+            else
+            {
+            
+            }
+            }
+            }
+    
+        """.trimIndent()) { out }
+    }
+    @Disabled
+    @Test   // TODO: should it give an error?
+    fun h05_until_var_err () {
+        val out = all("""
+            var x = () until _0
+        """.trimIndent())
+        assert(out == """            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun h06_where_until_err () {
+        val out = all("""
+            output std () where { var x = () } until x
+        """.trimIndent())
+        assert(out == "(ln 1, col 36): expected statement : have `until`") { out }
     }
 
     // TUPLES / TYPE
@@ -1095,7 +1150,6 @@ class TInfer {
             var r: Rect = [[_1,_2],[_1,_2]]
             var h = r.2.2
         """.trimIndent())
-        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == """
             type Point @[] = [_int,_int]
             type Dims @[] = [_int,_int]

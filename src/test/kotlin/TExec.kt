@@ -799,4 +799,30 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 [<.1>,<.1>]>\n") { out }
     }
+
+    // WHERE / UNTIL
+
+    @Test
+    fun f01_where () {
+        val out = all("""
+            output std x where { var x = ()  }
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun f02_until () {
+        val out = all("""
+            output std () until _1
+        """.trimIndent())
+        //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun f03_err () {
+        val out = all("""
+            output std () until ()
+        """.trimIndent())
+        assert(out == "(ln 3, col 1): invalid condition : type mismatch : expected _int : have ()\n") { out }
+    }
 }
