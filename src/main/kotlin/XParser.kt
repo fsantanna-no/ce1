@@ -309,38 +309,46 @@ class XParser: Parser()
             val where = if (!all.accept(TK.WHERE)) until else {
                 val tk0 = all.tk0
                 val blk = this.block()
+                assert(!blk.iscatch && blk.scp1.isanon()) { "TODO" }
                 when {
                     (until !is Stmt.Seq) -> {
-                        // set x = y where { ys }
-                        //      {
-                        //          ys
-                        //          set x = y
-                        //      }
-                        Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                            Stmt.Seq(tk0, blk.body, until))
+                        val old = All_nest("""
+                            {
+                                ${blk.body.xtostr()}
+                                ${until.xtostr()}
+                            }
+                            
+                        """.trimIndent())
+                        val ret = this.stmt()
+                        all = old
+                        ret
                     }
                     (until.s1 is Stmt.Var) -> {
-                        // var x = y where { ys }
-                        //      var x: ?
-                        //      {
-                        //          ys
-                        //          set x = y
-                        //      }
+                        /*
+                        val old = All_nest("""
+                            ${until.s1.xtostr()}        // this wouldn't work b/c var has no type yet
+                            {
+                                ${blk.body.xtostr()}
+                                ${until.s2.xtostr()}
+                            }
+                        """.trimIndent())
+                         */
                         Stmt.Seq(tk0, until.s1,
                             Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
                                 Stmt.Seq(tk0, blk.body, until.s2)))
                     }
                     (until.s2 is Stmt.Return) -> {
-                        // return x where { ys }
-                        //      {
-                        //          ys
-                        //          set ret = x
-                        //      }
-                        //      return
-                        Stmt.Seq(tk0,
-                            Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                                Stmt.Seq(tk0, blk.body, until.s1)),
-                            until.s2)
+                        val old = All_nest("""
+                            {
+                                ${blk.body.xtostr()}
+                                ${until.s1.xtostr()}
+                            }
+                            ${until.s2.xtostr()}
+                            
+                        """.trimIndent())
+                        val ret = this.stmt()
+                        all = old
+                        ret
                     }
                     else -> error("bug found")
                 }
