@@ -134,8 +134,8 @@ open class Parser
             all.accept(TK.NEW) -> {
                 val tk0 = all.tk0
                 val e = this.expr()
-                all.assert_tk(tk0, e is Expr.UCons && e.tk_.num != 0) {
-                    "invalid `new` : expected constructor"
+                all.assert_tk(tk0,e is Expr.As && e.e is Expr.UCons && e.e.tk_.num!=0) {
+                    "invalid `new` : expected alias constructor"
                 }
 
                 val scp = if (all.accept(TK.CHAR, ':')) {
@@ -145,7 +145,7 @@ open class Parser
                 } else {
                     Tk.Id(TK.XID, all.tk0.lin, all.tk0.col, "LOCAL")
                 }
-                Expr.New(tk0 as Tk.Key, Scope(scp,null), e as Expr.UCons)
+                Expr.New(tk0 as Tk.Key, Scope(scp,null), e as Expr.As)
             }
             all.accept(TK.UNIT) -> Expr.Unit(all.tk0 as Tk.Sym)
             all.accept(TK.XID) -> Expr.Var(all.tk0 as Tk.Id)
@@ -332,7 +332,9 @@ open class Parser
                     Stmt.Loop(tk0, block)
                 } else {
                     val i = this.expr()
-                    All_assert_tk(all.tk0, i is Expr.Var) { "expected variable expression" }
+                    All_assert_tk(all.tk0, i is Expr.Var) {
+                        "expected variable expression"
+                    }
                     all.accept_err(TK.IN)
                     val tsks = this.expr()
                     val block = this.block()
@@ -386,8 +388,19 @@ open class Parser
         return Pair(scps, ctrs)
     }
 
+    fun expr_as (e: Expr): Expr {
+        return if (!all.accept(TK.XAS)) e else {
+            val tk0 = all.tk0 as Tk.Sym
+            val type = this.type(false)
+            All_assert_tk(all.tk0, type is Type.Alias) {
+                "expected alias type"
+            }
+            Expr.As(tk0, e, type as Type.Alias)
+        }
+    }
+
     fun expr_dots (): Expr {
-        var e = this.expr_one()
+        var e = this.expr_as(this.expr_one())
 
         // one!1\.2?1
         while (all.accept(TK.CHAR, '\\') || all.accept(TK.CHAR, '.') || all.accept(TK.CHAR, '!') || all.accept(
@@ -441,8 +454,20 @@ open class Parser
                     else -> error("impossible case")
                 }
             }
+            e = this.expr_as(e)
         }
         return e
+    }
+
+    fun attr_as (e: Attr): Attr {
+        return if (!all.accept(TK.XAS)) e else {
+            val tk0 = all.tk0 as Tk.Sym
+            val type = this.type(false)
+            All_assert_tk(all.tk0, type is Type.Alias) {
+                "expected alias type"
+            }
+            Attr.As(tk0, e, type as Type.Alias)
+        }
     }
 
     fun attr (): Attr {
@@ -474,6 +499,8 @@ open class Parser
                 error("unreachable")
             }
         }
+
+        e = this.attr_as(e)
 
         // one.1!\.2.1?
         while (all.accept(TK.CHAR, '\\') || all.accept(TK.CHAR, '.') || all.accept(TK.CHAR, '!')) {
@@ -514,6 +541,7 @@ open class Parser
                     else -> error("impossible case")
                 }
             }
+            e = this.attr_as(e)
         }
         return e
     }

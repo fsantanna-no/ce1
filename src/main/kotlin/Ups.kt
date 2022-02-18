@@ -46,10 +46,11 @@ fun Expr.setUps (up: Any) {
     when (this) {
         is Expr.Unit, is Expr.Var -> {}
         is Expr.Nat   -> this.xtype?.setUps(this)
+        is Expr.As    -> { this.e.setUps(this) ; this.type.setUps(this) }
         is Expr.TCons -> this.arg.forEach { it.setUps(this) }
         is Expr.UCons -> { this.xtype?.setUps(this) ; this.arg.setUps(this) }
         is Expr.UNull -> this.xtype?.setUps(this)
-        is Expr.New   -> this.arg.setUps(this)
+        is Expr.New   -> this.xarg.setUps(this)
         is Expr.Dnref -> this.ptr.setUps(this)
         is Expr.Upref -> this.pln.setUps(this)
         is Expr.TDisc -> this.tup.setUps(this)
