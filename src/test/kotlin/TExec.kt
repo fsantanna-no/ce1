@@ -825,4 +825,15 @@ class TExec {
         """.trimIndent())
         assert(out == "(ln 3, col 1): invalid condition : type mismatch : expected _int : have ()\n") { out }
     }
+    @Test
+    fun f05_err () {
+        val out = all("""
+            output std v where {
+                var v = ()
+            } until z where {
+                var z = _1:_int
+            }
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
 }

@@ -1087,11 +1087,11 @@ class TInfer {
             output std () until x where { var x = () }
         """.trimIndent())
         assert(out == """
+            loop {
+            output std ()
             {
             var x: ()
             set x = ()
-            loop {
-            output std ()
             if x
             {
             break
@@ -1115,11 +1115,41 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun h06_where_until_err () {
+    fun h06_where_until_where () {
         val out = all("""
-            output std () where { var x = () } until x
+            output std y where { var y = () } until x where { var x:_int = _1 }
         """.trimIndent())
-        assert(out == "(ln 1, col 36): expected statement : have `until`") { out }
+        assert(out == """
+            loop {
+            {
+            var y: ()
+            set y = ()
+            output std y
+            }
+            {
+            var x: _int
+            set x = (_1: _int)
+            if x
+            {
+            break
+            }
+            else
+            {
+
+            }
+            }
+            }
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun h07_err () {
+        val out = all("""
+            output std v until _1 where {
+                var v = ()
+            }
+        """.trimIndent())
+        assert(out == "(ln 4, col 36): undeclared variable \"v\"") { out }
     }
 
     // TUPLES / TYPE

@@ -1,6 +1,3 @@
-import java.io.PushbackReader
-import java.io.StringReader
-
 class XParser: Parser()
 {
     override fun type(tasks: Boolean): Type {
@@ -288,17 +285,50 @@ class XParser: Parser()
                 ret
             }
             else -> super.stmt()
-        }.let { stmt ->
-            val until = if (!all.accept(TK.UNTIL)) stmt else {
-                val tk0 = all.tk0
+        }.let { it1 ->
+            val it2 = if (!all.check(TK.WHERE)) it1 else this.where(it1)
+            val it3 = if (!all.accept(TK.UNTIL)) it2 else {
+                //val tk0 = all.tk0
                 //All_assert_tk(tk0, stmt !is Stmt.Var) { "unexpected `until`" }
+
                 val cnd = this.expr()
-                val old = All_nest("""
+                val old1 = All_nest("""
+                    if ${cnd.xtostr()} {
+                        break
+                    }
+                    
+                """.trimIndent())
+                val if1 = this.stmt()
+                all = old1
+                val if2 = if (!all.check(TK.WHERE)) if1 else this.where(if1)
+
+                val old2 = All_nest("""
                     loop {
-                        ${stmt.xtostr()}
-                        if ${cnd.xtostr()} {
-                            break
-                        }
+                        ${it2.xtostr()}
+                        ${if2.xtostr()}
+                    }
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old2
+                ret
+            }
+            //println(it3.xtostr())
+            it3
+        }
+    }
+
+    fun where (s: Stmt): Stmt {
+        all.accept_err(TK.WHERE)
+        val tk0 = all.tk0
+        val blk = this.block()
+        assert(!blk.iscatch && blk.scp1.isanon()) { "TODO" }
+        return when {
+            (s !is Stmt.Seq) -> {
+                val old = All_nest("""
+                    {
+                        ${blk.body.xtostr()}
+                        ${s.xtostr()}
                     }
                     
                 """.trimIndent())
@@ -306,54 +336,38 @@ class XParser: Parser()
                 all = old
                 ret
             }
-            val where = if (!all.accept(TK.WHERE)) until else {
-                val tk0 = all.tk0
-                val blk = this.block()
-                assert(!blk.iscatch && blk.scp1.isanon()) { "TODO" }
-                when {
-                    (until !is Stmt.Seq) -> {
-                        val old = All_nest("""
-                            {
-                                ${blk.body.xtostr()}
-                                ${until.xtostr()}
-                            }
-                            
-                        """.trimIndent())
-                        val ret = this.stmt()
-                        all = old
-                        ret
-                    }
-                    (until.s1 is Stmt.Var) -> {
-                        /*
-                        val old = All_nest("""
-                            ${until.s1.xtostr()}        // this wouldn't work b/c var has no type yet
-                            {
-                                ${blk.body.xtostr()}
-                                ${until.s2.xtostr()}
-                            }
-                        """.trimIndent())
-                         */
-                        Stmt.Seq(tk0, until.s1,
-                            Stmt.Block(blk.tk_, blk.iscatch, blk.scp1,
-                                Stmt.Seq(tk0, blk.body, until.s2)))
-                    }
-                    (until.s2 is Stmt.Return) -> {
-                        val old = All_nest("""
-                            {
-                                ${blk.body.xtostr()}
-                                ${until.s1.xtostr()}
-                            }
+            (s.s1 is Stmt.Var) -> {
+                /*
+                    val old = All_nest("""
+                        ${until.s1.xtostr()}        // this wouldn't work b/c var has no type yet
+                        {
+                            ${blk.body.xtostr()}
                             ${until.s2.xtostr()}
-                            
-                        """.trimIndent())
-                        val ret = this.stmt()
-                        all = old
-                        ret
-                    }
-                    else -> error("bug found")
-                }
+                        }
+                    """.trimIndent())
+                     */
+                Stmt.Seq(
+                    tk0, s.s1,
+                    Stmt.Block(
+                        blk.tk_, blk.iscatch, blk.scp1,
+                        Stmt.Seq(tk0, blk.body, s.s2)
+                    )
+                )
             }
-            where
+            (s.s2 is Stmt.Return) -> {
+                val old = All_nest("""
+                    {
+                        ${blk.body.xtostr()}
+                        ${s.s1.xtostr()}
+                    }
+                    ${s.s2.xtostr()}
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old
+                ret
+            }
+            else -> error("bug found")
         }
     }
 }
