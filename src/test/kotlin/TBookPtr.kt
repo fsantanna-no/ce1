@@ -847,6 +847,6 @@ class TBookPtr {
             output std /v
         """.trimIndent()
         )
-        assert(out == "<.2>\n<.3>\n<.1>\n<.4>\n") { out }
+       assert(out == "<.2>\n<.3>\n<.1>\n<.4>\n") { out }
     }
 }

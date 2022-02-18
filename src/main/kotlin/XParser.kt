@@ -193,21 +193,20 @@ class XParser: Parser()
                 Stmt.If(tk0, tst, true_, false_)
             }
             all.accept(TK.RETURN) -> {
-                val tk0 = all.tk0 as Tk.Key
-                val e = if (all.checkExpr()) {
-                    this.expr()
+                if (!all.checkExpr()) {
+                    Stmt.Return(all.tk0 as Tk.Key)
                 } else {
-                    Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
+                    val e = this.expr()
+                    val old = All_nest("""
+                        set ret = ${e.xtostr()}
+                        return
+                        
+                    """.trimIndent()
+                    )
+                    val ret = this.stmts()
+                    all = old
+                    ret
                 }
-                Stmt.Seq(
-                    tk0,
-                    Stmt.Set(
-                        Tk.Chr(TK.CHAR, tk0.lin, tk0.col, '='),
-                        Expr.Var(Tk.Id(TK.XID, tk0.lin, tk0.col, "ret")),
-                        e
-                    ),
-                    Stmt.Return(tk0)
-                )
             }
             all.accept(TK.TYPE) -> {
                 all.accept_err(TK.XID)

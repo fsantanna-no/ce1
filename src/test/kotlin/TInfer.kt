@@ -625,7 +625,7 @@ class TInfer {
                 }
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
+        assert(out == "(ln 7, col 11): undeclared variable \"x\"") { out }
         /*
         assert(out == """
             var cnst: func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1
@@ -862,7 +862,7 @@ class TInfer {
         """.trimIndent()
         )
         //assert(out == "<.1 <.0>>\n") { out }
-        assert(out == "(ln 5, col 20): undeclared variable \"x\"") { out }
+        assert(out == "(ln 9, col 12): undeclared variable \"x\"") { out }
     }
     @Test
     fun f03 () {
@@ -883,7 +883,7 @@ class TInfer {
         """.trimIndent()
         )
         //assert(out == "5\n") { out }
-        assert(out == "(ln 4, col 16): undeclared variable \"x\"") { out }
+        assert(out == "(ln 8, col 11): undeclared variable \"x\"") { out }
     }
     @Test
     fun f04 () {
@@ -902,7 +902,7 @@ class TInfer {
             call ff ()
         """.trimIndent()
         )
-        assert(out == "(ln 4, col 14): undeclared variable \"ff\"") { out }
+        assert(out == "(ln 8, col 7): undeclared variable \"ff\"") { out }
     }
     @Test
     fun f05 () {
@@ -920,10 +920,10 @@ class TInfer {
         //assert(out == "()\n") { out }
         assert(out == """
             var f: func @[] -> () -> _int
-            { @X14
+            { @X15
             var x: _int
             set x = (_10: _int)
-            set f = func @X14 -> @[] -> () -> _int {
+            set f = func @X15 -> @[] -> () -> _int {
             set ret = x
             return
             }
