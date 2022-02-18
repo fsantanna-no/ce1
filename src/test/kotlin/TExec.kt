@@ -353,7 +353,7 @@ class TExec {
         val out = all("""
             type List = <[(),/List]>
             var x: /List = new <.1 [(),<.0>]>
-            var y: [(),/List] = [(), new <.1 [(),<.0>]>]    -- TODO: err in this line
+            var y: [(),/List] = [(), new <.1 [(),<.0>]>]
             var z = [(), /x]
             output std z.2\\!1.2\!0
         """.trimIndent())
@@ -792,12 +792,29 @@ class TExec {
             type TVAnchor = <(),(),()>
             type TPico = <
                 [THAnchor,TVAnchor]
-            >            
+            >
             var x = <.1 [<.1>,<.1>]>: TPico
             output std /x
             output pico x
         """.trimIndent())
         assert(out == "<.1 [<.1>,<.1>]>\n") { out }
+    }
+    @Test
+    fun e08_ptr_num() {
+        val out = all("""
+            type Num = /<Num>    
+            var zero:  Num = <.0>
+            var one:   Num = new <.1 zero>
+            output std one
+        """.trimIndent())
+        assert(out == """
+            type Num @[i] = /<Num @[i]> @i
+            var zero: Num @[GLOBAL]
+            set zero = <.0>: Num @[GLOBAL]
+            var one: Num @[GLOBAL]
+            set one = (new <.1 zero>: <Num @[GLOBAL]>: @GLOBAL)
+
+        """.trimIndent()) { out }
     }
 
     // WHERE / UNTIL

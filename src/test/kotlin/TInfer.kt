@@ -172,7 +172,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[GLOBAL] @GLOBAL
-            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: List @[GLOBAL]: @GLOBAL)
+            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]: @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -187,7 +187,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[GLOBAL] @GLOBAL
-            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: List @[GLOBAL]: @GLOBAL)
+            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]: @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -423,7 +423,7 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
-            set ((arg\)!1) = (new <.1 <.0>: /List @[j] @j>: List @[j]: @j)
+            set ((arg\)!1) = (new <.1 <.0>: /List @[j] @j>: </List @[j] @j>:+ List @[j]: @j)
             }
 
 
@@ -537,7 +537,7 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             {
             var pa: /List @[LOCAL] @LOCAL
-            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: List @[LOCAL]: @LOCAL)
+            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>:+ List @[LOCAL]: @LOCAL)
             var f: func @[] -> () -> ()
             set f = func @[] -> () -> () {
 
@@ -740,7 +740,7 @@ class TInfer {
             }
             else
             {
-            set ret = (new <.1 (clone @[j,j,l,l] ((arg\)!1): @l)>: List @[l]: @k)
+            set ret = (new <.1 (clone @[j,j,l,l] ((arg\)!1): @l)>: </List @[l] @l>:+ List @[l]: @k)
             return
             }
             }
@@ -809,6 +809,22 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun e07_ptr_num() {
+        val out = all("""
+            type Num = /<Num>    
+            var zero:  Num = <.0>
+            var one:   Num = new <.1 zero>
+        """.trimIndent())
+        assert(out == """
+            type Num @[i] = /<Num @[i]> @i
+            var zero: Num @[GLOBAL]
+            set zero = <.0>: Num @[GLOBAL]
+            var one: Num @[GLOBAL]
+            set one = (new <.1 zero>: <Num @[GLOBAL]>: @GLOBAL)
+
+        """.trimIndent()) { out }
+    }
 
     // CLOSURE ERRORS
 
@@ -832,11 +848,11 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             { @A
             var pa: /List @[A] @A
-            set pa = (new <.1 <.0>: /List @[A] @A>: List @[A]: @A)
+            set pa = (new <.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]: @A)
             var f: func @A -> @[] -> () -> ()
             set f = func @A -> @[] -> () -> () {
             var pf: /List @[A] @A
-            set pf = (new <.1 <.0>: /List @[A] @A>: List @[A]: @A)
+            set pf = (new <.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]: @A)
             set ((pa\)!1) = pf
             }
             
@@ -1191,6 +1207,4 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
-
-
 }

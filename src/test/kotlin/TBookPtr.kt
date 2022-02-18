@@ -194,8 +194,7 @@ class TBookPtr {
             $clone
             $add
             output std add [two,one]
-        """.trimIndent()
-        )
+        """.trimIndent())
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
     }
     @Test

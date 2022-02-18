@@ -29,6 +29,7 @@ fun Expr.xinfTypes (inf: Type?) {
             }
             this.xtype ?: inf!!
         }
+        is Expr.As -> TODO()    // should not parse :+/:-
         is Expr.Upref -> {
             All_assert_tk(this.tk, inf==null || xinf is Type.Pointer) { "invalid inference : type mismatch"}
             this.pln.xinfTypes((xinf as Type.Pointer?)?.pln)
@@ -98,7 +99,7 @@ fun Expr.xinfTypes (inf: Type?) {
             this.xtype ?: inf!!
                 //.mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
         }
-        is Expr.New   -> {
+        is Expr.New -> {
             All_assert_tk(this.tk, inf==null || xinf is Type.Pointer) {
                 "invalid inference : type mismatch"
             }
