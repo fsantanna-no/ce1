@@ -816,6 +816,33 @@ class TExec {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun e09_bool() {
+        val out = all("""
+            type Bool = <(),()>
+            var v: Bool = <.1>
+            output std /v
+        """.trimIndent())
+        assert(out == "<.1>\n") { out }
+    }
+    @Test
+    fun e10_rect() {
+        val out = all("""
+            type Unit  = ()
+            type Int   = _int
+            type Point = [Int,Int]
+            type Rect  = [Point,Point]
+            type URect = [Unit,Rect]
+            var v:    Int   = _1
+            var pt:   Point = [_1,v]
+            var rect: Rect  = [pt,[_3,_4]]
+            var ur1:  URect = [(),rect]
+            var unit: Unit  = ()
+            var ur2:  URect = [unit,rect]
+            output std /ur2
+        """.trimIndent())
+        assert(out == "[(),[[1,1],[3,4]]]\n") { out }
+    }
 
     // WHERE / UNTIL
 
