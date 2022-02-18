@@ -159,4 +159,20 @@ class TPar {
         """.trimIndent())
         assert(out == "2\n3\n4\n") { out }
     }
+    @Test
+    fun b04_watching () {
+        val out = all("""
+            type Event = <(),_uint64_t,()>
+            spawn {
+                watching evt?3 {
+                    await _0
+                }
+                output std ()
+            }
+            emit <.3 ()>
+            
+        """.trimIndent())
+        assert(out == "()\n") { out }
+    }
+
 }

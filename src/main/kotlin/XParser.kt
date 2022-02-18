@@ -252,6 +252,20 @@ class XParser: Parser()
                 all = old
                 ret
             }
+            all.accept(TK.WATCHING) -> {
+                val cnd = this.expr()
+                val blk = this.block()
+                val old = All_nest("""
+                    paror {
+                        await ${cnd.xtostr()}
+                    } with
+                        ${blk.xtostr()}
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old
+                ret
+            }
             all.accept(TK.PARAND) || all.accept(TK.PAROR) -> {
                 val op = if (all.tk0.enu==TK.PARAND) "&&" else "||"
                 var pars = mutableListOf<Stmt.Block>()
