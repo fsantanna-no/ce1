@@ -31,7 +31,7 @@ fun Expr.UNull.check () {
 }
 
 fun Expr.UCons.check () {
-    val tp = this.xtype!!.noalias()
+    val tp = this.xtype!!
     All_assert_tk(this.xtype!!.tk, tp is Type.Union) { "invalid type : expected union" }
     val uni = tp as Type.Union
     val ok = (uni.vec.size >= this.tk_.num)
@@ -101,6 +101,11 @@ fun check_01_before_tps (s: Stmt) {
             }
             is Expr.UCons -> {
                 if (e.xtype != null) e.check()
+            }
+            is Expr.New -> {
+                All_assert_tk(e.tk, e.arg.type.xisrec) {
+                    "invalid `new` : expected recursive type : have "
+                }
             }
             is Expr.Func -> {
                 val outers: List<Scope> = e.ups_tolist().let {
