@@ -34,7 +34,7 @@ fun Expr.xinfTypes (inf: Type?) {
             this.pln.xinfTypes((xinf as Type.Pointer?)?.pln)
             this.pln.wtype!!.let {
                 val lbl = this.toBaseVar()?.let {
-                    val blk = (it.env(it.tk_.id) as Stmt.Var).ups_first { it is Stmt.Block } as Stmt.Block?
+                    val blk = it.env(it.tk_.id)!!.ups_first { it is Stmt.Block } as Stmt.Block?
                     when {
                         (blk == null) -> "GLOBAL"
                         blk.scp1.isanon() -> {
