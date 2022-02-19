@@ -172,7 +172,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[GLOBAL] @GLOBAL
-            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]: @GLOBAL)
+            set l = (new (<.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]): @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -187,7 +187,7 @@ class TInfer {
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[GLOBAL] @GLOBAL
-            set l = (new <.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]: @GLOBAL)
+            set l = (new (<.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]): @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -387,7 +387,7 @@ class TInfer {
             type List @[x] = </List @[x] @x>
             var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
-            set ((arg\)!1) = <.0>: /List @[j] @j
+            set (((arg\):- List @[j])!1) = <.0>: /List @[j] @j
             }
 
 
@@ -405,7 +405,7 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
-            set ((arg\)!1) = <.0>: /List @[j] @j
+            set (((arg\):- List @[j])!1) = <.0>: /List @[j] @j
             }
 
 
@@ -423,7 +423,7 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             var f: func @[i,j] -> /List @[j] @i -> ()
             set f = func @[i,j] -> /List @[j] @i -> () {
-            set ((arg\)!1) = (new <.1 <.0>: /List @[j] @j>: </List @[j] @j>:+ List @[j]: @j)
+            set (((arg\):- List @[j])!1) = (new (<.1 <.0>: /List @[j] @j>: </List @[j] @j>:+ List @[j]): @j)
             }
 
 
@@ -537,7 +537,7 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             {
             var pa: /List @[LOCAL] @LOCAL
-            set pa = (new <.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>:+ List @[LOCAL]: @LOCAL)
+            set pa = (new (<.1 <.0>: /List @[LOCAL] @LOCAL>: </List @[LOCAL] @LOCAL>:+ List @[LOCAL]): @LOCAL)
             var f: func @[] -> () -> ()
             set f = func @[] -> () -> () {
 
@@ -740,7 +740,7 @@ class TInfer {
             }
             else
             {
-            set ret = (new <.1 (clone @[j,j,l,l] ((arg\)!1): @l)>: </List @[l] @l>:+ List @[l]: @k)
+            set ret = (new (<.1 (clone @[j,j,l,l] (((arg\):- List @[j])!1): @l)>: </List @[l] @l>:+ List @[l]): @k)
             return
             }
             }
@@ -848,12 +848,12 @@ class TInfer {
             type List @[i] = </List @[i] @i>
             { @A
             var pa: /List @[A] @A
-            set pa = (new <.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]: @A)
+            set pa = (new (<.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]): @A)
             var f: func @A -> @[] -> () -> ()
             set f = func @A -> @[] -> () -> () {
             var pf: /List @[A] @A
-            set pf = (new <.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]: @A)
-            set ((pa\)!1) = pf
+            set pf = (new (<.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]): @A)
+            set (((pa\):- List @[A])!1) = pf
             }
             
             call (f @[] ())
@@ -1181,9 +1181,9 @@ class TInfer {
         assert(out == """
             type Point @[] = [_int,_int]
             var xy: Point
-            set xy = [(_1: _int),(_2: _int)]
+            set xy = ([(_1: _int),(_2: _int)]:+ Point)
             var x: _int
-            set x = (xy.1)
+            set x = ((xy:- Point).1)
             
         """.trimIndent()) { out }
     }
@@ -1201,9 +1201,9 @@ class TInfer {
             type Dims @[] = [_int,_int]
             type Rect @[] = [Point,Dims]
             var r: Rect
-            set r = [[(_1: _int),(_2: _int)],[(_1: _int),(_2: _int)]]
+            set r = ([([(_1: _int),(_2: _int)]:+ Point),([(_1: _int),(_2: _int)]:+ Dims)]:+ Rect)
             var h: _int
-            set h = ((r.2).2)
+            set h = ((((r:- Rect).2):- Dims).2)
             
         """.trimIndent()) { out }
     }

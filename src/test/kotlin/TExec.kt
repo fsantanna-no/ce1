@@ -800,21 +800,14 @@ class TExec {
         assert(out == "<.1 [<.1>,<.1>]>\n") { out }
     }
     @Test
-    fun e08_ptr_num() {
+    fun todo_e08_ptr_num() {
         val out = all("""
             type Num = /<Num>    
             var zero:  Num = <.0>
             var one:   Num = new <.1 zero>
             output std one
         """.trimIndent())
-        assert(out == """
-            type Num @[i] = /<Num @[i]> @i
-            var zero: Num @[GLOBAL]
-            set zero = <.0>: Num @[GLOBAL]
-            var one: Num @[GLOBAL]
-            set one = (new <.1 zero>: <Num @[GLOBAL]>: @GLOBAL)
-
-        """.trimIndent()) { out }
+        assert(out == "<.1 <.0>>\n") { out }
     }
     @Test
     fun e09_bool() {
@@ -836,12 +829,24 @@ class TExec {
             var v:    Int   = _1
             var pt:   Point = [_1,v]
             var rect: Rect  = [pt,[_3,_4]]
+            var r2: Rect  = [[_1,_2],[_3,_4]]
             var ur1:  URect = [(),rect]
             var unit: Unit  = ()
             var ur2:  URect = [unit,rect]
             output std /ur2
         """.trimIndent())
         assert(out == "[(),[[1,1],[3,4]]]\n") { out }
+    }
+    @Test
+    fun e11_rect_dot() {
+        val out = all("""
+            type Int   = _int
+            type Point = [Int,Int]
+            type Rect  = [Point,Point]
+            var r: Rect  = [[_1,_2],[_3,_4]]
+            output std r.2.1
+        """.trimIndent())
+        assert(out == "3\n") { out }
     }
 
     // WHERE / UNTIL
