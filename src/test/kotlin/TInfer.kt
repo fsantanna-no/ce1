@@ -1207,4 +1207,38 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun j03 () {
+        val out = all("""
+            type TPico = <()>
+            spawn {
+                output std <.1>: TPico
+            }
+        """.trimIndent())
+        assert(out == """
+            type TPico @[] = <()>
+            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            output std (<.1 ()>: <()>:+ TPico)
+            }
+             @[] ())
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun j04 () {
+        val out = all("""
+            type TPico = <(),[_int,_int]>
+            spawn {
+                output std TPico.2 [_1,_2]
+            }
+        """.trimIndent())
+        assert(out == """
+            type TPico @[] = <()>
+            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            output std (<.1 ()>: <()>:+ TPico)
+            }
+             @[] ())
+            
+        """.trimIndent()) { out }
+    }
 }

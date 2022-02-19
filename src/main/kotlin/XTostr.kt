@@ -30,7 +30,14 @@ class XTostr: Tostr()
     override fun tostr (e: Expr): String {
         return when (e) {
             is Expr.Nat   -> if (e.xtype != null) super.tostr(e) else e.tk_.toce()
-            is Expr.UCons -> if (e.xtype != null) super.tostr(e) else "<." + e.tk_.num + " " + this.tostr(e.arg) + ">"
+            is Expr.UCons -> {
+                // TODO: Alias should go away when changing from <.1>:T -> T.1
+                when (e.xtype) {
+                    is Type.Alias -> "(<." + e.tk_.num + " " + this.tostr(e.arg) + ">: " + (e.xtype as Type.Alias).tk_.id + ")"
+                    null -> "<." + e.tk_.num + " " + this.tostr(e.arg) + ">"
+                    else -> super.tostr(e)
+                }
+            }
             is Expr.UNull -> if (e.xtype != null) super.tostr(e) else "<.0>"
             is Expr.New   -> if (e.xscp  != null) super.tostr(e) else "(new " + this.tostr(e.arg) + ")"
             is Expr.Call  -> if (e.xscps.first != null) super.tostr(e) else {
