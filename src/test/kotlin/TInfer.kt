@@ -23,7 +23,7 @@ class TInfer {
             s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {
-            //throw e
+            throw e
             return e.message!!
         }
     }
@@ -1233,9 +1233,9 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            type TPico @[] = <()>
+            type TPico @[] = <(),[_int,_int]>
             spawn (task @GLOBAL -> @[] -> () -> () -> () {
-            output std (<.1 ()>: <()>:+ TPico)
+            output std (<.2 [(_1: _int),(_2: _int)]>: <(),[_int,_int]>:+ TPico)
             }
              @[] ())
             

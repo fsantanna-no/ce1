@@ -71,17 +71,22 @@ class XParser: Parser()
                 }
                 Expr.Nat(tk0, tp)
             }
-            all.accept(TK.CHAR, '<') -> {
+            all.accept(TK.CHAR, '<') || (all.tk1.istype() && all.accept(TK.XID)) -> {
+                val tkx = all.tk0
                 all.accept_err(TK.CHAR, '.')
                 all.accept_err(TK.XNUM)
                 val tk0 = all.tk0 as Tk.Num
                 val cons = when {
                     (tk0.num == 0) -> null
-                    all.check(TK.CHAR, '>') -> Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
-                    else -> this.expr()
+                    all.checkExpr() -> this.expr()
+                    else -> Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
                 }
-                all.accept_err(TK.CHAR, '>')
-                val tp = if (!all.accept(TK.CHAR, ':')) null else this.type(false)
+                val tp = if (tkx.enu == TK.CHAR) {
+                    all.accept_err(TK.CHAR, '>')
+                    if (!all.accept(TK.CHAR, ':')) null else this.type(false)
+                } else {
+                    Type.Alias(tkx as Tk.Id, false, null)
+                }
                 if (tk0.num == 0) {
                     Expr.UNull(tk0, tp)
                 } else {

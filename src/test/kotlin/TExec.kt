@@ -848,6 +848,19 @@ class TExec {
         """.trimIndent())
         assert(out == "3\n") { out }
     }
+    @Test
+    fun e12_ucons_type () {
+        val out = all("""
+            type TPico = <(),[_int,_int]>
+            spawn {
+                var t1 = TPico.1
+                output std /t1
+                var t2 = TPico.2 [_1,_2]
+                output std /t2
+            }
+        """.trimIndent())
+        assert(out == "<.1>\n<.2 [1,2]>\n") { out }
+    }
 
     // WHERE / UNTIL
 
