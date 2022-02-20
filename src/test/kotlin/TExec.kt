@@ -363,7 +363,7 @@ class TExec {
     fun b13_new_self () {
         val out = all("""
             type List = <[//List,/List]>
-            var x: /List = new <.1 [_,<.0>]>
+            var x: /List = new <.1 [_(&printf),<.0>]>
             set x\!1.1 = /x
             output std x
             output std x\!1.1\

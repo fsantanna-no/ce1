@@ -23,7 +23,7 @@ class TInfer {
             s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {
-            throw e
+            //throw e
             return e.message!!
         }
     }

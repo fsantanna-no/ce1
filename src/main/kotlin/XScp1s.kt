@@ -61,7 +61,7 @@ fun Stmt.xinfScp1s () {
                     val def = tp.env(tp.tk_.id)
                     if (def is  Stmt.Typedef) {
                         val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
-                        tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null) }
+                        tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null) }
                     } else {
                         // will be an error in Check_01
                     }
@@ -72,7 +72,7 @@ fun Stmt.xinfScp1s () {
             is Type.Pointer -> {
                 // do not infer to LOCAL if inside function/typedef declaration
                 if (tp.xscp==null && tp.ups_first { it is Type.Func || it is Stmt.Typedef }==null) {
-                    tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null)
+                    tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
                 }
             }
             is Type.Func -> {
@@ -80,7 +80,7 @@ fun Stmt.xinfScp1s () {
 
                 // task needs to add implicit closure @LOCAL if absent
                 val first = tp.xscps.first ?: if (tp.tk.enu==TK.FUNC) null else {
-                    Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlock()), null)
+                    Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
                 }
 
                 // {closure} + {explicit scopes} + implicit inp_out

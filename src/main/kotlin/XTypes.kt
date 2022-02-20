@@ -52,7 +52,7 @@ fun Expr.xinfTypes (inf: Type?) {
         }
         is Expr.Dnref -> {
             this.ptr.xinfTypes(xinf?.let {
-                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,this.localBlock())
+                val scp1 = Tk.Id(TK.XID,this.tk.lin,this.tk.col,this.localBlockScp1Id(false))
                 Type.Pointer (
                     Tk.Chr(TK.CHAR,this.tk.lin,this.tk.col,'/'),
                     Scope(scp1,null),
@@ -108,7 +108,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 if (xinf is Type.Pointer) {
                     this.xscp = xinf.xscp
                 } else {
-                    this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, this.localBlock()), null)
+                    this.xscp = Scope(Tk.Id(TK.XID, this.tk.lin, this.tk.col, this.localBlockScp1Id(false)), null)
                 }
             }
             Type.Pointer (
@@ -200,7 +200,7 @@ fun Expr.xinfTypes (inf: Type?) {
                         val e = this
 
                         // TODO: remove after change increasing?
-                        this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,this.localBlock())))
+                        this.arg.xinfTypes(ft.inp.mapScp1(e, Tk.Id(TK.XID, this.tk.lin, this.tk.col,this.localBlockScp1Id(false))))
 
                         // Calculates type scopes {...}:
                         //  call f @[...] arg
@@ -230,7 +230,7 @@ fun Expr.xinfTypes (inf: Type?) {
                                 ft.out.flattenLeft()
                                     .map { it.toScp1s() }
                                     .flatten()
-                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, ft.localBlock()) }
+                                    .map { Tk.Id(TK.XID, ft.tk.lin, ft.tk.col, ft.localBlockScp1Id(false)) }
                             } else {
                                 inf.flattenLeft()
                                    .map { it.toScp1s() }
