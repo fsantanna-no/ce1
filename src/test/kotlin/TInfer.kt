@@ -17,13 +17,16 @@ class TInfer {
             s.setUps(null)
             s.setScp1s()
             s.setEnvs(null)
+            check_00_after_envs(s)
             s.xinfScp1s()
             check_01_before_tps(s)
             s.xinfTypes(null)
             s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {
-            //throw e
+            if (THROW) {
+                throw e
+            }
             return e.message!!
         }
     }
@@ -1240,5 +1243,14 @@ class TInfer {
              @[] ())
             
         """.trimIndent()) { out }
+    }
+    @Test
+    fun f06_tst () {
+        val out = all("""
+            var isPointInsideRect = func Point -> _int {
+                return _1
+            }
+        """.trimIndent())
+        assert(out == "()\n") { out }
     }
 }
