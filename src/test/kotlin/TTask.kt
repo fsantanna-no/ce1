@@ -626,7 +626,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 6): invalid `loop` : type mismatch : expected task type : have task @GLOBAL -> @[] -> () -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 6): invalid `loop` : type mismatch : expected task type : have task @GLOBAL -> @[] -> () -> _int -> ()\n") { out }
 
     }
     @Test
@@ -637,7 +637,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid `loop` : type mismatch :\n    active task @GLOBAL -> @[] -> () -> _int -> ()\n    active tasks @GLOBAL -> @[] -> [()] -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @GLOBAL -> @[] -> () -> _int -> ()\n    active tasks @GLOBAL -> @[] -> [()] -> _int -> ()\n") { out }
 
     }
     @Test
@@ -647,7 +647,7 @@ class TTask {
             loop x in () {
             }
         """.trimIndent())
-        assert(out == "(ln 2, col 6): invalid `loop` : type mismatch : expected task type : have ()\n") { out }
+        assert(out == "(ln 3, col 6): invalid `loop` : type mismatch : expected task type : have ()\n") { out }
     }
     @Test
     fun f04_err () {
@@ -656,7 +656,7 @@ class TTask {
             loop x in () {
             }
         """.trimIndent())
-        assert(out == "(ln 2, col 11): invalid `loop` : type mismatch : expected tasks type : have ()\n") { out }
+        assert(out == "(ln 3, col 11): invalid `loop` : type mismatch : expected tasks type : have ()\n") { out }
     }
 
     @Test

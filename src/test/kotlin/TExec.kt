@@ -885,7 +885,7 @@ class TExec {
         val out = all("""
             output std () until ()
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid condition : type mismatch : expected _int : have ()\n") { out }
+        assert(out == "(ln 4, col 1): invalid condition : type mismatch : expected _int : have ()\n") { out }
     }
     @Test
     fun f05_err () {

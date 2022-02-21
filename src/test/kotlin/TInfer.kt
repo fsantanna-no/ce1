@@ -1086,6 +1086,7 @@ class TInfer {
             output std () until _0
         """.trimIndent())
         assert(out == """
+            {
             loop {
             output std ()
             if (_0: _int)
@@ -1097,6 +1098,7 @@ class TInfer {
             
             }
             }
+            }
             
         """.trimIndent()) { out }
     }
@@ -1106,6 +1108,7 @@ class TInfer {
             output std () until x where { var x = () }
         """.trimIndent())
         assert(out == """
+            {
             loop {
             output std ()
             {
@@ -1118,6 +1121,7 @@ class TInfer {
             else
             {
             
+            }
             }
             }
             }
@@ -1139,6 +1143,7 @@ class TInfer {
             output std y where { var y = () } until x where { var x:_int = _1 }
         """.trimIndent())
         assert(out == """
+            {
             loop {
             {
             var y: ()
@@ -1155,6 +1160,7 @@ class TInfer {
             else
             {
 
+            }
             }
             }
             }
@@ -1251,6 +1257,6 @@ class TInfer {
                 return _1
             }
         """.trimIndent())
-        assert(out == "()\n") { out }
+        assert(out == "(ln 1, col 30): undeclared type \"Point\"") { out }
     }
 }
