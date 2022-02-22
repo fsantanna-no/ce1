@@ -10,6 +10,7 @@ fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
         s.setUps(null)
         s.setScp1s()
         s.setEnvs(null)
+        check_00_after_envs(s)
         s.xinfScp1s()
         check_01_before_tps(s)
         s.setScp2s()

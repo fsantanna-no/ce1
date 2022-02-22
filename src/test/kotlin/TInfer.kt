@@ -1259,4 +1259,13 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 1, col 30): undeclared type \"Point\"") { out }
     }
+    @Test
+    fun f07_tst () {
+        val out = all("""
+            var f = func () -> () {                                                 
+                return g ()                                                         
+            }                                                                       
+        """.trimIndent())
+        assert(out == "(ln 3, col 84): undeclared variable \"g\"") { out }
+    }
 }
