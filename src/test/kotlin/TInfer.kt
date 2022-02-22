@@ -1268,4 +1268,30 @@ class TInfer {
         """.trimIndent())
         assert(out == "(ln 3, col 84): undeclared variable \"g\"") { out }
     }
+    @Test
+    fun f08_spawn_abort () {
+        val out = all("""
+            type Event = <(),_uint64_t,(),()>
+            var t = task () -> () -> () {
+                var v = _1:_int
+                loop {
+                    output std v
+                    await evt?3
+                    set v = _(${D}v+1)
+                }
+            }
+            
+            spawn {
+                loop {
+                    spawn t _1:_int
+                    await evt?4
+                }
+            }
+            
+            emit Event.3
+            emit Event.4
+            emit Event.3
+       """.trimIndent())
+        assert(out == "111\n") { out }
+    }
 }

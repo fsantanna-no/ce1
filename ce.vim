@@ -20,7 +20,8 @@ syn keyword Identifier  arg pub ret evt
 syn keyword Function    std pico
 syn keyword Function    not and or
 syn keyword Function    eq neq gt lt gte lte
-syn keyword Function    add sub mul div rem
+syn keyword Function    umn add sub mul div rem
+syn keyword Function    f2int int2f fadd fsub fmul fdiv
 
 syn keyword cTodo contained TODO FIXME XXX
 

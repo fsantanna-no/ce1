@@ -79,6 +79,7 @@ fun Stmt.xinfScp1s () {
                 val inp_pub_out = (tp.inp.flattenLeft() + (tp.pub?.flattenLeft() ?: emptyList()) + tp.out.flattenLeft()).increasing()
 
                 // task needs to add implicit closure @LOCAL if absent
+                // TODO: should be argument @s, but not supported for closure
                 val first = tp.xscps.first ?: if (tp.tk.enu==TK.FUNC) null else {
                     Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
                 }
