@@ -73,22 +73,27 @@ class XParser: Parser()
                     all.checkExpr() -> this.expr()
                     else -> Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
                 }
-                val tp = if (tkx.enu == TK.CHAR) {
+                if (tkx.enu == TK.CHAR) {
                     all.accept_err(TK.CHAR, '>')
-                    if (!all.accept(TK.CHAR, ':')) null else this.type()
+                    val tp = if (!all.accept(TK.CHAR, ':')) null else this.type()
+                    if (tk0.num == 0) {
+                        Expr.UNull(tk0, tp)
+                    } else {
+                        Expr.UCons(tk0, tp, cons!!)
+                    }
                 } else {
-                    Type.Alias(tkx as Tk.Id, false, null)
-                }
-                if (tk0.num == 0) {
-                    Expr.UNull(tk0, tp)
-                } else {
-                    Expr.UCons(tk0, tp, cons!!)
+                    val tp = Type.Alias(tkx as Tk.Id, false, null)
+                    Expr.As (
+                        Tk.Sym(TK.XAS, tk0.lin, tk0.col, ":+"),
+                        Expr.UCons(tk0, null, cons!!),
+                        tp
+                    )
                 }
             }
             all.accept(TK.NEW) -> {
                 val tk0 = all.tk0
                 val e = this.expr()
-                all.assert_tk(tk0, e is Expr.UCons && e.tk_.num != 0) {
+                all.assert_tk(tk0, e is Expr.As || (e is Expr.UCons && e.tk_.num!=0)) {
                     "invalid `new` : expected constructor"
                 }
 
@@ -99,7 +104,7 @@ class XParser: Parser()
                 } else {
                     null
                 }
-                Expr.New(tk0 as Tk.Key, if (scp==null) null else Scope(scp,null), e as Expr.UCons)
+                Expr.New(tk0 as Tk.Key, if (scp==null) null else Scope(scp,null), e)
             }
             else -> super.expr_one()
         }

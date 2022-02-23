@@ -184,13 +184,14 @@ class TInfer {
     fun a11_new () {
         val out = all("""
             type List = </List>
-            var l = new <.1 <.0>>:List
+            var l = new List.1 <.0>
+            --var l = new <.1 <.0>>:List
             output std l
         """.trimIndent())
         assert(out == """
             type List @[i] = </List @[i] @i>
             var l: /List @[GLOBAL] @GLOBAL
-            set l = (new (<.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL>:+ List @[GLOBAL]): @GLOBAL)
+            set l = (new (<.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL> :+ List @[GLOBAL]): @GLOBAL)
             output std l
 
         """.trimIndent()) { out }
@@ -199,9 +200,9 @@ class TInfer {
     fun a12_ucons () {
         val out = all("""
             type Xx = <()>
-            var y = <.2 ()>: Xx
+            var y = Xx.2 ()
         """.trimIndent())
-        assert(out == "(ln 2, col 11): invalid union constructor : out of bounds") { out }
+        assert(out == "(ln 2, col 12): invalid union constructor : out of bounds") { out }
     }
     @Test
     fun a13_input_ptr () {
@@ -1232,13 +1233,13 @@ class TInfer {
         val out = all("""
             type TPico = <()>
             spawn {
-                output std <.1>: TPico
+                output std TPico.1
             }
         """.trimIndent())
         assert(out == """
             type TPico @[] = <()>
             spawn (task @[] -> () -> () -> () {
-            output std (<.1 ()>: <()>:+ TPico)
+            output std (<.1 ()>: <()> :+ TPico)
             }
              @[] ())
             
@@ -1255,7 +1256,7 @@ class TInfer {
         assert(out == """
             type TPico @[] = <(),[_int,_int]>
             spawn (task @[] -> () -> () -> () {
-            output std (<.2 [(_1: _int),(_2: _int)]>: <(),[_int,_int]>:+ TPico)
+            output std (<.2 [(_1: _int),(_2: _int)]>: <(),[_int,_int]> :+ TPico)
             }
              @[] ())
             
@@ -1284,6 +1285,6 @@ class TInfer {
         val out = all("""
             output std e?3
         """.trimIndent())
-        assert(out == "()\n()\n") { out }
+        assert(out == "(ln 1, col 12): undeclared variable \"e\"") { out }
     }
 }

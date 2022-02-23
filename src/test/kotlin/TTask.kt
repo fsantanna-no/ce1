@@ -56,7 +56,7 @@ class TTask {
             var x = spawn f ()
             output std _2:_int
             --awake x _1:_int
-            emit @GLOBAL <.2 _1:_int>: Event
+            emit @GLOBAL Event.2 _1:_int
         """.trimIndent())
         assert(out == "1\n2\n3\n") { out }
     }
@@ -214,8 +214,8 @@ class TTask {
             }
             var y = spawn g ()
             
-            emit <.3 _1>
-            emit <.3 _2>
+            emit Event.3 _1
+            emit Event.3 _2
         """.trimIndent())
         assert(out == "1\n11\n12\n") { out }
     }
@@ -597,7 +597,7 @@ class TTask {
             var fs : active {} task [()]->()->()
             spawn f () in fs
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch :\n    tasks @[] -> [()] -> () -> ()\n    task @[] -> () -> () -> ()\n") { out }
+        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch :\n    task @[] -> [()] -> () -> ()\n    task @[] -> () -> () -> ()\n") { out }
     }
     @Test
     fun e02_spawn_free () {
@@ -634,11 +634,11 @@ class TTask {
     fun f02_err () {
         val out = all("""
             var xs: active {} task [()]->_int->()
-            var x:  active task  ()->_int->()
+            var x:  active task ()->_int->()
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @[] -> () -> _int -> ()\n    active tasks @[] -> [()] -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @[] -> () -> _int -> ()\n    active task @[] -> [()] -> _int -> ()\n") { out }
 
     }
     @Test

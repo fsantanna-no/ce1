@@ -502,8 +502,8 @@ class TExec {
         val out = all("""
             type List = </List>
             var l1: /List = new <.1 <.0>>
-            var l2 = new <.1 l1>:List
-            var t3 = [(), new <.1 l2\!1>:List]
+            var l2 = new List.1 l1
+            var t3 = [(), new List.1 l2\!1]
             output std l1
             output std /t3
         """.trimIndent())
@@ -689,11 +689,11 @@ class TExec {
             type List = </List>
             { @A
                 var pa: /List @[LOCAL] @LOCAL
-                set pa = new <.1 <.0>: /(List @[A]) @A>:List @[A]: @A
+                set pa = new List@[A].1 <.0>: /(List @[A]) @A: @A
                 var f: func ()->()
                 set f = func @[]-> ()->() {
                     var pf: /List @[A] @A
-                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                    set pf = new List @[A].1 <.0>: /List @[A] @A: @A
                     set pa\!1 = pf
                     --output std pa
                 }
@@ -713,7 +713,7 @@ class TExec {
                 var f: func ()->()
                 set f = func @[]-> ()->() {
                     var pf: /List @[A] @A
-                    set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
+                    set pf = new List @[A].1 <.0>: /List @[A] @A: @A
                     set pa\!1 = pf
                     --output std pa
                 }
@@ -794,7 +794,7 @@ class TExec {
             type TPico = <
                 [THAnchor,TVAnchor]
             >
-            var x = <.1 [<.1>,<.1>]>: TPico
+            var x = TPico.1 [<.1>,<.1>] 
             output std /x
             output pico x
         """.trimIndent())

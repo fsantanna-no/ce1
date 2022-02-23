@@ -29,7 +29,10 @@ fun Expr.xinfTypes (inf: Type?) {
             }
             this.xtype ?: inf!!
         }
-        is Expr.As -> TODO()    // should not parse :+/:-
+        is Expr.As -> {
+            this.e.xinfTypes(this.type.noalias())
+            this.type
+        }
         is Expr.Upref -> {
             All_assert_tk(this.tk, inf==null || xinf is Type.Pointer) { "invalid inference : type mismatch"}
             this.pln.xinfTypes((xinf as Type.Pointer?)?.pln)
@@ -87,6 +90,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 assert(inf != null)
                     //.mapScp1(this, Tk.Id(TK.XID, this.tk.lin, this.tk.col,"LOCAL")) // TODO: not always LOCAL
                 All_assert_tk(this.tk, xinf is Type.Union) { "invalid inference : type mismatch : expected union : have ${inf!!.tostr()}"}
+                this.check(xinf!!)
                 val x = (xinf as Type.Union).vec[this.tk_.num-1]
                 this.arg.xinfTypes(x)
                 inf
