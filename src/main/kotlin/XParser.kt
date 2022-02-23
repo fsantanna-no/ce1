@@ -26,14 +26,6 @@ class XParser: Parser()
             }
             all.accept(TK.FUNC) || all.accept(TK.TASK) || (tasks && all.accept(TK.TASKS)) -> {
                 val tk0 = all.tk0 as Tk.Key
-                val clo = if (all.accept(TK.CHAR, '@')) {
-                    all.accept_err(TK.XID)
-                    val tk = all.tk0.asscope()
-                    all.accept_err(TK.ARROW)
-                    tk
-                } else {
-                    null
-                }
                 val (scps, ctrs) = if (all.check(TK.ATBRACK)) {
                     val (x, y) = this.scopepars()
                     all.accept_err(TK.ARROW)
@@ -53,7 +45,7 @@ class XParser: Parser()
 
                 Type.Func(tk0,
                     Triple(
-                        clo.let { if (it==null) null else Scope(it,null) },
+                        Scope(Tk.Id(TK.XID, tk0.lin, tk0.col, "LOCAL"),null),
                         if (scps==null) null else scps.map { Scope(it,null) },
                         ctrs),
                     inp, pub, out)

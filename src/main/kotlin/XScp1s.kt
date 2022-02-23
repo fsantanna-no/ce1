@@ -78,23 +78,8 @@ fun Stmt.xinfScp1s () {
             is Type.Func -> {
                 val inp_pub_out = (tp.inp.flattenLeft() + (tp.pub?.flattenLeft() ?: emptyList()) + tp.out.flattenLeft()).increasing()
 
-                // task needs to add implicit closure @LOCAL if absent
-                // TODO: should be argument @s, but not supported for closure
-                val first = tp.xscps.first ?: if (tp.tk.enu==TK.FUNC) null else {
-                    Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
-                }
-
                 // {closure} + {explicit scopes} + implicit inp_out
                 val second = let {
-                    // if returns closure, label must go to input scope
-                    //      var f: func () -> (func @a1->()->())
-                    //      var f: func {@a1} -> () -> (func @a1->()->())
-                    val clo = if (tp.out is Type.Func && tp.out.xscps.first!=null && tp.out.xscps.first?.scp1?.enu==TK.XID) {
-                        listOf(tp.out.xscps.first!!)
-                    } else {
-                        emptyList()
-                    }
-
                     // remove scopes that are declared in outer Funcs
                     val outers: List<Scope> = tp.ups_tolist().let {
                         val es = it.filter { it is Expr.Func }.let { it as List<Expr.Func> }.map { it.type }
@@ -105,12 +90,12 @@ fun Stmt.xinfScp1s () {
                         return outers.none { it.scp1.id==x.scp1.id }
                     }
 
-                    (clo.filter(::noneInUps) + (tp.xscps.second ?: emptyList()) + inp_pub_out.filter(::noneInUps))
+                    ((tp.xscps.second ?: emptyList()) + inp_pub_out.filter(::noneInUps))
                         .distinctBy { it.scp1.id }
                         .filter { it.scp1.isscopepar() }
                         
                 }
-                tp.xscps = Triple(first, second, tp.xscps.third)
+                tp.xscps = Triple(tp.xscps.first, second, tp.xscps.third)
             }
         }
     }
@@ -129,7 +114,7 @@ fun Stmt.xinfScp1s () {
                             if (x.tk_.id in arrayOf("arg","pub","ret","evt")) {
                                 return
                             }
-                            val env = x.env(x.tk_.id,true)!!
+                            val env = x.env(x.tk_.id)!!
                             val lvlV = env.ups_tolist().count { it is Stmt.Block }
                             //println(x.tk_.id + ": $lvlF > $lvlV")
                             if (lvlV>0 && lvlF>lvlV && lvlV<lvlM) {

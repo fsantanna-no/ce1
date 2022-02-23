@@ -501,7 +501,7 @@ class TInfer {
     // CLOSURE
 
     @Test
-    fun d00_clo () {
+    fun noclo_d00_clo () {
         val out = all("""
             {
                 var x = ()
@@ -512,11 +512,11 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            { @X15
+            {
             var x: ()
             set x = ()
-            var f: func @X15 -> @[] -> () -> ()
-            set f = func @X15 -> @[] -> () -> () {
+            var f: func @[] -> () -> ()
+            set f = func @[] -> () -> () {
             output std x
             }
             
@@ -551,8 +551,9 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d02_clo () {
+    fun noclo_d02_clo () {
         val out = all("""
             var f: func () -> (func @a1->()->())
         """.trimIndent()
@@ -565,16 +566,17 @@ class TInfer {
     @Test
     fun d03_clo () {
         val out = all("""
-            var f: func @LOCAL->()->()
+            var f: func ()->()
         """.trimIndent()
         )
         assert(out == """
-            var f: func @GLOBAL -> @[] -> () -> ()
+            var f: func @[] -> () -> ()
             
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d04_clo () {
+    fun noclo_d04_clo () {
         val out = all("""
             var g: func () -> (func @a1->()->())
             var f: func @LOCAL -> () -> ()
@@ -586,8 +588,9 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d05_clo () {
+    fun noclo_d05_clo () {
         val out = all("""
             var g: func () -> (func @a1->()->())
             var f: func @LOCAL -> () -> ()
@@ -601,8 +604,9 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d06_clo () {
+    fun noclo_d06_clo () {
         val out = all("""
             var g: func () -> (func @a1->()->())
             var f: func @LOCAL -> () -> ()
@@ -618,8 +622,9 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d07_clo () {
+    fun noclo_d07_clo () {
         val out = all("""
             var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
                 var x: /_int@a1 = arg
@@ -647,8 +652,9 @@ class TInfer {
         """.trimIndent()) { out }
          */
     }
+    @Disabled
     @Test
-    fun d08_clo () {
+    fun noclo_d08_clo () {
         val out = all("""
             var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
             var five: _int
@@ -665,8 +671,9 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun d09_clo () {
+    fun noclo_d09_clo () {
         val out = all("""
             var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
             {
@@ -688,7 +695,7 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun d10_clo () {
+    fun noclo_d10_clo () {
         val out = all("""
             { --@Y
                 var x = ()
@@ -701,12 +708,12 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            { @X17
+            {
             var x: ()
             set x = ()
             {
-            var f: func @X17 -> @[] -> () -> ()
-            set f = func @X17 -> @[] -> () -> () {
+            var f: func @[] -> () -> ()
+            set f = func @[] -> () -> () {
             output std x
             }
             
@@ -765,8 +772,9 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun e03_clo () {
+    fun noclo_e03_clo () {
         val out = all(
             """
             var f: func (func ()->()) -> (func @GLOBAL->()->())
@@ -832,7 +840,7 @@ class TInfer {
     // CLOSURE ERRORS
 
     @Test
-    fun f01 () {
+    fun noclo_f01 () {
         val out = all("""
             type List = </List>
             { @A
@@ -852,8 +860,8 @@ class TInfer {
             { @A
             var pa: /List @[A] @A
             set pa = (new (<.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]): @A)
-            var f: func @A -> @[] -> () -> ()
-            set f = func @A -> @[] -> () -> () {
+            var f: func @[] -> () -> ()
+            set f = func @[] -> () -> () {
             var pf: /List @[A] @A
             set pf = (new (<.1 <.0>: /List @[A] @A>: </List @[A] @A>:+ List @[A]): @A)
             set (((pa\):- List @[A])!1) = pf
@@ -865,8 +873,9 @@ class TInfer {
            
         """.trimIndent()) { out }
     }
+    @Disabled
     @Test
-    fun f02 () {
+    fun noclo_f02 () {
         val out = all(
             """
             type List = </List>
@@ -883,8 +892,9 @@ class TInfer {
         //assert(out == "<.1 <.0>>\n") { out }
         assert(out == "(ln 9, col 12): undeclared variable \"x\"") { out }
     }
+    @Disabled
     @Test
-    fun f03 () {
+    fun noclo_f03 () {
         val out = all(
             """
             var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
@@ -904,8 +914,9 @@ class TInfer {
         //assert(out == "5\n") { out }
         assert(out == "(ln 8, col 11): undeclared variable \"x\"") { out }
     }
+    @Disabled
     @Test
-    fun f04 () {
+    fun noclo_f04 () {
         val out = all(
             """
             var f = func (func ()->()) -> (func @GLOBAL->()->()) {
@@ -924,7 +935,7 @@ class TInfer {
         assert(out == "(ln 8, col 7): undeclared variable \"ff\"") { out }
     }
     @Test
-    fun f05 () {
+    fun noclo_f05 () {
         val out = all("""
             var f: func () -> _int          -- 1. `f` is a reference to a function
             {
@@ -939,10 +950,10 @@ class TInfer {
         //assert(out == "()\n") { out }
         assert(out == """
             var f: func @[] -> () -> _int
-            { @X15
+            {
             var x: _int
             set x = (_10: _int)
-            set f = func @X15 -> @[] -> () -> _int {
+            set f = func @[] -> () -> _int {
             set ret = x
             return
             }
@@ -956,7 +967,7 @@ class TInfer {
     // PAR
 
     @Test
-    fun g01_spawn () {
+    fun noclo_g01_spawn () {
         val out = all("""
             spawn {
                 var x = ()
@@ -969,14 +980,14 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             var x: ()
             set x = ()
-            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std x
             }
              @[] ())
-            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std x
             }
              @[] ())
@@ -986,7 +997,7 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun g02_spawn_spawn () {
+    fun noclo_g02_spawn_spawn () {
         val out = all("""
             spawn {
                 var x = ()
@@ -1001,17 +1012,17 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             var x: ()
             set x = ()
-            spawn (task @LOCAL -> @[] -> () -> () -> () {
-            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std x
             }
              @[] ())
             }
              @[] ())
-            spawn (task @LOCAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std x
             }
              @[] ())
@@ -1021,15 +1032,15 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
-    fun g03_spawn_task () {
+    fun noclo_g03_spawn_task () {
         val out = all("""
             var t = spawn {
                 output std ()
             }
         """.trimIndent())
         assert(out == """
-            var t: active task @GLOBAL -> @[] -> () -> () -> ()
-            set t = spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            var t: active task @[] -> () -> () -> ()
+            set t = spawn (task @[] -> () -> () -> () {
             output std ()
             }
              @[] ())
@@ -1226,7 +1237,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type TPico @[] = <()>
-            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std (<.1 ()>: <()>:+ TPico)
             }
              @[] ())
@@ -1243,7 +1254,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type TPico @[] = <(),[_int,_int]>
-            spawn (task @GLOBAL -> @[] -> () -> () -> () {
+            spawn (task @[] -> () -> () -> () {
             output std (<.2 [(_1: _int),(_2: _int)]>: <(),[_int,_int]>:+ TPico)
             }
              @[] ())

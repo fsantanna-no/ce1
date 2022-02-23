@@ -13,15 +13,11 @@ fun Stmt.xtostr(): String {
 class XTostr: Tostr()
 {
     override fun tostr (tp: Type): String {
-        fun Scope?.clo(): String {
-            return if (this == null) "" else
-                " @" + this.scp1.anon2local() + " ->"
-        }
         return when (tp) {
             is Type.Pointer -> if (tp.xscp  != null) super.tostr(tp) else ("/" + this.tostr(tp.pln))
             is Type.Alias   -> if (tp.xscps != null) super.tostr(tp) else tp.tk_.id
             is Type.Func    -> if (tp.xscps.second != null) super.tostr(tp) else {
-                tp.tk_.key + tp.xscps.first.clo() + this.tostr(tp.inp) + " -> " + tp.pub.let { if (it == null) "" else this.tostr(it) + " -> " } + this.tostr(tp.out)
+                tp.tk_.key + this.tostr(tp.inp) + " -> " + tp.pub.let { if (it == null) "" else this.tostr(it) + " -> " } + this.tostr(tp.out)
             }
             else -> super.tostr(tp)
         }

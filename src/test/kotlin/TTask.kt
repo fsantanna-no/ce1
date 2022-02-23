@@ -95,7 +95,7 @@ class TTask {
     fun a04_vars () {
         val out = all("""
             type Event = <(),_int>
-            var f = task @LOCAL->@[]->()->()->() {
+            var f = task @[]->()->()->() {
                 {
                     var x = _10:_int
                     await evt?2
@@ -119,13 +119,13 @@ class TTask {
             var f : task ()->()->()
             var x : active task [()]->()->() = spawn f ()
         """.trimIndent())
-        assert(out == "(ln 3, col 9): invalid `spawn` : type mismatch :\n    task @GLOBAL -> @[] -> [()] -> () -> ()\n    task @GLOBAL -> @[] -> () -> () -> ()\n") { out }
+        assert(out == "(ln 3, col 9): invalid `spawn` : type mismatch :\n    task @[] -> [()] -> () -> ()\n    task @[] -> () -> () -> ()\n") { out }
     }
     @Test
     fun a05_args () {
         val out = all("""
             type Event = <(),_int>
-            var f = task @LOCAL->@[]->_(char*)->()->() {
+            var f = task @[]->_(char*)->()->() {
                 output std arg
                 await evt?2
                 output std evt!2
@@ -170,8 +170,9 @@ class TTask {
         """.trimIndent())
         assert(out == "10\n1\n11\n1\n2\n2\n12\n") { out }
     }
+    @Disabled
     @Test
-    fun a06_par2 () {
+    fun noclo_a06_par2 () {
         val out = all("""
             type Event = <(),_int>
             var build = func @[r1] -> () -> task @r1->()->()->() {
@@ -203,7 +204,7 @@ class TTask {
             }
             var x = spawn f ()
             
-            var g = task @LOCAL->@[]->()->()->() {
+            var g = task @[]->()->()->() {
                 await evt?3
                 var e1 = evt!3
                 output std _(${D}e1+10):_int
@@ -485,8 +486,8 @@ class TTask {
                     await evt?1
                     output std _1:_int
                 }
-                var xfg : active task @LOCAL->@[]->()->()->()
-                var xh : active task @LOCAL->@[]->()->()->()
+                var xfg : active task @[]->()->()->()
+                var xh : active task @[]->()->()->()
                 catch {
                     set xfg = spawn fg ()
                     set xh = spawn h ()
@@ -565,7 +566,7 @@ class TTask {
     @Test
     fun e01_spawn () {
         val out = all("""
-            spawn task @LOCAL->@[]->()->()->() {
+            spawn task @[]->()->()->() {
                 output std ()
             } ()
         """.trimIndent())
@@ -596,7 +597,7 @@ class TTask {
             var fs : active tasks [()]->()->()
             spawn f () in fs
         """.trimIndent())
-        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch :\n    tasks @GLOBAL -> @[] -> [()] -> () -> ()\n    task @GLOBAL -> @[] -> () -> () -> ()\n") { out }
+        assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch :\n    tasks @[] -> [()] -> () -> ()\n    task @[] -> () -> () -> ()\n") { out }
     }
     @Test
     fun e02_spawn_free () {
@@ -626,7 +627,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 6): invalid `loop` : type mismatch : expected task type : have task @GLOBAL -> @[] -> () -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 6): invalid `loop` : type mismatch : expected task type : have task @[] -> () -> _int -> ()\n") { out }
 
     }
     @Test
@@ -637,7 +638,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @GLOBAL -> @[] -> () -> _int -> ()\n    active tasks @GLOBAL -> @[] -> [()] -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @[] -> () -> _int -> ()\n    active tasks @[] -> [()] -> _int -> ()\n") { out }
 
     }
     @Test

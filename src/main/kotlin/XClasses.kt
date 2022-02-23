@@ -52,7 +52,7 @@ sealed class Type (val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class Spawns  (val tk_: Tk.Key, val tsk: Type.Func): Type(tk_, null, null)
     data class Func (
         val tk_: Tk.Key,
-        var xscps: Triple<Scope?,List<Scope>?,List<Pair<String,String>>?>,   // first=closure scope, second=input scopes
+        var xscps: Triple<Scope,List<Scope>?,List<Pair<String,String>>?>,   // first=closure scope, second=input scopes
         val inp: Type, val pub: Type?, val out: Type
     ): Type(tk_, null, null)
     data class Alias (
