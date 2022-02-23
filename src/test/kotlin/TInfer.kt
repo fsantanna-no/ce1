@@ -1305,4 +1305,11 @@ class TInfer {
        """.trimIndent())
         assert(out == "111\n") { out }
     }
+    @Test
+    fun err_todo () {
+        val out = all("""
+            output std e?3
+        """.trimIndent())
+        assert(out == "()\n()\n") { out }
+    }
 }

@@ -249,6 +249,20 @@ class XParser: Parser()
                 all = old
                 ret
             }
+            all.accept(TK.EVERY) -> {
+                val cnd = this.expr()
+                val blk = this.block()
+                val old = All_nest("""
+                    loop {
+                        await ${cnd.xtostr()}
+                        ${blk.xtostr()}
+                    }
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old
+                ret
+            }
             all.accept(TK.WATCHING) -> {
                 val cnd = this.expr()
                 val blk = this.block()

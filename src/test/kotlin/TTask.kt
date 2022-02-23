@@ -764,4 +764,21 @@ class TTask {
         """.trimIndent())
         assert(out == "1\n") { out }
     }
+
+    // SPAWN / EVERY
+
+    @Test
+    fun g01_spawn_every () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            spawn {
+                every evt?3 {
+                    output std ()
+                }
+            }
+            emit <.3 _10>
+            emit <.3 _10>
+        """.trimIndent())
+        assert(out == "()\n()\n") { out }
+    }
 }
