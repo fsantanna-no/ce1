@@ -577,7 +577,7 @@ class TTask {
     fun e01_spawn_err2 () {
         val out = all("""
             var f : func ()->()
-            var fs : active tasks ()->()->()
+            var fs : active {} task ()->()->()
             spawn f () in fs
         """.trimIndent())
         assert(out == "(ln 3, col 8): invalid `spawn` : type mismatch : expected task : have func @[] -> () -> ()\n") { out }
@@ -594,7 +594,7 @@ class TTask {
     fun e01_spawn_err4 () {
         val out = all("""
             var f : task ()->()->()
-            var fs : active tasks [()]->()->()
+            var fs : active {} task [()]->()->()
             spawn f () in fs
         """.trimIndent())
         assert(out == "(ln 3, col 1): invalid `spawn` : type mismatch :\n    tasks @[] -> [()] -> () -> ()\n    task @[] -> () -> () -> ()\n") { out }
@@ -608,7 +608,7 @@ class TTask {
                 await evt?2
                 output std _3:_int
             }
-            var fs : active tasks ()->()->()
+            var fs : active {} task ()->()->()
             spawn f () in fs
             output std _2:_int
             emit <.2 _1>
@@ -622,7 +622,7 @@ class TTask {
     @Test
     fun f01_err () {
         val out = all("""
-            var xs: active tasks ()->_int->()
+            var xs: active {} task ()->_int->()
             var x:  task ()->_int->()
             loop x in xs {
             }
@@ -633,7 +633,7 @@ class TTask {
     @Test
     fun f02_err () {
         val out = all("""
-            var xs: active tasks [()]->_int->()
+            var xs: active {} task [()]->_int->()
             var x:  active task  ()->_int->()
             loop x in xs {
             }
@@ -663,7 +663,7 @@ class TTask {
     @Test
     fun f05_loop () {
         val out = all("""
-            var fs: active tasks ()->_int->()
+            var fs: active {} task ()->_int->()
             var f: active task ()->_int->()
             loop f in fs {
             }
@@ -681,7 +681,7 @@ class TTask {
                 output std _1:_int
                 await evt?3
             }
-            var fs: active tasks ()->_int->()
+            var fs: active {} task ()->_int->()
             spawn f () in fs
             var x: active task ()->_int->()
             loop x in fs {
@@ -699,7 +699,7 @@ class TTask {
                 set pub = _3
                 output std _1:_int
             }
-            var fs: active tasks ()->_int->()
+            var fs: active {} task ()->_int->()
             spawn f () in fs
             var x: active task ()->_int->()
             loop x in fs {
@@ -725,7 +725,7 @@ class TTask {
                 await evt?3
             }
 
-            var xs: active tasks _int->_int->()
+            var xs: active {} task _int->_int->()
             spawn f _1 in xs
             spawn g _2 in xs
 
@@ -754,7 +754,7 @@ class TTask {
                 output std _1:_int
                 await _1
             }
-            var fs: active tasks ()->_int->()
+            var fs: active {} task ()->_int->()
             spawn f () in fs
             var x: active task ()->_int->()
             loop x in fs {
@@ -763,22 +763,5 @@ class TTask {
             }
         """.trimIndent())
         assert(out == "1\n") { out }
-    }
-
-    // SPAWN / EVERY
-
-    @Test
-    fun g01_spawn_every () {
-        val out = all("""
-            type Event = <(),_uint64_t,_int>
-            spawn {
-                every evt?3 {
-                    output std ()
-                }
-            }
-            emit <.3 _10>
-            emit <.3 _10>
-        """.trimIndent())
-        assert(out == "()\n()\n") { out }
     }
 }

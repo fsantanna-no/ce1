@@ -482,8 +482,9 @@ class TBook {
         )
         assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
     }
+    @Disabled
     @Test
-    fun ch_01_04_curry_pg13_xxx() {
+    fun noclo_ch_01_04_curry_pg13_xxx() {
         val out = all(
             """
             type Num @[s] = </Num @[s] @s>

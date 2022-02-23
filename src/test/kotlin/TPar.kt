@@ -174,5 +174,19 @@ class TPar {
         """.trimIndent())
         assert(out == "()\n") { out }
     }
+    @Test
+    fun b05_spawn_every () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            spawn {
+                every evt?3 {
+                    output std ()
+                }
+            }
+            emit <.3 _10>
+            emit <.3 _10>
+        """.trimIndent())
+        assert(out == "()\n()\n") { out }
+    }
 
 }

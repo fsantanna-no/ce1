@@ -663,8 +663,9 @@ class TExec {
         )
         assert(out == "()\n") { out }
     }
+    @Disabled
     @Test
-    fun c10_func_ret () {
+    fun noclo_c10_func_ret () {
         val out = all(
             """
             var g = func () -> (func ()->()) {
@@ -683,14 +684,14 @@ class TExec {
     // CLOSURE
 
     @Test
-    fun d01 () {
+    fun noclo_d01 () {
         val out = all("""
             type List = </List>
             { @A
                 var pa: /List @[LOCAL] @LOCAL
                 set pa = new <.1 <.0>: /(List @[A]) @A>:List @[A]: @A
-                var f: func @A-> ()->()
-                set f = func@A-> @[]-> ()->() {
+                var f: func ()->()
+                set f = func @[]-> ()->() {
                     var pf: /List @[A] @A
                     set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
                     set pa\!1 = pf
@@ -703,14 +704,14 @@ class TExec {
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
     @Test
-    fun d02 () {
+    fun noclo_d02 () {
         val out = all("""
             type List = </List>
             { @A
                 var pa: /List @[LOCAL] @LOCAL
                 set pa = new <.1 <.0>>
-                var f: func @A-> ()->()
-                set f = func@A-> @[]-> ()->() {
+                var f: func ()->()
+                set f = func @[]-> ()->() {
                     var pf: /List @[A] @A
                     set pf = new <.1 <.0>: /List @[A] @A>:List @[A]: @A
                     set pa\!1 = pf
