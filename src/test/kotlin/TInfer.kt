@@ -435,9 +435,9 @@ class TInfer {
             call f <.0>
         """.trimIndent())
         assert(out == """
-            type List @[i,j] = /</List @[i,j] @j> @i
-            var f: func @[i,j] -> List @[i,j] -> ()
-            call (f @[GLOBAL,GLOBAL] <.0>: List @[GLOBAL,GLOBAL])
+            type List @[i] = /</List @[i] @i> @i
+            var f: func @[i] -> List @[i] -> ()
+            call (f @[GLOBAL] <.0>: List @[GLOBAL])
 
         """.trimIndent()) { out }
     }
@@ -478,6 +478,66 @@ class TInfer {
     fun c12_rec_ptr () {
         val out = all("""
             type List = </List>
+            { @A
+                var x: /List @GLOBAL
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            { @A
+            var x: /List @[GLOBAL] @GLOBAL
+            }
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c12_rec_ptr2 () {
+        val out = all("""
+            type List = </List>
+            { @A
+                { @B
+                    var x: /List @A
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            { @A
+            { @B
+            var x: /List @[A] @A
+            }
+            }
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c13_rec_ptr () {
+        val out = all("""
+            type List = </List>
+            var f: func @[a] -> /List @[a] -> ()
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var f: func @[a] -> /List @[a] @a -> ()
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c14_rec_ptr () {
+        val out = all("""
+            type List = </List>
+            var f: func @[a] -> /List @a -> ()
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var f: func @[a] -> /List @[a] @a -> ()
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c15_rec_ptr () {
+        val out = all("""
+            type List = </List>
             var f: func @[i] -> /List @[i] -> ()
             { @A
                 var x: /List @[A]
@@ -489,9 +549,16 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            type List @[i] = /</List @[i] @i> @i
-            var f: func @[i] -> List @[i] -> ()
-            call (f @[GLOBAL] <.0>: List @[GLOBAL])
+            type List @[i] = </List @[i] @i>
+            var f: func @[i] -> /List @[i] @i -> ()
+            { @A
+            var x: /List @[A] @A
+            { @B
+            var g: func @[i] -> /List @[i] @i -> ()
+            var y: /List @[A] @A
+            var z: /List @[A] @A
+            }
+            }
 
         """.trimIndent()) { out }
     }

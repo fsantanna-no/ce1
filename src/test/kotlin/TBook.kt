@@ -16,18 +16,9 @@ private val nums = """
     var five:  /Num = new <.1 four>
 """.trimIndent()
 
-private fun Num (ptr: Boolean, scope: String): String {
-    val ret = "(Num @[$scope])"
-    return if (!ptr) ret else "/"+ret+"@"+scope
-}
-private val Num    = "/Num"
-//private val NumA1  = "/Num @[a1]"
-private val NumA1  = Num(true,  "a1")
-private val NumA2  = Num(true,  "a2")
-
 private val clone = """
-    var clone : func $Num -> $Num
-    set clone = func $Num -> $Num {
+    var clone : func /Num -> /Num
+    set clone = func /Num -> /Num {
         if arg\?0 {
             return <.0>
         } else {
@@ -37,8 +28,8 @@ private val clone = """
 """.trimIndent()
 
 private val add = """
-    var add : func [$Num,$Num] -> $Num
-    set add = func [$Num,$Num] -> $Num {
+    var add : func [/Num,/Num] -> /Num
+    set add = func [/Num,/Num] -> /Num {
         var x = arg.1
         var y = arg.2
         if y\?0 {
@@ -50,8 +41,8 @@ private val add = """
 """.trimIndent()
 
 private val mul = """
-    var mul : func [$Num,$Num] -> $Num
-    set mul = func [$Num,$Num] -> $Num {
+    var mul : func [/Num,/Num] -> /Num
+    set mul = func [/Num,/Num] -> /Num {
         var x = arg.1
         var y = arg.2
         if y\?0 {
@@ -64,8 +55,8 @@ private val mul = """
 """.trimIndent()
 
 private val lt = """
-    var lt : func [$Num,$Num] -> _int
-    set lt = func [$Num,$Num] -> _int {
+    var lt : func [/Num,/Num] -> _int
+    set lt = func [/Num,/Num] -> _int {
         if arg.2\?0 {
             return _0
         } else {
@@ -79,8 +70,8 @@ private val lt = """
 """.trimIndent()
 
 private val sub = """
-    var sub : func [$Num,$Num] -> $Num
-    set sub = func [$Num,$Num] -> $Num {
+    var sub : func [/Num,/Num] -> /Num
+    set sub = func [/Num,/Num] -> /Num {
         var x = arg.1
         var y = arg.2
         if x\?0 {
@@ -96,8 +87,8 @@ private val sub = """
 """.trimIndent()
 
 private val mod = """
-    var mod : func [$Num,$Num] -> $Num
-    set mod = func [$Num,$Num] -> $Num {
+    var mod : func [/Num,/Num] -> /Num
+    set mod = func [/Num,/Num] -> /Num {
         if lt arg {
             return clone arg.1
         } else {
@@ -108,8 +99,8 @@ private val mod = """
 """.trimIndent()
 
 private val eq = """
-    var eq : func [$Num,$Num] -> _int
-    set eq = func [$Num,$Num] -> _int {
+    var eq : func [/Num,/Num] -> _int
+    set eq = func [/Num,/Num] -> _int {
         var x = arg.1
         var y = arg.2
         if x\?0 {
@@ -125,8 +116,8 @@ private val eq = """
 """.trimIndent()
 
 private val lte = """
-    var lte : func  [$Num,$Num] -> _int
-    set lte = func  [$Num,$Num] -> _int {
+    var lte : func  [/Num,/Num] -> _int
+    set lte = func  [/Num,/Num] -> _int {
         var islt = lt [arg.1\!1,arg.2\!1]
         var iseq = eq [arg.1\!1,arg.2\!1]
         return _(${D}islt || ${D}iseq)
@@ -266,7 +257,7 @@ class TBook {
             $clone
             $add
             $mul
-            var square = func $Num -> $Num {
+            var square = func /Num -> /Num {
                 return mul [arg,arg]
             }
             output std square two
@@ -283,7 +274,7 @@ class TBook {
             $lt
             -- 20
             -- returns narrower scope, guarantees both alive
-            var smaller = func @[a1,a2: a2>a1] -> [$NumA1,$NumA2] -> $NumA2 {
+            var smaller = func @[a1,a2: a2>a1] -> [/Num@[a1],/Num@a2] -> /Num@a2 {
                 if lt arg {
                     return arg.1
                 } else {
@@ -309,7 +300,7 @@ class TBook {
         val out = all(
             """
             $nums
-            var f_three = func $Num -> $Num {
+            var f_three = func /Num -> /Num {
                 return three
             }
             output std f_three one
@@ -322,8 +313,8 @@ class TBook {
     fun ch_01_02_infinity_pg05() {
         val out = all(
             """
-            var infinity : func () -> $Num
-            set infinity = func () -> $Num {
+            var infinity : func () -> /Num
+            set infinity = func () -> /Num {
                 output std _10:_int
                 return new <.1 infinity ()>
             }
@@ -343,7 +334,7 @@ class TBook {
             $clone
             $add
             $mul
-            var multiply = func [$Num,$Num] -> $Num {
+            var multiply = func [/Num,/Num] -> /Num {
                 if arg.1\?0 {
                     return <.0>
                 } else {
@@ -366,10 +357,10 @@ class TBook {
             $clone
             $add
             $mul
-            var square = func $Num -> $Num {
+            var square = func /Num -> /Num {
                 return mul [arg,arg]
             }
-            var twice = func [func $Num->$Num, $Num] -> $Num {
+            var twice = func [func /Num->/Num, /Num] -> /Num {
                 return arg.1 (arg.1 arg.2)
             }
             output std twice [square,two]
@@ -389,8 +380,8 @@ class TBook {
             $add
             $mul
             
-            var fact : func $Num->$Num
-            set fact = func $Num->$Num {
+            var fact : func /Num->/Num
+            set fact = func /Num->/Num {
                 if arg\?0 {
                     return new <.1 <.0>>
                 } else {
@@ -560,8 +551,8 @@ class TBook {
             $lt
             $sub
             -- 51
-            var mod : func [$Num,$Num] -> $Num
-            set mod = func [$Num,$Num] -> $Num {
+            var mod : func [/Num,/Num] -> /Num
+            set mod = func [/Num,/Num] -> /Num {
                 if lt arg {
                     return clone arg.1
                 } else {
@@ -597,7 +588,7 @@ class TBook {
             var n100 = mul [n10,n10]
             var n400 = mul [four,n100]
             
-            var leap = func $Num -> $B {
+            var leap = func /Num -> $B {
                 var mod4 = mod [arg,four]
                 var mod100 = mod [arg,n100]
                 var mod400 = mod [arg,n400]
@@ -634,7 +625,7 @@ class TBook {
             $ntob
             $or
             -- 119
-            var analyse = func [$Num,$Num,$Num] -> $Tri {
+            var analyse = func [/Num,/Num,/Num] -> $Tri {
                 var xy = add [arg.1,arg.2]
                 if lte[xy,arg.3] {
                     return <.1>

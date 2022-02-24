@@ -726,7 +726,7 @@ class TTask {
     }
 
     @Test
-    fun f10_task_type () {
+    fun todo_f10_task_type () {
         val out = all("""
             type Xask = task ()->()->()
             type Xunc = func ()->()

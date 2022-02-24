@@ -1,6 +1,8 @@
 // set increasing @i to each pointer in type
-fun List<Type>.increasing (): List<Scope> {
-    var c = 'h'     // first is 'i'
+// - increment only for function types
+// - do not increment for alias types
+fun List<Type>.increasing (toinc: Boolean): List<Scope> {
+    var c = if (toinc) 'h' else 'i'     // first is 'i'
     return this
         .filter { it is Type.Pointer || it is Type.Alias }
         //.let { it as List<Type.Pointer> }
@@ -8,7 +10,9 @@ fun List<Type>.increasing (): List<Scope> {
             when (tp) {
                 is Type.Pointer -> {
                     tp.xscp = tp.xscp ?: let {
-                        c += 1  // infer implicit scope incrementally
+                        if (toinc) {
+                            c += 1  // infer implicit scope incrementally
+                        }
                         Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, c + ""), null)
                     }
                     listOf(tp.xscp!!)
@@ -60,9 +64,15 @@ fun Stmt.xinfScp1s () {
                 val def = tp.env(tp.tk_.id)
                 when {
                     (tp.xscps != null) -> {}
+                    (def !is Stmt.Typedef) -> {} // will be an error in Check_01
+                    (tp.wup.let { it is Type.Pointer && it.xscp!=null } && def.xscp1s.first.let { it!=null && it.size>0 }) -> {
+                        // copy alias scope from enclosing pointer scope
+                        // var x: /List @A --> /List @[A] @A
+                        assert(def.xscp1s.first!!.size == 1) { "can't choose from multiple scopes" }
+                        tp.xscps = listOf((tp.wup as Type.Pointer).xscp!!)
+                    }
                     // do not infer inside func/typedef declaration (it is inferred there)
                     (tp.ups_first { it is Stmt.Typedef || it is Type.Func } != null) -> {}
-                    (def !is Stmt.Typedef) -> {} // will be an error in Check_01
                     else -> {
                         val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
                         tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null) }
@@ -72,21 +82,22 @@ fun Stmt.xinfScp1s () {
             is Type.Pointer -> {
                 when {
                     (tp.xscp != null) -> {}
-                    // do not infer to LOCAL if inside function/typedef declaration
-                    (tp.ups_first { it is Type.Func || it is Stmt.Typedef } != null) -> {}
                     (tp.pln is Type.Alias && tp.pln.xscps!=null && tp.pln.xscps!!.size>0) -> {
                         // copy alias scope to enclosing pointer scope
                         // var x: /List @[A] --> /List @[A] @A
+                        println(tp.pln)
                         assert(tp.pln.xscps!!.size == 1) { "can't choose from multiple scopes" }
                         tp.xscp = tp.pln.xscps!![0]
                     }
+                    // do not infer to LOCAL if inside function/typedef declaration
+                    (tp.ups_first { it is Type.Func || it is Stmt.Typedef } != null) -> {}
                     else -> {
                         tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
                     }
                 }
             }
             is Type.Func -> {
-                val inp_pub_out = (tp.inp.flattenLeft() + (tp.pub?.flattenLeft() ?: emptyList()) + tp.out.flattenLeft()).increasing()
+                val inp_pub_out = (tp.inp.flattenLeft() + (tp.pub?.flattenLeft() ?: emptyList()) + tp.out.flattenLeft()).increasing(true)
 
                 // {closure} + {explicit scopes} + implicit inp_out
                 val second = let {
@@ -152,7 +163,7 @@ fun Stmt.xinfScp1s () {
         when (s) {
             is Stmt.Typedef -> {
                 val tps  = s.type.flattenLeft()
-                val scps = tps.increasing()
+                val scps = tps.increasing(false)
                 val fst  = ((s.xscp1s.first?.map { Scope(it,null) } ?: emptyList()) + scps)
                     .distinctBy { it.scp1.id }
                     

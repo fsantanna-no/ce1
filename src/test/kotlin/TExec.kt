@@ -480,7 +480,7 @@ class TExec {
     // CLOSURE
 
     @Test
-    fun noclo_d01 () {
+    fun todo_d01 () {
         val out = all("""
             type List = </List>
             { @A
@@ -500,7 +500,7 @@ class TExec {
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
     @Test
-    fun noclo_d02 () {
+    fun todo_d02 () {
         val out = all("""
             type List = </List>
             { @A
