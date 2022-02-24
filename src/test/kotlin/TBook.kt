@@ -21,14 +21,9 @@ private fun Num (ptr: Boolean, scope: String): String {
     return if (!ptr) ret else "/"+ret+"@"+scope
 }
 private val Num    = "/Num"
-private val NumTL  = Num(true,  "LOCAL")
+//private val NumA1  = "/Num @[a1]"
 private val NumA1  = Num(true,  "a1")
 private val NumA2  = Num(true,  "a2")
-private val NumB1  = Num(true,  "b1")
-private val NumC1  = Num(true,  "c1")
-private val NumR1  = Num(true,  "r1")
-private val _NumR1 = Num(false, "r1")
-private val NumS1  = Num(true,  "s1")
 
 private val clone = """
     var clone : func $Num -> $Num

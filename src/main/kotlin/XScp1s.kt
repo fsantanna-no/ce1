@@ -57,22 +57,32 @@ fun Stmt.xinfScp1s () {
     fun ft (tp: Type) {
         when (tp) {
             is Type.Alias -> {
-                if (tp.xscps==null && tp.ups_first { it is Stmt.Typedef || it is Type.Func }==null) {
-                    val def = tp.env(tp.tk_.id)
-                    if (def is  Stmt.Typedef) {
+                val def = tp.env(tp.tk_.id)
+                when {
+                    (tp.xscps != null) -> {}
+                    // do not infer inside func/typedef declaration (it is inferred there)
+                    (tp.ups_first { it is Stmt.Typedef || it is Type.Func } != null) -> {}
+                    (def !is Stmt.Typedef) -> {} // will be an error in Check_01
+                    else -> {
                         val size = def.xscp1s.first.let { if (it == null) 0 else it.size }
                         tp.xscps = List(size) { Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null) }
-                    } else {
-                        // will be an error in Check_01
                     }
-                } else {
-                    // do not infer inside func/typedef declaration (it is inferred there)
                 }
             }
             is Type.Pointer -> {
-                // do not infer to LOCAL if inside function/typedef declaration
-                if (tp.xscp==null && tp.ups_first { it is Type.Func || it is Stmt.Typedef }==null) {
-                    tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
+                when {
+                    (tp.xscp != null) -> {}
+                    // do not infer to LOCAL if inside function/typedef declaration
+                    (tp.ups_first { it is Type.Func || it is Stmt.Typedef } != null) -> {}
+                    (tp.pln is Type.Alias && tp.pln.xscps!=null && tp.pln.xscps!!.size>0) -> {
+                        // copy alias scope to enclosing pointer scope
+                        // var x: /List @[A] --> /List @[A] @A
+                        assert(tp.pln.xscps!!.size == 1) { "can't choose from multiple scopes" }
+                        tp.xscp = tp.pln.xscps!![0]
+                    }
+                    else -> {
+                        tp.xscp = Scope(Tk.Id(TK.XID, tp.tk.lin, tp.tk.col, tp.localBlockScp1Id(false)), null)
+                    }
                 }
             }
             is Type.Func -> {

@@ -458,6 +458,43 @@ class TInfer {
 
         """.trimIndent()) { out }
     }
+    @Test
+    fun c11_rec_ptr () {
+        val out = all("""
+            type List = </List>
+            { @A
+                var x: /List @[A]
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            { @A
+            var x: /List @[A] @A
+            }
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun c12_rec_ptr () {
+        val out = all("""
+            type List = </List>
+            var f: func @[i] -> /List @[i] -> ()
+            { @A
+                var x: /List @[A]
+                { @B
+                    var g: func /List @[i] -> ()
+                    var y: /List @A
+                    var z: /List @[A]
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = /</List @[i] @i> @i
+            var f: func @[i] -> List @[i] -> ()
+            call (f @[GLOBAL] <.0>: List @[GLOBAL])
+
+        """.trimIndent()) { out }
+    }
 
     // CLOSURE
 
