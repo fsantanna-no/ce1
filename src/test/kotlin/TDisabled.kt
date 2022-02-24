@@ -510,4 +510,148 @@ class TDisabled {
         )
         assert(out == "()\n") { out }
     }
+
+    /*
+    @Disabled   // no more full closures
+    @Test
+    fun ch_01_04_addc_pg12() {
+        val out = all("""
+            $nums
+            $clone
+            $add
+            -- 25
+            var plusc = func $NumA1 -> (func @a1->$Num->$Num) {
+                var x = arg
+                return func @a1->$Num->$Num {
+                    return add [x,arg]
+                }
+            }
+            var f = plusc one
+            output std f two
+            output std f one
+            output std (plusc one) zero
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.0>>>\n<.1 <.0>>\n") { out }
+    }
+    @Disabled   // no more full closures
+    @Test
+    fun ch_01_04_quad_pg12() {
+        val out = all(
+            """
+            $nums
+            $clone
+            $add
+            $mul
+            var square: func $Num -> $Num
+            set square = func $Num -> $Num {
+                return mul [arg,arg]
+            }
+            var twicec = func (func $Num->$Num) -> (func @GLOBAL->$Num->$Num) {
+                var f = arg
+                return func @GLOBAL->$Num->$Num {
+                    return f (f arg)
+                }
+            }
+            var quad = twicec square
+            output std quad two
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.1 <.0>>>>>>>>>>>>>>>>>\n") { out }
+    }
+    @Disabled   // no more full closures
+    @Test
+    fun ch_01_04_curry_pg13() {
+        val out = all(
+            """
+            $nums
+            $clone
+            $add
+            var curry = func (func [$Num,$Num] -> $Num) -> (func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num)) {
+                var f = arg
+                return func @GLOBAL -> $NumA1 -> (func @a1->$Num->$Num) {
+                    var x = arg
+                    var ff = f
+                    return func @a1->$Num->$Num {
+                        var y = arg
+                        return ff [x,y]
+                    }
+                }
+            }
+            var addc = curry add
+            output std (addc  one) two
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.1 <.1 <.0>>>>\n") { out }
+    }
+    @Disabled
+    @Test
+    fun noclo_ch_01_04_curry_pg13_xxx() {
+        val out = all(
+            """
+            type Num @[s] = </Num @[s] @s>
+            var add: func [/Num@[a]@a, /Num@[b]@b] -> /Num@[r]@r
+            var curry : func (func [/Num@[a]@a,/Num@[b]@b]->/Num@[r]@r) -> (func @GLOBAL -> /Num@[a]@a -> (func @a->/Num@[b]@b->/Num@[r]@r))
+            --var addc = curry add
+            output std ()
+        """.trimIndent()
+        )
+        assert(out == "()\n") { out }
+    }
+    @Disabled   // no more full closures
+    @Test
+    fun ch_01_04_composition_pg15() {
+        val out = all(
+            """
+            $nums
+            $clone
+            $add
+            
+            var inc = func $Num -> $Num {
+                return add [one,arg]
+            }
+            output std inc two
+            
+            var compose = func [func $Num->$Num,func $Num->$Num] -> (func @GLOBAL->$Num->$Num) {
+                var f = arg.1
+                var g = arg.2
+                return func @GLOBAL->$Num->$Num {
+                    var v = f arg
+                    return g v
+                }
+            }
+            output std (compose [inc,inc]) one
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.1 <.1 <.0>>>>\n<.1 <.1 <.1 <.0>>>>\n") { out }
+    }
+    @Disabled   // no more full closures
+    @Test
+    fun ch_01_04_currying_pg11() {
+        val out = all(
+            """
+            $nums
+            $clone
+            $lt
+            -- 19
+            var smallerc = func $NumA1 -> (func @a1 -> $Num->$Num) {
+                var x = arg
+                return func @a1 -> $Num -> $Num {
+                    if (lt [x,arg]) {
+                        return clone x     -- TODO: remove clone
+                    } else {
+                        return clone arg   -- TODO: remove clone
+                    }
+                }
+            }
+            -- 30
+            var f: func @LOCAL -> $Num -> $Num
+            set f = smallerc two
+            output std f one
+            output std f three
+        """.trimIndent()
+        )
+        assert(out == "<.1 <.0>>\n<.1 <.1 <.0>>>\n") { out }
+    }
+     */
 }
