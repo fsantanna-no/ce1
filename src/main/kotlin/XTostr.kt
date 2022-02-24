@@ -27,11 +27,8 @@ class XTostr: Tostr()
         return when (e) {
             is Expr.Nat   -> if (e.xtype != null) super.tostr(e) else e.tk_.toce()
             is Expr.UCons -> {
-                // TODO: Alias should go away when changing from <.1>:T -> T.1
-                when (e.xtype) {
-                    is Type.Alias -> "(<." + e.tk_.num + " " + this.tostr(e.arg) + ">: " + (e.xtype as Type.Alias).tk_.id + ")"
-                    null -> "<." + e.tk_.num + " " + this.tostr(e.arg) + ">"
-                    else -> super.tostr(e)
+                if (e.xtype != null) super.tostr(e) else {
+                    "<." + e.tk_.num + " " + this.tostr(e.arg) + ">"
                 }
             }
             is Expr.UNull -> if (e.xtype != null) super.tostr(e) else "<.0>"

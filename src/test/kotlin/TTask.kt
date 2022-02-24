@@ -170,29 +170,6 @@ class TTask {
         """.trimIndent())
         assert(out == "10\n1\n11\n1\n2\n2\n12\n") { out }
     }
-    @Disabled
-    @Test
-    fun noclo_a06_par2 () {
-        val out = all("""
-            type Event = <(),_int>
-            var build = func @[r1] -> () -> task @r1->()->()->() {
-                set ret = task @r1->()->()->() {
-                    output std _1:_int
-                    await evt?2
-                    output std _2:_int
-                }
-            }
-            var f = build ()
-            var g = build ()
-            output std _10:_int
-            var x = spawn f ()
-            output std _11:_int
-            var y = spawn g ()
-            emit <.2 _1>
-            output std _12:_int
-        """.trimIndent())
-        assert(out == "10\n1\n11\n1\n2\n2\n12\n") { out }
-    }
     @Test
     fun a07_emit () {
         val out = all("""
@@ -638,7 +615,7 @@ class TTask {
             loop x in xs {
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @[] -> () -> _int -> ()\n    active task @[] -> [()] -> _int -> ()\n") { out }
+        assert(out == "(ln 4, col 1): invalid `loop` : type mismatch :\n    active task @[] -> () -> _int -> ()\n    active {} task @[] -> [()] -> _int -> ()\n") { out }
 
     }
     @Test
@@ -763,5 +740,23 @@ class TTask {
             }
         """.trimIndent())
         assert(out == "1\n") { out }
+    }
+
+    @Test
+    fun f10_task_type () {
+        val out = all("""
+            type Xask = task ()->()->()
+            type Xunc = func ()->()
+            var t = Xask {
+                output std _1:_int
+            }
+            var f = Xunc {
+                output std _2:_int
+            }
+            var x = spawn t ()
+            call f () 
+            output std _2:_int
+        """.trimIndent())
+        assert(out == "1\n2\n") { out }
     }
 }

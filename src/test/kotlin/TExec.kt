@@ -232,83 +232,6 @@ class TExec {
 
     // old disabled
 
-    @Disabled
-    @Test
-    fun b01_new () {
-        val out = all("""
-            var xxx: /<(),/</^^,/^>>
-            set xxx =
-                new <.2
-                    new <.1
-                        new <.1>
-                    >
-                >
-            output std xxx
-        """.trimIndent())
-        assert(out == "<.2 <.1 <.1>>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b02_new () {
-        val out = all("""
-            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
-            set x = new <.2 new <.2 new <.2 <.0>>>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.2 <.2 <.2 <.0>>>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b03_new () {
-        val out = all("""
-            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
-            set x = new <.2 new <.1 new <.1>>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.2 <.1 <.1>>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b04_new () {
-        val out = all("""
-            var x: /<(),/</^^ @LOCAL,/^ @LOCAL> @LOCAL> @LOCAL
-            set x = new <.2 new <.2 new <.1 new <.1>>>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.2 <.2 <.1 <.1>>>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b05_new () {
-        val out = all("""
-            var x: /</<[/^^,/^]>>
-            set x = new <.1 new <.1 [<.0>,<.0>]>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.1 <.1 [<.0>,<.0>]>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b06_new () {
-        val out = all("""
-            var x: /</<[/^^ @LOCAL,/^ @LOCAL]> @LOCAL> @LOCAL
-            set x = new <.1 new <.1 [<.0>,new <.1 [<.0>,<.0>]>]>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.1 <.1 [<.0>,<.1 [<.0>,<.0>]>]>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b08_new () {
-        val out = all("""
-            var e: /<(),<(),/^^ @LOCAL>>
-            set e = new <.2 <.2 new <.1>>>
-            var s: <(),/<(),<(),/^^>>>
-            set s = <.2 e>
-            output std /s
-        """.trimIndent())
-        assert(out == "<.2 <.2 <.2 <.1>>>>\n") { out }
-    }
     @Test
     fun b09_union () {
         val out = all("""
@@ -320,33 +243,6 @@ class TExec {
         """.trimIndent())
         //assert(out == "(ln 3, col 7): invalid assignment of \"x\" : borrowed in line 2") { out }
         assert(out == "<.1 _>\n<.0>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b10_new () {
-        val out = all("""
-            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL
-            set x = new <.1 [<.1>,<.0>]>
-            var y: /< [<(),//^^>,/^]>
-            set y = new <.1 [<.1>,x]>
-            set y\!1.2\!1.1 = <.1>
-            -- <.1 [<.1>,<.1 [<.1>,<.0>]>]>
-            output std y
-        """.trimIndent())
-        assert(out == "<.1 [<.1>,<.1 [<.1>,<.0>]>]>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b11_new_self () {
-        val out = all("""
-            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL
-            set x = new <.1 [<.1>,<.0>]>
-            var y: /< [<(),//^^>,/^]>
-            set y = new <.1 [<.1>, x]>
-            set y\!1.2\!1.1 = <.2 /y>
-            output std y
-        """.trimIndent())
-        assert(out == "<.1 [<.1>,<.1 [<.2 _>,<.0>]>]>\n") { out }
     }
     @Test
     fun b12_new_self () {
@@ -370,29 +266,6 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 [_,<.0>]>\n<.1 [_,<.0>]>\n") { out }
     }
-    @Disabled
-    @Test
-    fun b14_new_self () {
-        val out = all("""
-            var x: /< [<(),//^^>,/^]>
-            set x = new <.1 [<.1>,<.0>]>
-            set x\!1.1 = <.2 /x>  -- ok
-            output std x
-            output std x\!1.1!2\
-        """.trimIndent())
-        assert(out == "<.1 [<.2 _>,<.0>]>\n<.1 [<.2 _>,<.0>]>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b15_new_self () {
-        val out = all("""
-            var x: /< <(),//^^ @LOCAL @LOCAL>> @LOCAL
-            set x = new <.1 <.1>>
-            output std x
-        """.trimIndent())
-        assert(out == "<.1 <.1>>\n") { out }
-        //assert(out == "(ln 1, col 14): invalid type declaration : unexpected `^´") { out }
-    }
     @Test
     fun b16_new () {
         val out = all("""
@@ -414,42 +287,6 @@ class TExec {
             output std /t2
         """.trimIndent())
         assert(out == "[(),<.2 <.1>>]\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b18_new () {
-        val out = all("""
-            var v1: /<(),/<[/^^,/^]>> = new <.2 <.0>>
-            var v2: /<(),/<[/^^,/^]>>
-            set v2 = new <.2 new <.1 [new <.1>,<.0>]>>
-            output std v1
-            output std v2
-        """.trimIndent())
-        assert(out == "<.2 <.0>>\n<.2 <.1 [<.1>,<.0>]>>\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b19_new () {
-        val out = all("""
-            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,<.0>]>
-            var y: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,x]>
-            set y\!1.2\!1.1 = <.1>
-            output std y
-        """.trimIndent())
-        assert(out == "<.1 [<.1>,<.1 [<.1>,<.0>]>]>\n") { out }
-        //assert(out == "(ln 1, col 16): invalid type declaration : unexpected `^´") { out }
-    }
-    @Disabled
-    @Test
-    fun b20_new () {
-        val out = all("""
-            var x: /< [<(),//^^ @LOCAL @LOCAL>,/^ @LOCAL]> @LOCAL = new <.1 [<.1>,new <.1 [<.1>,<.0>]>]>
-            set x\!1.2 = <.0>
-            output std x
-        """.trimIndent())
-        //assert(out == "(ln 1, col 14): invalid type declaration : unexpected `^´") { out }
-        //assert(out == "out.exe: out.c:133: main: Assertion `(*(x))._1._2 == NULL' failed.\n") { out }
-        assert(out == "<.1 [<.1>,<.0>]>\n") { out }
     }
     @Test
     fun b21_new () {
@@ -488,15 +325,6 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1 <.1 <.0>>>\n") { out }
     }
-    @Disabled
-    @Test
-    fun b24_double () {
-        val out = all("""
-            var n = <.0>: /<</^^>>
-            output std n
-        """.trimIndent())
-        assert(out == "<.0>\n") { out }
-    }
     @Test
     fun b25_new () {
         val out = all("""
@@ -508,21 +336,6 @@ class TExec {
             output std /t3
         """.trimIndent())
         assert(out == "<.1 <.0>>\n[(),<.1 <.1 <.0>>>]\n") { out }
-    }
-    @Disabled
-    @Test
-    fun b27_self () {
-        val out = all("""
-            var x: /< [<(),/^^>,_int,/^]>
-            var z: /< [<(),/^^>,_int,/^]> = <.0>
-            var o: <(),/< [<(),/^^>,_int,/^]>> = <.1>
-            set x = new <.1 [o,_1,new <.1 [o,_2,z]>]>
-            set x\!1.3\!1.1 = <.2 x>
-            set x\!1.1 = <.2 x\!1.3>
-            output std x\!1.3\!1.2
-            output std x\!1.2
-        """.trimIndent())
-        assert(out == "2\n1\n") { out }
     }
 
     // FUNC / CALL
@@ -659,23 +472,6 @@ class TExec {
                 return arg.1 arg.2
             }
             output std g [f,()]
-        """.trimIndent()
-        )
-        assert(out == "()\n") { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_c10_func_ret () {
-        val out = all(
-            """
-            var g = func () -> (func ()->()) {
-                var f = func () -> () {
-                    output std ()
-                }
-               return f
-            }
-            var f = g ()
-            call f ()
         """.trimIndent()
         )
         assert(out == "()\n") { out }

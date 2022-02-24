@@ -75,11 +75,22 @@ class XParser: Parser()
                 }
                 if (tkx.enu == TK.CHAR) {
                     all.accept_err(TK.CHAR, '>')
-                    val tp = if (!all.accept(TK.CHAR, ':')) null else this.type()
+                    val tp = if (!all.accept(TK.CHAR, ':')) null else {
+                        val tp = this.type()
+                        when (tk0.num) {
+                            0 -> all.assert_tk(tp.tk,tp is Type.Pointer && tp.pln is Type.Alias) {
+                                "invalid type : expected pointer to alias type"
+                            }
+                            else -> all.assert_tk(tp.tk,tp is Type.Union) {
+                                "invalid type : expected union type"
+                            }
+                        }
+                        tp
+                    }
                     if (tk0.num == 0) {
-                        Expr.UNull(tk0, tp)
+                        Expr.UNull(tk0, tp as Type.Pointer?)
                     } else {
-                        Expr.UCons(tk0, tp, cons!!)
+                        Expr.UCons(tk0, tp as Type.Union?, cons!!)
                     }
                 } else {
                     val tp = Type.Alias(tkx as Tk.Id, false, null)

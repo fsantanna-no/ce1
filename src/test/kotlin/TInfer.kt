@@ -236,46 +236,6 @@ class TInfer {
 
     // inference error
 
-    @Disabled
-    @Test
-    fun b01 () {
-        val out = all("""
-            var x: /<(),/</^^,/^>>
-            set x = <.1>
-        """.trimIndent())
-        assert(out == "(ln 2, col 11): invalid inference : type mismatch") { out }
-    }
-    @Disabled
-    @Test
-    fun b02 () {
-        val out = all("""
-            var x: /<(),/</^^,/^>>
-            set x = new <.2 new <.1 <.1>>>
-        """.trimIndent())
-        assert(out == "(ln 2, col 27): invalid inference : type mismatch") { out }
-    }
-    @Disabled
-    @Test
-    fun b03 () {
-        val out = all("""
-            var x: /</<[/^^ @GLOBAL,/^ @GLOBAL]> @GLOBAL> @GLOBAL
-            set x = new <.1 <.1 [<.0>,<.0>]>>
-        """.trimIndent())
-        assert(out == "(ln 2, col 19): invalid inference : type mismatch") { out }
-    }
-    @Disabled
-    @Test
-    fun b04_self () {
-        val out = all("""
-            var z: /< [<(),//^^>,_int,/^]> = <.0>
-            var x: /< [<(),//^^>,_int,/^]> = new <.1 [z,_1,new <.1 [z,_2,z]>]>
-            set x!1.3!1.1 = <.1 /x>
-            set x!1.1 = <.1 /x!1.3>
-            output std x!1.3!1.2
-            output std x!1.1!1\!1.1!1\!1.2
-        """.trimIndent())
-        assert(out == "(ln 4, col 17): invalid operand to `/´ : union discriminator") { out }
-    }
     @Test
     fun b05_nat () {
         val out = all("""
@@ -552,18 +512,6 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
-    @Disabled
-    @Test
-    fun noclo_d02_clo () {
-        val out = all("""
-            var f: func () -> (func @a1->()->())
-        """.trimIndent()
-        )
-        assert(out == """
-            var f: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            
-        """.trimIndent()) { out }
-    }
     @Test
     fun d03_clo () {
         val out = all("""
@@ -573,126 +521,6 @@ class TInfer {
         assert(out == """
             var f: func @[] -> () -> ()
             
-        """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_d04_clo () {
-        val out = all("""
-            var g: func () -> (func @a1->()->())
-            var f: func @LOCAL -> () -> ()
-        """.trimIndent()
-        )
-        assert(out == """
-            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @GLOBAL -> @[] -> () -> ()
-            
-        """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_d05_clo () {
-        val out = all("""
-            var g: func () -> (func @a1->()->())
-            var f: func @LOCAL -> () -> ()
-            set f = g ()
-        """.trimIndent()
-        )
-        assert(out == """
-            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @GLOBAL -> @[] -> () -> ()
-            set f = (g @[GLOBAL] (): @GLOBAL)
-            
-        """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_d06_clo () {
-        val out = all("""
-            var g: func () -> (func @a1->()->())
-            var f: func @LOCAL -> () -> ()
-            set f = g ()
-            call f ()
-        """.trimIndent()
-        )
-        assert(out == """
-            var g: func @[a1] -> () -> func @a1 -> @[] -> () -> ()
-            var f: func @GLOBAL -> @[] -> () -> ()
-            set f = (g @[GLOBAL] (): @GLOBAL)
-            call (f @[] ())
-            
-        """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_d07_clo () {
-        val out = all("""
-            var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
-                var x: /_int@a1 = arg
-                return func @a1->()->/_int@a1 {
-                    return x
-                }
-            }
-        """.trimIndent())
-        assert(out == "(ln 7, col 11): undeclared variable \"x\"") { out }
-        /*
-        assert(out == """
-            var cnst: func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1
-            set cnst = func @[a1] -> /_int @a1 -> func @a1 -> @[] -> () -> /_int @a1 {
-            var x: /_int @a1
-            set x = arg
-            set ret = func @a1 -> @[] -> () -> /_int @a1 {
-            set ret = x
-            return
-            }
-            
-            return
-            }
-            
-            
-        """.trimIndent()) { out }
-         */
-    }
-    @Disabled
-    @Test
-    fun noclo_d08_clo () {
-        val out = all("""
-            var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
-            var five: _int
-            var f: func @LOCAL->()->/_int@LOCAL = g /five
-            var v: /_int = f ()
-        """.trimIndent())
-        assert(out == """
-            var g: func @[a] -> /_int @a -> func @a -> @[] -> () -> /_int @a
-            var five: _int
-            var f: func @GLOBAL -> @[] -> () -> /_int @GLOBAL
-            set f = (g @[GLOBAL] (/five): @GLOBAL)
-            var v: /_int @GLOBAL
-            set v = (f @[] (): @GLOBAL)
-
-        """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_d09_clo () {
-        val out = all("""
-            var g: func @[a]->/_int@a -> (func @a->()->/_int@a)
-            {
-                var five: _int
-                var f: func @LOCAL->()->/_int@LOCAL = g /five
-                var v: /_int = f ()
-            }
-        """.trimIndent())
-        assert(out == """
-            var g: func @[a] -> /_int @a -> func @a -> @[] -> () -> /_int @a
-            { @SSFIVE
-            var five: _int
-            var f: func @LOCAL -> @[] -> () -> /_int @LOCAL
-            set f = (g @[LOCAL] (/five): @LOCAL)
-            var v: /_int @LOCAL
-            set v = (f @[] (): @LOCAL)
-            }
-
         """.trimIndent()) { out }
     }
     @Test
@@ -772,16 +600,6 @@ class TInfer {
             output std (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] (f @[GLOBAL,GLOBAL,GLOBAL,GLOBAL] <.0>: /List @[GLOBAL] @GLOBAL: @GLOBAL): @GLOBAL)
 
         """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_e03_clo () {
-        val out = all(
-            """
-            var f: func (func ()->()) -> (func @GLOBAL->()->())
-        """.trimIndent()
-        )
-        assert(out == "var f: func @[] -> func @[] -> () -> () -> func @GLOBAL -> @[] -> () -> ()\n") { out }
     }
     @Test
     fun e04_ctrs () {
@@ -873,67 +691,6 @@ class TInfer {
             }
            
         """.trimIndent()) { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_f02 () {
-        val out = all(
-            """
-            type List = </List>
-            var g = func @[a1] -> () -> (func @a1->()->()) {
-                var x: /(List @[a1])@a1 = new <.1 <.0>>
-                return func @a1->()->() {
-                    output std x
-                }
-            }
-            var f: (func @LOCAL->()->()) = g ()
-            call f ()
-        """.trimIndent()
-        )
-        //assert(out == "<.1 <.0>>\n") { out }
-        assert(out == "(ln 9, col 12): undeclared variable \"x\"") { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_f03 () {
-        val out = all(
-            """
-            var cnst = func @[a1]->/_int@a1 -> (func @a1->()->/_int@a1) {
-                var x: /_int@a1 = arg
-                return func @a1->()->/_int@a1 {
-                    return x
-                }
-            }
-            {
-                var five = _5: _int
-                var f: func @LOCAL -> () -> /_int@LOCAL = cnst /five
-                var v: /_int = f ()
-                output std v\
-            }
-        """.trimIndent()
-        )
-        //assert(out == "5\n") { out }
-        assert(out == "(ln 8, col 11): undeclared variable \"x\"") { out }
-    }
-    @Disabled
-    @Test
-    fun noclo_f04 () {
-        val out = all(
-            """
-            var f = func (func ()->()) -> (func @GLOBAL->()->()) {
-                var ff = arg
-                return func @GLOBAL->()->() {
-                    call ff ()
-                }
-            }
-            var u = func ()->() {
-                output std ()
-            }
-            var ff = f u
-            call ff ()
-        """.trimIndent()
-        )
-        assert(out == "(ln 8, col 7): undeclared variable \"ff\"") { out }
     }
     @Test
     fun noclo_f05 () {
@@ -1140,9 +897,8 @@ class TInfer {
     
         """.trimIndent()) { out }
     }
-    @Disabled
     @Test   // TODO: should it give an error?
-    fun h05_until_var_err () {
+    fun todo_h05_until_var_err () {
         val out = all("""
             var x = () until _0
         """.trimIndent())
