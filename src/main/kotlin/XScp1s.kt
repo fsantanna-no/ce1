@@ -103,9 +103,9 @@ fun Stmt.xinfScp1s () {
                 val second = let {
                     // remove scopes that are declared in outer Funcs
                     val outers: List<Scope> = tp.ups_tolist().let {
-                        val es = it.filter { it is Expr.Func }.let { it as List<Expr.Func> }.map { it.type }
+                        val es = it.filter { it is Expr.Func }.let { it as List<Expr.Func> }.map { it.xtype }
                         val ts = it.filter { it is Type.Func }.let { it as List<Type.Func> }
-                        (es + ts).map { it.xscps.second ?: emptyList() }.flatten()
+                        (es + ts).map { it?.xscps?.second ?: emptyList() }.flatten()
                     }
                     fun noneInUps (x: Scope): Boolean {
                         return outers.none { it.scp1.id==x.scp1.id }
@@ -123,7 +123,7 @@ fun Stmt.xinfScp1s () {
     fun fe (e: Expr) {
         when (e) {
             is Expr.Func -> {
-                if (e.type.xscps.first != null) {
+                if (e.xtype?.xscps?.first != null) {
                     return
                 }
                 val lvlF = 1 + e.ups_tolist().count { it is Stmt.Block }
@@ -154,7 +154,7 @@ fun Stmt.xinfScp1s () {
                 }
                 e.visit(null, ::fx, null, null)
                 if (scp != null) {
-                    e.type.xscps = Triple(Scope(scp!!,null), e.type.xscps.second, e.type.xscps.third)
+                    e.xtype?.xscps = Triple(Scope(scp!!,null), e.xtype?.xscps?.second, e.xtype?.xscps?.third)
                 }
             }
         }

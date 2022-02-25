@@ -80,11 +80,11 @@ sealed class Attr(val tk: Tk) {
 sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) {
     data class Unit  (val tk_: Tk.Sym): Expr(tk_, null, null, Type.Unit(tk_))
     data class Var   (val tk_: Tk.Id): Expr(tk_, null, null, null)
-    data class Nat   (val tk_: Tk.Nat, var xtype: Type?): Expr(tk_, null, null, xtype)
+    data class Nat   (val tk_: Tk.Nat, val xtype: Type?): Expr(tk_, null, null, xtype)
     data class As    (val tk_: Tk.Sym, val e: Expr, val type: Type.Alias): Expr(tk_, null, null, type)
     data class TCons (val tk_: Tk.Chr, val arg: List<Expr>): Expr(tk_, null, null, null)
-    data class UCons (val tk_: Tk.Num, var xtype: Type.Union?, var arg: Expr): Expr(tk_, null, null, xtype)
-    data class UNull (val tk_: Tk.Num, var xtype: Type.Pointer?): Expr(tk_, null, null, xtype)
+    data class UCons (val tk_: Tk.Num, val xtype: Type.Union?, var arg: Expr): Expr(tk_, null, null, xtype)
+    data class UNull (val tk_: Tk.Num, val xtype: Type.Pointer?): Expr(tk_, null, null, xtype)
     data class TDisc (val tk_: Tk.Num, val tup: Expr): Expr(tk_, null, null, null)
     data class UDisc (val tk_: Tk.Num, val uni: Expr): Expr(tk_, null, null, null)
     data class UPred (val tk_: Tk.Num, val uni: Expr): Expr(tk_, null, null, null)
@@ -92,7 +92,7 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
     data class New   (val tk_: Tk.Key, var xscp: Scope?, val arg: Expr): Expr(tk_, null, null, null)
     data class Dnref (val tk_: Tk,     val ptr: Expr): Expr(tk_, null, null, null)
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null, null)
-    data class Func  (val tk_: Tk.Key, val type: Type.Func, val block: Stmt.Block) : Expr(tk_, null, null, type)
+    data class Func(val tk_: Tk, val xtype: Type.Func?, val block: Stmt.Block) : Expr(tk_, null, null, xtype)
     data class Call (
         val tk_: Tk,
         val f: Expr,

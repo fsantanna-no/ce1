@@ -56,6 +56,25 @@ class XParser: Parser()
 
     override fun expr_one (): Expr {
         return when {
+            all.tk1.istype() -> {
+                val id = all.tk1 as Tk.Id
+                val tp = this.type() as Type.Alias
+                val e = if (all.accept(TK.CHAR, '.')) {
+                    all.accept_err(TK.XNUM)
+                    val num = all.tk0 as Tk.Num
+                    all.assert_tk(num, num.num>0) {
+                        "invalid union constructor : expected positive index"
+                    }
+                    val cons = if (all.checkExpr()) this.expr() else {
+                        Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
+                    }
+                    Expr.UCons(num, null, cons)
+                } else {
+                    val block = this.block()
+                    Expr.Func(id, null, block)
+                }
+                Expr.As(Tk.Sym(TK.XAS,id.lin,id.col,":+"), e, tp)
+            }
             all.accept(TK.XNAT) -> {
                 val tk0 = all.tk0 as Tk.Nat
                 val tp = if (!all.accept(TK.CHAR, ':')) null else {
@@ -63,7 +82,7 @@ class XParser: Parser()
                 }
                 Expr.Nat(tk0, tp)
             }
-            all.accept(TK.CHAR, '<') || (all.tk1.istype() && all.accept(TK.XID)) -> {
+            all.accept(TK.CHAR, '<') -> {
                 val tkx = all.tk0
                 all.accept_err(TK.CHAR, '.')
                 all.accept_err(TK.XNUM)
@@ -73,32 +92,23 @@ class XParser: Parser()
                     all.checkExpr() -> this.expr()
                     else -> Expr.Unit(Tk.Sym(TK.UNIT, all.tk1.lin, all.tk1.col, "()"))
                 }
-                if (tkx.enu == TK.CHAR) {
-                    all.accept_err(TK.CHAR, '>')
-                    val tp = if (!all.accept(TK.CHAR, ':')) null else {
-                        val tp = this.type()
-                        when (tk0.num) {
-                            0 -> all.assert_tk(tp.tk,tp is Type.Pointer && tp.pln is Type.Alias) {
-                                "invalid type : expected pointer to alias type"
-                            }
-                            else -> all.assert_tk(tp.tk,tp is Type.Union) {
-                                "invalid type : expected union type"
-                            }
+                all.accept_err(TK.CHAR, '>')
+                val tp = if (!all.accept(TK.CHAR, ':')) null else {
+                    val tp = this.type()
+                    when (tk0.num) {
+                        0 -> all.assert_tk(tp.tk,tp is Type.Pointer && tp.pln is Type.Alias) {
+                            "invalid type : expected pointer to alias type"
                         }
-                        tp
+                        else -> all.assert_tk(tp.tk,tp is Type.Union) {
+                            "invalid type : expected union type"
+                        }
                     }
-                    if (tk0.num == 0) {
-                        Expr.UNull(tk0, tp as Type.Pointer?)
-                    } else {
-                        Expr.UCons(tk0, tp as Type.Union?, cons!!)
-                    }
+                    tp
+                }
+                if (tk0.num == 0) {
+                    Expr.UNull(tk0, tp as Type.Pointer?)
                 } else {
-                    val tp = Type.Alias(tkx as Tk.Id, false, null)
-                    Expr.As (
-                        Tk.Sym(TK.XAS, tk0.lin, tk0.col, ":+"),
-                        Expr.UCons(tk0, null, cons!!),
-                        tp
-                    )
+                    Expr.UCons(tk0, tp as Type.Union?, cons!!)
                 }
             }
             all.accept(TK.NEW) -> {

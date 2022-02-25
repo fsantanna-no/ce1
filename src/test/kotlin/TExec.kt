@@ -658,6 +658,23 @@ class TExec {
         """.trimIndent())
         assert(out == "<.1>\n<.2 [1,2]>\n") { out }
     }
+    @Test
+    fun e13_func_alias () {
+        val out = all("""
+            type Int2Int = func @[] -> _int -> _int
+            
+            var f: Int2Int
+            set f = Int2Int {
+                set ret = arg
+            } 
+            
+            var x: _int
+            set x = f _10:_int
+            
+            output std x
+       """.trimIndent())
+        assert(out == "10\n") { out }
+    }
 
     // WHERE / UNTIL
 

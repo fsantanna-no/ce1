@@ -122,8 +122,15 @@ fun Expr.xinfTypes (inf: Type?) {
             )
         }
         is Expr.Func -> {
+            if (this.xtype == null) {
+                assert(xinf != null) { "bug found" }
+                All_assert_tk(this.tk, xinf is Type.Func) {
+                    "invalid type : expected function type"
+                }
+                this.wtype = xinf!! // must set wtype before b/c block may access arg/ret/etc
+            }
             this.block.xinfTypes(null)
-            this.type
+            this.xtype ?: xinf!!
         }
         is Expr.TDisc -> {
             this.tup.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
@@ -193,7 +200,7 @@ fun Expr.xinfTypes (inf: Type?) {
             val nat = Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,""))
             this.f.xinfTypes(nat)    // no infer for functions, default _ for nat
 
-            this.f.wtype!!.let { ft ->
+            this.f.wtype!!.noalias().let { ft ->
                 when (ft) {
                     is Type.Nat -> {
                         this.arg.xinfTypes(nat)
