@@ -52,12 +52,12 @@ fun Type.clone (up: Any, lin: Int, col: Int): Type {
             )
             is Type.Active -> Type.Active (
                 this.tk_.copy(lin_ = lin, col_ = col),
-                this.tsk.aux(lin, col) as Type.Func
+                this.tsk.aux(lin, col)
             )
             is Type.Actives -> Type.Actives (
                 this.tk_.copy(lin_ = lin, col_ = col),
                 this.len,
-                this.tsk.aux(lin, col) as Type.Func
+                this.tsk.aux(lin, col)
             )
             is Type.Pointer -> Type.Pointer(
                 this.tk_.copy(lin_ = lin, col_ = col),
@@ -79,6 +79,14 @@ fun Expr.Func.ftp (): Type.Func? {
 
 fun Type.isrec (): Boolean {
     return this.flattenLeft().any { it is Type.Alias && it.xisrec }
+}
+
+fun Type.noact (): Type {
+    return when (this) {
+        is Type.Active -> this.tsk
+        is Type.Actives -> this.tsk
+        else -> this
+    }
 }
 
 fun Type.noalias (): Type {
