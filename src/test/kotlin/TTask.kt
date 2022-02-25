@@ -747,16 +747,48 @@ class TTask {
     fun todo_f10_task_type () {
         val out = all("""
             type Xask = task ()->()->()
+            var t : Xask
+            set t = Xask {
+                output std _2:_int
+            }
+            output std _1:_int
+            var x : active Xask
+            set x = spawn t ()
+            var y = spawn t ()
+            output std _3:_int
+        """.trimIndent())
+        assert(out == "1\n2\n2\n3\n") { out }
+    }
+    @Test
+    fun todo_f11_task_type () {
+        val out = all("""
+            type Xask = task ()->()->()
+            var t : Xask
+            set t = Xask {
+                output std _2:_int
+            }
+            output std _1:_int
+            var xs : active {} Xask
+            spawn t () in xs
+            spawn t () in xs
+            output std _3:_int
+        """.trimIndent())
+        assert(out == "1\n2\n2\n3\n") { out }
+    }
+    @Test
+    fun todo_f12_task_type () {
+        val out = all("""
             type Xunc = func ()->()
-            var t = Xask {
+            var f = Xunc {
                 output std _1:_int
             }
-            var f = Xunc {
+            call f () 
+            type Xask = task ()->()->()
+            var t = Xask {
                 output std _2:_int
             }
             var x = spawn t ()
-            call f () 
-            output std _2:_int
+            output std _3:_int
         """.trimIndent())
         assert(out == "1\n2\n") { out }
     }
