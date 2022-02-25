@@ -7,7 +7,7 @@
 fun Type.mapScp1 (up: Any, to: Tk.Id): Type {
     fun Type.aux (): Type {
         return when (this) {
-            is Type.Unit, is Type.Nat, is Type.Spawn, is Type.Spawns -> this
+            is Type.Unit, is Type.Nat, is Type.Active, is Type.Actives -> this
             is Type.Tuple   -> Type.Tuple(this.tk_, this.vec.map { it.aux() })
             is Type.Union   -> Type.Union(this.tk_, this.vec.map { it.aux() })
             is Type.Func    -> this
@@ -141,10 +141,10 @@ fun Expr.xinfTypes (inf: Type?) {
         is Expr.Pub -> {
             this.tsk.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
             this.tsk.wtype.let {
-                All_assert_tk(this.tk, it is Type.Spawn) {
+                All_assert_tk(this.tk, it is Type.Active) {
                     "invalid \"pub\" : type mismatch : expected active task"
                 }
-                (it as Type.Spawn).tsk.pub!!
+                (it as Type.Active).tsk.pub!!
             }
         }
         is Expr.UDisc, is Expr.UPred -> {
@@ -367,7 +367,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                     this.s2.call.xinfTypes(null)
                     this.s2.call.f.wtype!!.let {
                         this.s1.xinfTypes (
-                            Type.Spawn (
+                            Type.Active (
                                 Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
                                 it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col) as Type.Func
                             )
