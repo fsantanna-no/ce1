@@ -744,23 +744,25 @@ class TTask {
     }
 
     @Test
-    fun todo_f10_task_type () {
+    fun f10_task_type () {
         val out = all("""
-            type Xask = task ()->()->()
+            type Xask = task ()->_int->()
             var t : Xask
             set t = Xask {
+                set pub = _10:_int
                 output std _2:_int
             }
             output std _1:_int
             var x : active Xask
             set x = spawn t ()
             var y = spawn t ()
+            output std x.pub
             output std _3:_int
         """.trimIndent())
-        assert(out == "1\n2\n2\n3\n") { out }
+        assert(out == "1\n2\n2\n10\n3\n") { out }
     }
     @Test
-    fun todo_f11_task_type () {
+    fun f11_task_type () {
         val out = all("""
             type Xask = task ()->()->()
             var t : Xask
@@ -778,6 +780,24 @@ class TTask {
     @Test
     fun todo_f12_task_type () {
         val out = all("""
+            type Event = <()>
+            type Xask = task @[] -> () -> _int -> ()
+            var t = Xask {
+                set pub = _10
+                await _0
+            }
+            var xs: active {} Xask
+            spawn t () in xs
+            var i: active Xask
+            loop i in xs {
+                output std i.pub
+            }
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun f13_task_type () {
+        val out = all("""
             type Xunc = func ()->()
             var f = Xunc {
                 output std _1:_int
@@ -790,6 +810,6 @@ class TTask {
             var x = spawn t ()
             output std _3:_int
         """.trimIndent())
-        assert(out == "1\n2\n") { out }
+        assert(out == "1\n2\n3\n") { out }
     }
 }

@@ -597,14 +597,15 @@ class TExec {
         assert(out == "<.1 [<.1>,<.1>]>\n") { out }
     }
     @Test
-    fun todo_e08_ptr_num() {
+    fun e08_ptr_num() {
         val out = all("""
             type Num = /<Num>    
             var zero:  Num = <.0>
             var one:   Num = new <.1 zero>
             output std one
         """.trimIndent())
-        assert(out == "<.1 <.0>>\n") { out }
+        //assert(out == "<.1 <.0>>\n") { out }
+        assert(out == "(ln 3, col 18): invalid type : expected pointer to alias type\n") { out }
     }
     @Test
     fun e09_bool() {

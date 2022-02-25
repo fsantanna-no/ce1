@@ -151,7 +151,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 All_assert_tk(this.tk, it is Type.Active) {
                     "invalid \"pub\" : type mismatch : expected active task"
                 }
-                (it as Type.Active).tsk.pub!!
+                ((it as Type.Active).tsk.noalias() as Type.Func).pub!!
             }
         }
         is Expr.UDisc, is Expr.UPred -> {
@@ -376,7 +376,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                         this.s1.xinfTypes (
                             Type.Active (
                                 Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
-                                it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col) as Type.Func
+                                it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col)
                             )
                         )
                         this.s2.dst?.xinfTypes(null) //it

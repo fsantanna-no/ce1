@@ -909,6 +909,54 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+    @Test
+    fun g04_task_type () {
+        val out = all("""
+            type Xask = task ()->_int->()
+            var t : Xask
+            set t = Xask {
+                output std _2:_int
+            }
+            output std _1:_int
+            var x : active Xask
+            set x = spawn t ()
+            var y = spawn t ()
+            output std x.pub
+            output std _3:_int
+        """.trimIndent())
+        assert(out == """
+            type Xask @[] = task @[] -> () -> _int -> ()
+            var t: Xask
+            set t = (task @[] -> () -> _int -> () {
+            output std (_2: _int)
+            }
+             :+ Xask)
+            output std (_1: _int)
+            var x: active Xask
+            set x = spawn ((t:- Xask) @[] ())
+            var y: active Xask
+            set y = spawn ((t:- Xask) @[] ())
+            output std ((x:- Xask).pub)
+            output std (_3: _int)
+            
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun g05_task_type () {
+        val out = all("""
+            type Xask = task ()->()->()
+            var t : Xask
+            var xs : active {} Xask
+            spawn t () in xs
+        """.trimIndent())
+        assert(out == """
+            type Xask @[] = task @[] -> () -> () -> ()
+            var t: Xask
+            var xs: active {} Xask
+            spawn ((t:- Xask) @[] ()) in xs
+
+        """.trimIndent()) { out }
+    }
 
     // WHERE / UNTIL
 
