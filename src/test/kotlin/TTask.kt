@@ -705,6 +705,24 @@ class TTask {
         assert(out == "1\n2\n1\n2\n2\n()\n") { out }
     }
 
+    @Disabled
+    @Test
+    fun c03_try_catch () {
+        val out = all("""
+            catch (file not found) {
+                var f = open ()
+                defer {
+                    call close f
+                }
+                loop {
+                    var c = read f
+                    ... throw err ...
+                }
+            }
+        """.trimIndent())
+        assert(out == "0\n1\n2\n") { out }
+    }
+
     //@Disabled
     @Test   // TODO: can't kill itself b/c i becomes dangling
     fun todo_f09_dloop_kill () {
