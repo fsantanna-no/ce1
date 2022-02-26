@@ -778,7 +778,7 @@ class TTask {
         assert(out == "1\n2\n2\n3\n") { out }
     }
     @Test
-    fun todo_f12_task_type () {
+    fun f12_task_type () {
         val out = all("""
             type Event = <()>
             type Xask = task @[] -> () -> _int -> ()
@@ -811,5 +811,26 @@ class TTask {
             output std _3:_int
         """.trimIndent())
         assert(out == "1\n2\n3\n") { out }
+    }
+
+    @Test
+    fun f14_task_type () {
+        val out = all("""
+            type Event = <()>
+            var n = _0:_int
+            type Xask = task () -> () -> ()
+            var t = Xask {
+                set n = _(${D}n+1)
+                await _0:_int
+            }
+            
+            var xs: active {2} Xask
+            spawn t () in xs
+            spawn t () in xs
+            spawn t () in xs
+            spawn t () in xs
+            output std n
+        """.trimIndent())
+        assert(out == "2\n") { out }
     }
 }
