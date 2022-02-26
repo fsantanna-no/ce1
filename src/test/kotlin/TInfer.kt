@@ -842,14 +842,14 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             var x: ()
             set x = ()
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             output std x
             }
              @[] ())
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             output std x
             }
              @[] ())
@@ -874,17 +874,17 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             var x: ()
             set x = ()
-            spawn (task @[] -> () -> () -> () {
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
+            spawn (task @[] -> _ -> _ -> _ {
             output std x
             }
              @[] ())
             }
              @[] ())
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             output std x
             }
              @[] ())
@@ -901,8 +901,8 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == """
-            var t: active task @[] -> () -> () -> ()
-            set t = spawn (task @[] -> () -> () -> () {
+            var t: active task @[] -> _ -> _ -> _
+            set t = spawn (task @[] -> _ -> _ -> _ {
             output std ()
             }
              @[] ())
@@ -1111,7 +1111,7 @@ class TInfer {
             type Event @[] = <(),(),(),(),_int>
             var sub: func @[] -> [_imt,_int] -> _int
             var lte: func @[] -> [_imt,_int] -> _int
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             {
             var ms_: _int
             set ms_ = (_1000: _int)
@@ -1153,7 +1153,7 @@ class TInfer {
             type Event @[] = <(),(),(),(),_int>
             var sub: func @[] -> [_imt,_int] -> _int
             var lte: func @[] -> [_imt,_int] -> _int
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             {
             {
             loop {
@@ -1238,7 +1238,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type TPico @[] = <()>
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             output std (<.1 ()>: <()> :+ TPico)
             }
              @[] ())
@@ -1255,7 +1255,7 @@ class TInfer {
         """.trimIndent())
         assert(out == """
             type TPico @[] = <(),[_int,_int]>
-            spawn (task @[] -> () -> () -> () {
+            spawn (task @[] -> _ -> _ -> _ {
             output std (<.2 [(_1: _int),(_2: _int)]>: <(),[_int,_int]> :+ TPico)
             }
              @[] ())

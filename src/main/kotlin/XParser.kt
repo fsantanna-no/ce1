@@ -252,9 +252,9 @@ class XParser: Parser()
                 if (all.check(TK.CHAR,'{')) {
                     val block = this.block()
                     val old = All_nest("""
-                        spawn task () -> () -> () {
+                        spawn (task _ -> _ -> _ {
                             ${block.body.xtostr()}
-                        } ()
+                        }) ()
                         
                     """.trimIndent())
                     val ret = this.stmt()

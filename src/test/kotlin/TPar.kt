@@ -119,9 +119,11 @@ class TPar {
         val out = all("""
             var t = task () -> _int -> () {
                 spawn {
-                    set pub = _1
+                    set pub = _10
                 }
             }
+            var xt = spawn t ()
+            output std xt.pub
         """.trimIndent())
         assert(out == "10\n") { out }
     }
