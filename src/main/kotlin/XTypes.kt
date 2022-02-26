@@ -135,8 +135,8 @@ fun Expr.xinfTypes (inf: Type?) {
         is Expr.TDisc -> {
             this.tup.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
             this.tup.wtype!!.noalias().let {
-                All_assert_tk(this.tk, it is Type.Tuple) {
-                    "invalid discriminator : type mismatch"
+                All_assert_tk(it.tk, it is Type.Tuple) {
+                    "invalid discriminator : type mismatch : expected tuple : have ${it.tostr()}"
                 }
                 val (MIN, MAX) = Pair(1, (it as Type.Tuple).vec.size)
                 All_assert_tk(this.tk, MIN <= this.tk_.num && this.tk_.num <= MAX) {

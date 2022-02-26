@@ -14,12 +14,13 @@ class TPar {
         Lexer.lex()
         val s = XParser().stmts()
         s.setUps(null)
+        s.setScp1s()
         s.setEnvs(null)
         check_00_after_envs(s)
         s.xinfScp1s()
         check_01_before_tps(s)
-        s.setScp2s()
         s.xinfTypes(null)
+        s.setScp2s()
         val ce0 = s.tostr()
         File("out.ce").writeText(ce0)
         val (ok,out) = exec("ce0 out.ce")
@@ -99,6 +100,30 @@ class TPar {
         """.trimIndent())
         //assert(out == "(ln 2, col 5): expected `in` : have end of file") { out }
         assert(out == "()\n") { out }
+    }
+    @Test
+    fun a6_dollar () {
+        val out = all("""
+            spawn {
+                var x: _int
+                set x = _10:_int
+                spawn {
+                    output std _(${D}x): _int
+                }
+            }
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun a7_anon () {
+        val out = all("""
+            var t = task () -> _int -> () {
+                spawn {
+                    set pub = _1
+                }
+            }
+        """.trimIndent())
+        assert(out == "10\n") { out }
     }
 
     // PAR
