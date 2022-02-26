@@ -1,5 +1,13 @@
 class XParser: Parser()
 {
+    fun event (): String {
+        return if (all.accept(TK.XCLK)) {
+            "" + (all.tk0 as Tk.Clk).ms + "ms"
+        } else {
+            this.expr().xtostr()
+        }
+    }
+
     override fun type (): Type {
         return when {
             all.accept(TK.XID) -> {
@@ -276,11 +284,11 @@ class XParser: Parser()
                 ret
             }
             all.accept(TK.EVERY) -> {
-                val cnd = this.expr()
+                val evt = this.event()
                 val blk = this.block()
                 val old = All_nest("""
                     loop {
-                        await ${cnd.xtostr()}
+                        await $evt
                         ${blk.xtostr()}
                     }
                     
@@ -290,11 +298,11 @@ class XParser: Parser()
                 ret
             }
             all.accept(TK.WATCHING) -> {
-                val cnd = this.expr()
+                val evt = this.event()
                 val blk = this.block()
                 val old = All_nest("""
                     paror {
-                        await ${cnd.xtostr()}
+                        await $evt
                     } with
                         ${blk.xtostr()}
                     
@@ -302,6 +310,30 @@ class XParser: Parser()
                 val ret = this.stmt()
                 all = old
                 ret
+            }
+            all.accept(TK.AWAIT) -> {
+                val tk0 = all.tk0 as Tk.Key
+                if (all.accept(TK.XCLK)) {
+                    val clk = all.tk0 as Tk.Clk
+                    val old = All_nest("""
+                        {
+                            var ms_:_int = _${clk.ms} 
+                            loop {
+                                await evt?5
+                                set ms_ = sub [ms_, evt!5]
+                                if lte [ms_,_0] {
+                                    break
+                                }
+                            }
+                        }                    
+                    """.trimIndent())
+                    val ret = this.stmt()
+                    all = old
+                    ret
+                } else {
+                    val e = this.expr()
+                    Stmt.Await(tk0, e)
+                }
             }
             all.accept(TK.PARAND) || all.accept(TK.PAROR) -> {
                 val op = if (all.tk0.enu==TK.PARAND) "&&" else "||"

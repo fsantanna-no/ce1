@@ -15,6 +15,7 @@ class TPar {
         val s = XParser().stmts()
         s.setUps(null)
         s.setEnvs(null)
+        check_00_after_envs(s)
         s.xinfScp1s()
         check_01_before_tps(s)
         s.setScp2s()
@@ -189,4 +190,50 @@ class TPar {
         assert(out == "()\n()\n") { out }
     }
 
+    // WCLOCK
+
+    @Test
+    fun c01_clk () {
+        val out = all("""
+            type Event = <(),_int,(),(),_int>
+            var sub = func [_int,_int] -> _int {
+                return _(${D}arg._1 - ${D}arg._2)
+            }
+            var lte = func [_int,_int] -> _int {
+                return _(${D}arg._1 <= ${D}arg._2)
+            }
+            spawn {
+                output std _1:_int
+                await 1s
+                output std _4:_int
+            }
+            output std _2:_int
+            emit @GLOBAL Event.5 _999
+            output std _3:_int
+            emit @GLOBAL Event.5 _1
+            output std _5:_int
+        """.trimIndent())
+        assert(out == "1\n2\n3\n4\n5\n") { out }
+    }
+    @Test
+    fun c02_clk () {
+        val out = all("""
+            type Event = <(),_int,(),(),_int>
+            var sub = func [_int,_int] -> _int {
+                return _(${D}arg._1 - ${D}arg._2)
+            }
+            var lte = func [_int,_int] -> _int {
+                return _(${D}arg._1 <= ${D}arg._2)
+            }
+            spawn {
+                every 1s {
+                    output std _1:_int
+                }
+            }
+            emit @GLOBAL Event.5 _1000
+            emit @GLOBAL Event.5 _1000
+            emit @GLOBAL Event.5 _1000
+        """.trimIndent())
+        assert(out == "1\n1\n1\n") { out }
+    }
 }

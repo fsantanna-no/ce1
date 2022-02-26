@@ -958,7 +958,7 @@ class TInfer {
         """.trimIndent()) { out }
     }
 
-    // WHERE / UNTIL
+    // WHERE / UNTIL / WCLOCK
 
     @Test
     fun h01_err () {
@@ -1095,6 +1095,98 @@ class TInfer {
             }
         """.trimIndent())
         assert(out == "(ln 4, col 36): undeclared variable \"v\"") { out }
+    }
+
+    @Test
+    fun h08_wclock () {
+        val out = all("""
+            type Event = <(),(),(),(),_int>
+            var sub: func [_imt,_int] -> _int
+            var lte: func [_imt,_int] -> _int
+            spawn {
+                await 1s
+            }
+        """.trimIndent())
+        assert(out == """
+            type Event @[] = <(),(),(),(),_int>
+            var sub: func @[] -> [_imt,_int] -> _int
+            var lte: func @[] -> [_imt,_int] -> _int
+            spawn (task @[] -> () -> () -> () {
+            {
+            var ms_: _int
+            set ms_ = (_1000: _int)
+            {
+            {
+            loop {
+            await ((evt:- Event)?5)
+            set ms_ = (sub @[] [ms_,((evt:- Event)!5)])
+            if (lte @[] [ms_,(_0: _int)])
+            {
+            break
+            }
+            else
+            {
+            
+            }
+            }
+            }
+            }
+            }
+            }
+             @[] ())
+
+        """.trimIndent()) { out }
+    }
+    @Test
+    fun h09_wclock () {
+        val out = all("""
+            type Event = <(),(),(),(),_int>
+            var sub: func [_imt,_int] -> _int
+            var lte: func [_imt,_int] -> _int
+            spawn {
+                every 1h5min2s20ms {
+                    output std ()
+                }
+            }
+        """.trimIndent())
+        assert(out == """
+            type Event @[] = <(),(),(),(),_int>
+            var sub: func @[] -> [_imt,_int] -> _int
+            var lte: func @[] -> [_imt,_int] -> _int
+            spawn (task @[] -> () -> () -> () {
+            {
+            {
+            loop {
+            {
+            var ms_: _int
+            set ms_ = (_3902020: _int)
+            {
+            {
+            loop {
+            await ((evt:- Event)?5)
+            set ms_ = (sub @[] [ms_,((evt:- Event)!5)])
+            if (lte @[] [ms_,(_0: _int)])
+            {
+            break
+            }
+            else
+            {
+
+            }
+            }
+            }
+            }
+            }
+            {
+            output std ()
+            }
+            }
+            }
+            }
+            }
+             @[] ())
+
+        """.trimIndent()) { out }
     }
 
     // TUPLES / TYPE
