@@ -857,4 +857,24 @@ class TTask {
         """.trimIndent())
         assert(out == "10\n") { out }
     }
+
+    // EMIT LOCAL
+
+    @Test
+    fun g01_local () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            var f = task @[]->()->()->() {
+                output std _1:_int
+                await evt?3
+                output std _2:_int
+            }
+            var x1 = spawn f ()
+            var x2 = spawn f ()
+            emit x1 Event.3 _1
+            output std _3:_int
+        """.trimIndent())
+        assert(out == "1\n1\n2\n3\n") { out }
+    }
+
 }
