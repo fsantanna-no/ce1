@@ -160,7 +160,7 @@ class TPar {
                 }
                 output std _3:_int
             }
-            emit <.3 ()>
+            emit @GLOBAL <.3 ()>
             output std _4:_int
             
         """.trimIndent())
@@ -181,7 +181,7 @@ class TPar {
                 }
                 output std _3:_int
             }
-            emit <.3 ()>
+            emit @GLOBAL <.3 ()>
             output std _4:_int
             
         """.trimIndent())
@@ -197,7 +197,7 @@ class TPar {
                 }
                 output std ()
             }
-            emit <.3 ()>
+            emit @GLOBAL <.3 ()>
             
         """.trimIndent())
         assert(out == "()\n") { out }
@@ -211,8 +211,8 @@ class TPar {
                     output std ()
                 }
             }
-            emit <.3 _10>
-            emit <.3 _10>
+            emit @GLOBAL <.3 _10>
+            emit @GLOBAL <.3 _10>
         """.trimIndent())
         assert(out == "()\n()\n") { out }
     }
