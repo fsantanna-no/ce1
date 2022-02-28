@@ -342,11 +342,11 @@ class XParser: Parser()
                         val clk = all.tk0 as Tk.Clk
                         val old = All_nest("""
                             {
-                                var ms_:_int = _${clk.ms}
+                                var ms_$N: _int = _${clk.ms}
                                 loop {
                                     await evt?5
-                                    set ms_ = sub [ms_, evt!5]
-                                    if lte [ms_,_0] {
+                                    set ms_$N = sub [ms_$N, evt!5]
+                                    if lte [ms_$N,_0] {
                                         break
                                     }
                                 }
@@ -372,7 +372,7 @@ class XParser: Parser()
                 }
                 val spws = pars.mapIndexed { i,x -> "var tk_${N}_$i = spawn { ${x.body.xtostr()} }" }.joinToString("\n")
                 val oks  = pars.mapIndexed { i,_ -> "var ok_${N}_$i: _int = _((${D}tk_${N}_$i->task0.state == TASK_DEAD))" }.joinToString("\n")
-                val sets = pars.mapIndexed { i,_ -> "set ok_${N}_$i = _(${D}ok_${N}_$i || (((uint64_t)${D}tk_${N}_$i)==${D}tk_x))" }.joinToString("\n")
+                val sets = pars.mapIndexed { i,_ -> "set ok_${N}_$i = _(${D}ok_${N}_$i || (((uint64_t)${D}tk_${N}_$i)==${D}tk_$N))" }.joinToString("\n")
                 val chks = pars.mapIndexed { i,_ -> "${D}ok_${N}_$i" }.joinToString(" $op ")
 
                 val old = All_nest("""
@@ -384,7 +384,7 @@ class XParser: Parser()
                                 break
                             }
                             await evt?2
-                            var tk_x = evt!2
+                            var tk_$N = evt!2
                             $sets
                         }
                     }
