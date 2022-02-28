@@ -13,7 +13,7 @@ set cpo&vim
 let s:ft = matchstr(&ft, '^\([^.]\)\+')
 
 syn keyword PreProc     await awake break call emit escape in input
-syn keyword PreProc     new output return set throw until var
+syn keyword PreProc     new output pause resume return set throw until var
 syn keyword Statement   active catch else every func if loop native par parand paror
 syn keyword Statement   spawn type task type watching with where
 syn keyword Identifier  arg pub ret evt
