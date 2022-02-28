@@ -1113,14 +1113,14 @@ class TInfer {
             var lte: func @[] -> [_imt,_int] -> _int
             spawn (task @[] -> _ -> _ -> _ {
             {
-            var ms_: _int
-            set ms_ = (_1000: _int)
+            var ms_8: _int
+            set ms_8 = (_1000: _int)
             {
             {
             loop {
             await ((evt:- Event)?5)
-            set ms_ = (sub @[] [ms_,((evt:- Event)!5)])
-            if (lte @[] [ms_,(_0: _int)])
+            set ms_8 = (sub @[] [ms_8,((evt:- Event)!5)])
+            if (lte @[] [ms_8,(_0: _int)])
             {
             break
             }
@@ -1158,14 +1158,14 @@ class TInfer {
             {
             loop {
             {
-            var ms_: _int
-            set ms_ = (_3902020: _int)
+            var ms_12: _int
+            set ms_12 = (_3902020: _int)
             {
             {
             loop {
             await ((evt:- Event)?5)
-            set ms_ = (sub @[] [ms_,((evt:- Event)!5)])
-            if (lte @[] [ms_,(_0: _int)])
+            set ms_12 = (sub @[] [ms_12,((evt:- Event)!5)])
+            if (lte @[] [ms_12,(_0: _int)])
             {
             break
             }

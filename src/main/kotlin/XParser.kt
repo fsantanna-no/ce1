@@ -251,12 +251,7 @@ class XParser: Parser()
                 val tk0 = all.tk0 as Tk.Key
                 if (all.check(TK.CHAR,'{')) {
                     val block = this.block()
-                    val old = All_nest("""
-                        spawn (task _ -> _ -> _ {
-                            ${block.body.xtostr()}
-                        }) ()
-                        
-                    """.trimIndent())
+                    val old = All_nest("spawn (task _ -> _ -> _ ${block.xtostr()}) ()")
                     val ret = this.stmt()
                     all = old
                     ret
@@ -301,7 +296,7 @@ class XParser: Parser()
                 while (all.accept(TK.WITH)) {
                     pars.add(this.block())
                 }
-                val srcs = pars.map { "spawn { ${it.body.xtostr()} }" }.joinToString("\n")
+                val srcs = pars.map { "spawn ${it.xtostr()}" }.joinToString("\n")
                 val old = All_nest(srcs + "await _0\n")
                 val ret = this.stmts()
                 all = old
