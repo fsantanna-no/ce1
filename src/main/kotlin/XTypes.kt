@@ -331,6 +331,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         }
         is Stmt.Await -> this.e.xinfTypes(Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int")).clone(this, this.tk.lin, this.tk.col))
         is Stmt.Emit  -> this.e.xinfTypes(Type.Alias(Tk.Id(TK.XID, this.tk.lin, this.tk.col,"Event"), false, emptyList()).clone(this,this.tk.lin,this.tk.col))
+        is Stmt.Pause -> this.tsk.xinfTypes(null)
         is Stmt.Input -> {
             //All_assert_tk(this.tk, this.xtype!=null || inf!=null) {
             //    "invalid inference : undetermined type"

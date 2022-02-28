@@ -263,4 +263,29 @@ class TPar {
         """.trimIndent())
         assert(out == "1\n1\n1\n") { out }
     }
+
+    // PAUSE
+
+    @Test
+    fun d01_pause () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int,()>
+            spawn {
+                pauseif evt?3 {
+                    output std _1:_int
+                    await evt?4
+                    output std _5:_int
+                }
+            }
+            output std _2:_int
+            emit @GLOBAL Event.3 _1
+            output std _3:_int
+            emit @GLOBAL Event.4
+            emit @GLOBAL Event.3 _0
+            output std _4:_int
+            emit @GLOBAL Event.4
+        """.trimIndent())
+        assert(out == "1\n2\n3\n4\n5\n") { out }
+    }
+
 }

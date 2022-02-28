@@ -5,7 +5,7 @@ enum class TK {
     XID, XNAT, XNUM, XAS, XCLK,
     UNIT, ARROW, ATBRACK,
     ACTIVE, AWAIT, BREAK, CALL, CATCH, ELSE, EMIT, EVERY, FUNC, IF, IN, INPUT,
-    LOOP, NATIVE, NEW, OUTPUT, PAR, PARAND, PAROR, RETURN, SET, SPAWN, TASK,
+    LOOP, NATIVE, NEW, OUTPUT, PAUSE, PAUSEIF, RESUME, PAR, PARAND, PAROR, RETURN, SET, SPAWN, TASK,
     THROW, TYPE, UNTIL, VAR, WATCHING, WHERE, WITH
 }
 
@@ -29,6 +29,9 @@ val key2tk: HashMap<String, TK> = hashMapOf (
     "par"    to TK.PAR,
     "parand" to TK.PARAND,
     "paror"  to TK.PAROR,
+    "pause"  to TK.PAUSE,
+    "pauseif" to TK.PAUSEIF,
+    "resume" to TK.RESUME,
     "return" to TK.RETURN,
     "set"    to TK.SET,
     "spawn"  to TK.SPAWN,
@@ -111,6 +114,7 @@ sealed class Stmt (val n: Int, val tk: Tk, var wup: Any?, var wenv: Any?) {
     data class SSpawn (val tk_: Tk.Key, val dst: Expr?, val call: Expr.Call): Stmt(N++, tk_, null, null)
     data class DSpawn (val tk_: Tk.Key, val dst: Expr, val call: Expr.Call): Stmt(N++, tk_, null, null)
     data class Await  (val tk_: Tk.Key, val e: Expr): Stmt(N++, tk_, null, null)
+    data class Pause  (val tk_: Tk.Key, val tsk: Expr, val pause: Boolean): Stmt(N++, tk_, null, null)
     data class Emit   (val tk_: Tk.Key, val tgt: Any, val e: Expr): Stmt(N++, tk_, null, null)
     data class Throw  (val tk_: Tk.Key): Stmt(N++, tk_, null, null)
     data class Input  (val tk_: Tk.Key, var xtype: Type?, val dst: Expr?, val lib: Tk.Id, val arg: Expr): Stmt(N++, tk_, null, null)

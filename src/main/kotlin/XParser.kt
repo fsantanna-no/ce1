@@ -271,6 +271,30 @@ class XParser: Parser()
                     }
                 }
             }
+            all.accept(TK.PAUSEIF) -> {
+                val pred = this.expr() as Expr.UPred
+                val blk = this.block()
+                val old = All_nest("""
+                    {
+                        var tsk_$N = spawn ${blk.xtostr()}
+                        watching tsk_$N {
+                            loop {
+                                await ${pred.xtostr()}
+                                var x_$N = ${pred.uni.xtostr()}!${pred.tk_.num}
+                                if x_$N {
+                                    pause tsk_$N
+                                } else {
+                                    resume tsk_$N
+                                }
+                            }
+                        }
+                    }
+                    
+                """.trimIndent())
+                val ret = this.stmt()
+                all = old
+                ret
+            }
             all.accept(TK.PAR) -> {
                 var pars = mutableListOf<Stmt.Block>()
                 pars.add(this.block())
@@ -313,28 +337,32 @@ class XParser: Parser()
             }
             all.accept(TK.AWAIT) -> {
                 val tk0 = all.tk0 as Tk.Key
-                if (all.accept(TK.XCLK)) {
-                    val clk = all.tk0 as Tk.Clk
-                    val old = All_nest("""
-                        {
-                            var ms_:_int = _${clk.ms} 
-                            loop {
-                                await evt?5
-                                set ms_ = sub [ms_, evt!5]
-                                if lte [ms_,_0] {
-                                    break
+                when {
+                    all.accept(TK.XCLK) -> {
+                        val clk = all.tk0 as Tk.Clk
+                        val old = All_nest("""
+                            {
+                                var ms_:_int = _${clk.ms}
+                                loop {
+                                    await evt?5
+                                    set ms_ = sub [ms_, evt!5]
+                                    if lte [ms_,_0] {
+                                        break
+                                    }
                                 }
                             }
-                        }                    
-                    """.trimIndent())
-                    val ret = this.stmt()
-                    all = old
-                    ret
-                } else {
-                    val e = this.expr()
-                    Stmt.Await(tk0, e)
+                        """.trimIndent())
+                        val ret = this.stmt()
+                        all = old
+                        ret
+                    }
+                    else -> {
+                        val e = this.expr()
+                        Stmt.Await(tk0, e)
+                    }
                 }
             }
+
             all.accept(TK.PARAND) || all.accept(TK.PAROR) -> {
                 val op = if (all.tk0.enu==TK.PARAND) "&&" else "||"
                 var pars = mutableListOf<Stmt.Block>()
