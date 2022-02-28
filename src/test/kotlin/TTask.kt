@@ -725,12 +725,12 @@ class TTask {
         assert(out == "0\n1\n2\n") { out }
     }
 
-    //@Disabled
-    @Test   // TODO: can't kill itself b/c i becomes dangling
-    fun todo_f09_dloop_kill () {
+    @Test
+    fun f09_dloop_kill () {
         val out = all("""
+            type Event = <(),_int,_int>
             var f = task ()->_int->() {
-                set pub = _3
+                set pub = _10
                 output std _1:_int
                 await _1
             }
@@ -739,10 +739,34 @@ class TTask {
             var x: active task ()->_int->()
             loop x in fs {
                 emit @GLOBAL <.2 _5>
+                --emit @GLOBAL <.2 _5>
                 output std x.pub
             }
         """.trimIndent())
-        assert(out == "1\n") { out }
+        assert(out == "1\n10\n") { out }
+    }
+    @Test
+    fun f09_dloop_kill2 () {
+        val out = all("""
+            type Event = <(),_int,_int>
+            var f = task ()->_int->() {
+                set pub = _10
+                output std _1:_int
+                await _1
+            }
+            var fs: active {} task ()->_int->()
+            spawn f () in fs
+            var x: active task ()->_int->()
+            loop x in fs {
+                var y: active task ()->_int->()
+                loop y in fs {
+                    emit @GLOBAL <.2 _5>
+                    output std x.pub
+                }
+                emit @GLOBAL <.2 _5>
+            }
+        """.trimIndent())
+        assert(out == "1\n10\n") { out }
     }
 
     @Test
