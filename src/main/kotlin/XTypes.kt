@@ -145,7 +145,7 @@ fun Expr.xinfTypes (inf: Type?) {
                 it.vec[this.tk_.num - 1]
             }
         }
-        is Expr.Pub -> {
+        is Expr.Field -> {
             this.tsk.xinfTypes(null)  // not possible to infer big (tuple) from small (disc)
             this.tsk.wtype.let {
                 All_assert_tk(this.tk, it is Type.Active) {
@@ -354,44 +354,9 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         }
         is Stmt.Block -> this.body.xinfTypes(null)
         is Stmt.Seq -> {
+            val infer = if (this.s1 is Stmt.Var) this.s1.infer else null
             when {
-                (this.s1 is Stmt.Var && this.s1.xtype != null) -> {
-                    // infer expr (s2) from var (s1)
-                    // var x: OK
-                    // set x = NO
-                    this.s1.xinfTypes(null)
-                    this.s2.xinfTypes(this.s1.xtype)
-                }
-                (this.s1 is Stmt.Var && this.s2 is Stmt.Input && this.s2.dst is Expr.Var && this.s1.tk_.id==this.s2.dst.tk_.id) -> {
-                    // var x = input ...
-                    this.s2.xinfTypes(null)
-                    this.s2.xtype!!.let {
-                        this.s1.xinfTypes(it)
-                        this.s2.dst!!.xinfTypes(null) //it
-                    }
-                }
-                (this.s1 is Stmt.Var && this.s2 is Stmt.SSpawn && this.s2.dst is Expr.Var && this.s1.tk_.id==this.s2.dst.tk_.id) -> {
-                    // var x = spawn ...
-                    this.s2.call.xinfTypes(null)
-                    this.s2.call.f.wtype!!.let {
-                        this.s1.xinfTypes (
-                            Type.Active (
-                                Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
-                                it.clone(this.s2,this.s2.tk.lin,this.s2.tk.col)
-                            )
-                        )
-                        this.s2.dst?.xinfTypes(null) //it
-                    }
-                }
-                (this.s1 is Stmt.Var && this.s2 is Stmt.Set && this.s2.dst is Expr.Var && this.s1.tk_.id==this.s2.dst.tk_.id) -> {
-                    // var x = ...
-                    this.s2.src.xinfTypes(null)
-                    this.s2.src.wtype!!.let {
-                        this.s1.xinfTypes(it)
-                        this.s2.dst.xinfTypes(null) //it
-                    }
-                }
-                (this.s1 is Stmt.Var && this.s2 is Stmt.Block) -> {
+                (this.s1 is Stmt.Var && this.s1.xtype==null && this.s2 is Stmt.Block) -> {
                     // var x = y where { var y=() }
                     //      var x: ?
                     //      {               // s2.body is Seq
@@ -402,10 +367,52 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                     val set = (this.s2.body as Stmt.Seq).s2 as Stmt.Set
                     this.s1.xinfTypes(set.src.wtype!!)
                 }
-                else -> {
+                (this.s1 !is Stmt.Var) -> {
                     this.s1.xinfTypes(null)
                     this.s2.xinfTypes(null)
                 }
+                (infer == null) -> {
+                    // infer expr (s2) from var (s1)
+                    // var x: OK
+                    // set x = NO
+                    this.s1.xinfTypes(null)
+                    this.s2.xinfTypes(this.s1.xtype)
+                }
+                (infer == "input") -> {             // var x = input ...
+                    this.s2 as Stmt.Input
+                    this.s2.xinfTypes(null)
+                    this.s1.xinfTypes(this.s2.xtype!!)
+                    this.s2.dst!!.xinfTypes(null) //this.s2.xtype!!
+                }
+                (infer == "spawn") -> {             // var x = spawn ...
+                    this.s2 as Stmt.SSpawn
+                    this.s2.call.xinfTypes(null)
+                    this.s1.xinfTypes (
+                        Type.Active (
+                            Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
+                            this.s2.call.f.wtype!!.clone(this.s2,this.s2.tk.lin,this.s2.tk.col)
+                        )
+                    )
+                    this.s2.dst?.xinfTypes(null) //this.s2.call.f.wtype!!
+                }
+                (infer == "await") -> {             // var x = await Task ...
+                    this.s2 as Stmt.SSpawn
+                    this.s2.call.xinfTypes(null)
+                    this.s1.xinfTypes (
+                        Type.Active (
+                            Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
+                            this.s2.call.f.wtype!!.clone(this.s2,this.s2.tk.lin,this.s2.tk.col)
+                        )
+                    )
+                    this.s2.dst?.xinfTypes(null) //this.s2.call.f.wtype!!
+                }
+                (infer == "set") -> {               // var x = ...
+                    this.s2 as Stmt.Set
+                    this.s2.src.xinfTypes(null)
+                    this.s1.xinfTypes(this.s2.src.wtype!!)
+                    this.s2.dst.xinfTypes(null) //this.s2.src.wtype!!
+                }
+                else -> error("bug found")
             }
         }
         else -> TODO(this.toString())

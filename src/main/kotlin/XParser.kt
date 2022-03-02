@@ -172,36 +172,38 @@ class XParser: Parser()
                 val tp = if (!all.accept(TK.CHAR, ':')) null else {
                     this.type()
                 }
-                if (all.accept(TK.CHAR, '=')) {
+                if (!all.accept(TK.CHAR, '=')) {
+                    if (tp == null) {
+                        all.err_expected("type declaration")
+                    }
+                    Stmt.Var(tk_id, tp, null)
+                } else {
+                    fun tpor (inf: String): String? {
+                        return if (tp == null) inf else null
+                    }
                     val tk0 = all.tk0 as Tk.Chr
                     val dst = Expr.Var(tk_id)
-                    val src = when {
-                        all.check(TK.INPUT) -> {
-                            all.accept(TK.INPUT)
+                    val (inf,src) = when {
+                        all.accept(TK.INPUT) -> {
                             val tk = all.tk0 as Tk.Key
                             all.accept_err(TK.XID)
                             val lib = (all.tk0 as Tk.Id)
                             val arg = this.expr()
                             val inp = if (!all.accept(TK.CHAR, ':')) null else this.type()
-                            Stmt.Input(tk, inp, dst, lib, arg)
+                            Pair(tpor("input"), Stmt.Input(tk, inp, dst, lib, arg))
                         }
                         all.check(TK.SPAWN) -> {
                             val s = this.stmt()
                             All_assert_tk(s.tk, s is Stmt.SSpawn) { "unexpected dynamic `spawn`" }
                             val ss = s as Stmt.SSpawn
-                            Stmt.SSpawn(ss.tk_, dst, ss.call)
+                            Pair(tpor("spawn"), Stmt.SSpawn(ss.tk_, dst, ss.call))
                         }
                         else -> {
                             val src = this.expr()
-                            Stmt.Set(tk0, dst, src)
+                            Pair(tpor("set"), Stmt.Set(tk0, dst, src))
                         }
                     }
-                    Stmt.Seq(tk_id, Stmt.Var(tk_id, tp), src)
-                } else {
-                    if (tp == null) {
-                        all.err_expected("type declaration")
-                    }
-                    Stmt.Var(tk_id, tp)
+                    Stmt.Seq(tk_id, Stmt.Var(tk_id,tp,inf), src)
                 }
             }
             all.accept(TK.INPUT) -> {
@@ -450,7 +452,7 @@ class XParser: Parser()
                             ${until.s2.xtostr()}
                         }
                     """.trimIndent())
-                     */
+                 */
                 Stmt.Seq(
                     tk0, s.s1,
                     Stmt.Block(
