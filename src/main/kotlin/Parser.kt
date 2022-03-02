@@ -231,7 +231,7 @@ open class Parser
                 val tk_id = all.tk0 as Tk.Id
                 all.accept_err(TK.CHAR, ':')
                 val tp = this.type()
-                Stmt.Var(tk_id, tp)
+                Stmt.Var(tk_id, tp, null)
             }
             all.accept(TK.SET) -> {
                 val dst = this.attr().toExpr()
@@ -442,7 +442,7 @@ open class Parser
                     (chr.chr != '.') -> false
                     all.accept(TK.XID) -> {
                         val tk = all.tk0 as Tk.Id
-                        all.assert_tk(tk, tk.id=="pub" || tk.id=="state") {
+                        all.assert_tk(tk, tk.id=="pub" || tk.id=="ret" || tk.id=="state") {
                             "unexpected \"${tk.id}\""
                         }
                         true
@@ -466,7 +466,7 @@ open class Parser
                     (chr.chr == '!') -> Expr.UDisc(num!!, e)
                     (chr.chr == '.') -> {
                         if (all.tk0.enu == TK.XID) {
-                            Expr.Pub(all.tk0 as Tk.Id, e)
+                            Expr.Field(all.tk0 as Tk.Id, e)
                         } else {
                             Expr.TDisc(num!!, e)
                         }
@@ -553,7 +553,7 @@ open class Parser
                     (chr.chr == '!') -> Attr.UDisc(num!!, e)
                     (chr.chr == '.') -> {
                         if (all.tk0.enu == TK.XID) {
-                            Attr.Pub(all.tk0 as Tk.Id, e)
+                            Attr.Field(all.tk0 as Tk.Id, e)
                         } else {
                             Attr.TDisc(num!!, e)
                         }
