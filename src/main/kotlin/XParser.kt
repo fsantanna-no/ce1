@@ -166,6 +166,30 @@ class XParser: Parser()
 
     override fun stmt(): Stmt {
         return when {
+            all.accept(TK.SET) -> {
+                val dst = this.attr().toExpr()
+                all.accept_err(TK.CHAR, '=')
+                val tk0 = all.tk0 as Tk.Chr
+                if (all.accept(TK.AWAIT)) {
+                    val e = this.expr()
+                    All_assert_tk(e.tk, e is Expr.Call) { "expected task call" }
+                    val old = All_nest("""
+                        {
+                            var tsk_$N = spawn ${e.xtostr()}
+                            var st_$N = tsk_$N.state
+                            if _(${D}st_$N == TASK_AWAITING) {
+                                await tsk_$N
+                            }
+                            set ${dst.xtostr()} = tsk_$N.ret
+                        }
+                    """.trimIndent())
+                    val ret = this.stmts()
+                    all = old
+                    ret
+                } else {
+                    this.set_tail(tk0, dst)
+                }
+            }
             all.accept(TK.VAR) -> {
                 all.accept_err(TK.XID)
                 val tk_id = all.tk0 as Tk.Id
@@ -197,6 +221,24 @@ class XParser: Parser()
                             All_assert_tk(s.tk, s is Stmt.SSpawn) { "unexpected dynamic `spawn`" }
                             val ss = s as Stmt.SSpawn
                             Pair(tpor("spawn"), Stmt.SSpawn(ss.tk_, dst, ss.call))
+                        }
+                        all.accept(TK.AWAIT) -> {
+                            val e = this.expr()
+                            All_assert_tk(e.tk, e is Expr.Call) { "expected task call" }
+                            val old = All_nest("""
+                                {
+                                    var tsk_$N = spawn ${e.xtostr()}
+                                    var st_$N = tsk_$N.state
+                                    if _(${D}st_$N == TASK_AWAITING) {
+                                        await tsk_$N
+                                    }
+                                    set ${tk_id.id} = tsk_$N.ret
+                                }
+                            """.trimIndent())
+                            val ret = this.stmts()
+                            all = old
+                            //println(ret)
+                            Pair(tpor("await"), ret)
                         }
                         else -> {
                             val src = this.expr()

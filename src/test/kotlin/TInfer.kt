@@ -1315,4 +1315,46 @@ class TInfer {
             
         """.trimIndent()) { out }
     }
+
+    @Test
+    fun f10_await_ret () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            var f = task @[]->_int->()->_int {
+                return arg
+            }
+            spawn {
+                var x = await f _1
+                output std x
+            }
+        """.trimIndent())
+        assert(out == """
+type Event @[] = <(),_uint64_t,_int>
+var f: task @[] -> _int -> () -> _int
+set f = task @[] -> _int -> () -> _int {
+set ret = arg
+return
+}
+
+spawn (task @[] -> _ -> _ -> _ {
+var x: _int
+var tsk_38: active task @[] -> _int -> () -> _int
+set tsk_38 = spawn (f @[] (_1: _int))
+var st_38: _int
+set st_38 = (tsk_38.state)
+if (_(${D}st_38 == TASK_AWAITING): _int)
+{
+await tsk_38
+}
+else
+{
+
+}
+set x = (tsk_38.ret)
+output std x
+}
+ @[] ())
+
+        """.trimIndent()) { out }
+    }
 }

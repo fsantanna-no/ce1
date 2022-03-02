@@ -49,7 +49,8 @@ class XTostr: Tostr()
                     "var " + it.tk_.id + " = " + when (s.s2) {
                         is Stmt.Set    -> this.tostr(s.s2.src)
                         is Stmt.SSpawn -> "spawn " + this.tostr(s.s2.call)
-                        else -> error("bug found")
+                        is Stmt.Seq    -> "await " + this.tostr(((((s.s2.s1 as Stmt.Seq).s1 as Stmt.Seq).s1 as Stmt.Seq).s2 as Stmt.SSpawn).call)
+                        else -> TODO(s.s2.toString())
                     } + "\n"
                 } else {
                     super.tostr(s)

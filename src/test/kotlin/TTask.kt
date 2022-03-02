@@ -901,4 +901,63 @@ class TTask {
         assert(out == "1\n1\n2\n3\n") { out }
     }
 
+    // AWAIT / RETURN / SPAWN
+
+    @Test
+    fun h01_ret () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            var f = task @[]->_int->()->_int {
+                return arg
+            }
+            spawn {
+                var x = await f _10
+                output std x
+            }
+        """.trimIndent())
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun h02_ret () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            var f = task @[]->_int->()->_int {
+                var v = arg
+                await evt?3
+                return v
+            }
+            var x1: _int
+            var x2: _int
+            spawn {
+                set x1 = await f _10
+                set x2 = await f _20
+            }
+            emit @GLOBAL Event.3 _1
+            emit @GLOBAL Event.3 _1
+            output std x1
+            output std x2
+        """.trimIndent())
+        assert(out == "10\n20\n") { out }
+    }
+    @Test
+    fun h03_ret () {
+        val out = all("""
+            type Event = <(),_uint64_t,_int>
+            var f = task @[]->_int->()->_int {
+                var v = arg
+                await evt?3
+                return v
+            }
+            spawn {
+                var v = await f _10
+                output std v
+            }
+            spawn {
+                var v = await f _20
+                output std v
+            }
+            emit @GLOBAL Event.3 _1
+        """.trimIndent())
+        assert(out == "10\n20\n") { out }
+    }
 }

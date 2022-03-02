@@ -361,7 +361,7 @@ fun Stmt.xinfTypes (inf: Type? = null) {
         }
         is Stmt.Block -> this.body.xinfTypes(null)
         is Stmt.Seq -> {
-            val infer = if (this.s1 is Stmt.Var) this.s1.infer else null
+            val infer = if (this.s1 is Stmt.Var) this.s1.xinfer else null
             when {
                 (this.s1 is Stmt.Var && this.s1.xtype==null && this.s2 is Stmt.Block) -> {
                     // var x = y where { var y=() }
@@ -403,15 +403,22 @@ fun Stmt.xinfTypes (inf: Type? = null) {
                     this.s2.dst?.xinfTypes(null) //this.s2.call.f.wtype!!
                 }
                 (infer == "await") -> {             // var x = await Task ...
-                    this.s2 as Stmt.SSpawn
-                    this.s2.call.xinfTypes(null)
-                    this.s1.xinfTypes (
-                        Type.Active (
-                            Tk.Key(TK.ACTIVE,this.s2.tk.lin,this.s2.tk.col,"active"),
-                            this.s2.call.f.wtype!!.clone(this.s2,this.s2.tk.lin,this.s2.tk.col)
-                        )
-                    )
-                    this.s2.dst?.xinfTypes(null) //this.s2.call.f.wtype!!
+                    /*
+                    var ID: ?
+                    var tsk_$N = spawn ${e.xtostr()}
+                    var st_$N = tsk_$N.state
+                    if _(st_$N == TASK_AWAITING) {
+                        await tsk_$N
+                    }
+                    set ID = tsk_$N.ret
+                     */
+                    //println(this)
+                    this.s1    as Stmt.Var
+                    this.s2    as Stmt.Seq
+                    this.s2.s2 as Stmt.Set
+                    this.s2.xinfTypes(null)
+                    println(this.s2.s2.src)
+                    this.s1.xinfTypes(this.s2.s2.src.wtype!!)
                 }
                 (infer == "set") -> {               // var x = ...
                     this.s2 as Stmt.Set
