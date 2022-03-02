@@ -151,7 +151,14 @@ fun Expr.xinfTypes (inf: Type?) {
                 All_assert_tk(this.tk, it is Type.Active) {
                     "invalid \"pub\" : type mismatch : expected active task"
                 }
-                ((it as Type.Active).tsk.noalias() as Type.Func).pub!!
+                val ftp = (it as Type.Active).tsk.noalias() as Type.Func
+                when (this.tk_.id) {
+                    "state" -> Type.Nat(Tk.Nat(TK.XNAT, this.tk.lin, this.tk.col, null,"int"))
+                    "pub"   -> ftp.pub!!
+                    "ret"   -> ftp.out
+                    else    -> error("bug found")
+
+                }
             }
         }
         is Expr.UDisc, is Expr.UPred -> {

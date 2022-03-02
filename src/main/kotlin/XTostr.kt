@@ -32,7 +32,7 @@ class XTostr: Tostr()
                 }
             }
             is Expr.UNull -> if (e.xtype != null) super.tostr(e) else "<.0>"
-            is Expr.Pub   -> "(" + this.tostr(e.tsk) + ".${e.tk_.id})"
+            is Expr.Field   -> "(" + this.tostr(e.tsk) + ".${e.tk_.id})"
             is Expr.New   -> if (e.xscp  != null) super.tostr(e) else "(new " + this.tostr(e.arg) + ")"
             is Expr.Call  -> if (e.xscps.first != null) super.tostr(e) else {
                 val out = e.xscps.second.let { if (it == null) "" else ": @" + it.scp1.anon2local() }

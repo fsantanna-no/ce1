@@ -73,7 +73,7 @@ sealed class Attr(val tk: Tk) {
     data class Dnref (val tk_: Tk, val ptr: Attr): Attr(tk_)
     data class TDisc (val tk_: Tk.Num, val tup: Attr): Attr(tk_)
     data class UDisc (val tk_: Tk.Num, val uni: Attr): Attr(tk_)
-    data class Pub   (val tk_: Tk.Id, val tsk: Attr): Attr(tk_)
+    data class Field (val tk_: Tk.Id, val tsk: Attr): Attr(tk_)
 }
 
 // Nat.type?
@@ -91,7 +91,7 @@ sealed class Expr (val tk: Tk, var wup: Any?, var wenv: Any?, var wtype: Type?) 
     data class TDisc (val tk_: Tk.Num, val tup: Expr): Expr(tk_, null, null, null)
     data class UDisc (val tk_: Tk.Num, val uni: Expr): Expr(tk_, null, null, null)
     data class UPred (val tk_: Tk.Num, val uni: Expr): Expr(tk_, null, null, null)
-    data class Pub   (val tk_: Tk.Id, val tsk: Expr): Expr(tk_, null, null, null)
+    data class Field (val tk_: Tk.Id, val tsk: Expr): Expr(tk_, null, null, null)
     data class New   (val tk_: Tk.Key, var xscp: Scope?, val arg: Expr): Expr(tk_, null, null, null)
     data class Dnref (val tk_: Tk,     val ptr: Expr): Expr(tk_, null, null, null)
     data class Upref (val tk_: Tk.Chr, val pln: Expr): Expr(tk_, null, null, null)
