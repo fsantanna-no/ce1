@@ -198,6 +198,22 @@ class TInfer {
         """.trimIndent()) { out }
     }
     @Test
+    fun a12_new () {
+        val out = all("""
+            type List = <Cons=/List>
+            var l = new List.Cons <.0>
+            --var l = new <.1 <.0>>:List
+            output std l
+        """.trimIndent())
+        assert(out == """
+            type List @[i] = </List @[i] @i>
+            var l: /List @[GLOBAL] @GLOBAL
+            set l = (new (<.1 <.0>: /List @[GLOBAL] @GLOBAL>: </List @[GLOBAL] @GLOBAL> :+ List @[GLOBAL]): @GLOBAL)
+            output std l
+
+        """.trimIndent()) { out }
+    }
+    @Test
     fun a12_ucons () {
         val out = all("""
             type Xx = <()>

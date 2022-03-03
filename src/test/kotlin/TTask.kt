@@ -25,7 +25,7 @@ class TTask {
         File("out.ce").writeText(ce0)
         val (ok,out) = exec("ce0 out.ce")
         assert(ok)
-        return out
+        return out.replace("out.ce : ","")
     }
 
     @Test
