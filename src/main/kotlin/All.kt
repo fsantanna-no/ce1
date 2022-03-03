@@ -40,6 +40,7 @@ fun All_restart (file: String?, inp: PushbackReader) {
 
 fun All_nest (src: String, f: ()->Any): Any {
     val old = alls.stack.removeFirst()
+    val (tk0,tk1) = Pair(alls.tk0,alls.tk1)
     alls.stack.addFirst(All(old.file,PushbackReader(StringReader(src),2)))
     all().lin = old.lin
     all().col = 1
@@ -47,6 +48,8 @@ fun All_nest (src: String, f: ()->Any): Any {
     val ret = f()
     alls.stack.removeFirst()
     alls.stack.addFirst(old)
+    alls.tk0 = tk0
+    alls.tk1 = tk1
     return ret
 }
 
@@ -123,11 +126,13 @@ fun Alls.err_expected (str: String) {
             else -> TODO(this.toString())
         }
     }
-    error("(ln ${this.tk1.lin}, col ${this.tk1.col}): expected $str : have ${this.tk1.toPay()}")
+    val file = all().file.let { if (it==null) "" else it+" : " }
+    error(file + "(ln ${this.tk1.lin}, col ${this.tk1.col}): expected $str : have ${this.tk1.toPay()}")
 }
 
 fun All_err_tk (tk: Tk, str: String): String {
-    error("(ln ${tk.lin}, col ${tk.col}): $str")
+    val file = all().file.let { if (it==null) "" else it+" : " }
+    error(file + "(ln ${tk.lin}, col ${tk.col}): $str")
 }
 
 inline fun All_assert_tk (tk: Tk, value: Boolean, lazyMessage: () -> String = {"Assertion failed"}) {
