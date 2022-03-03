@@ -2,8 +2,8 @@ import java.io.File
 import java.io.PushbackReader
 import java.io.StringReader
 
-fun ce1_to_ce0 (ce1: String): Pair<Boolean,String> {
-    All_new(PushbackReader(StringReader(ce1), 2))
+fun ce1_to_ce0 (file: String, ce1: String): Pair<Boolean,String> {
+    All_restart(file, PushbackReader(StringReader(ce1), 2))
     Lexer.lex()
     try {
         val s = XParser().stmts()
@@ -34,7 +34,7 @@ fun main (args: Array<String>) {
     }
 
     val inp = File(xinp!!).readText()
-    val (ok1,out1) = ce1_to_ce0(inp)
+    val (ok1,out1) = ce1_to_ce0(xinp!!, inp)
     if (!ok1) {
         println(out1)
         return

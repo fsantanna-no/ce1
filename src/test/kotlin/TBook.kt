@@ -142,7 +142,7 @@ class TBook {
         println("or:    ${or.count    { it == '\n' }}")
         println("and:   ${and.count   { it == '\n' }}")
 
-        All_new(PushbackReader(StringReader(inp), 2))
+        All_restart(null, PushbackReader(StringReader(inp), 2))
         Lexer.lex()
         val s = XParser().stmts()
         s.setUps(null)

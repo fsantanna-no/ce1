@@ -9,7 +9,7 @@ import java.io.StringReader
 class TInfer {
 
     fun all (inp: String): String {
-        All_new(PushbackReader(StringReader(inp), 2))
+        All_restart(null, PushbackReader(StringReader(inp), 2))
         N = 1
         Lexer.lex()
         try {

@@ -37,7 +37,7 @@ class TParser {
 
     @Test
     fun c01_parser_var () {
-        All_new(PushbackReader(StringReader("var x: () = ()"), 2))
+        All_restart(null, PushbackReader(StringReader("var x: () = ()"), 2))
         Lexer.lex()
         val s = XParser().stmt()
         assert(s is Stmt.Seq && s.s1 is Stmt.Var && s.s2 is Stmt.Set)
@@ -45,7 +45,7 @@ class TParser {
     }
     @Test
     fun c02_parser_var () {
-        All_new(PushbackReader(StringReader("var x: ()"), 2))
+        All_restart(null, PushbackReader(StringReader("var x: ()"), 2))
         Lexer.lex()
         val s = XParser().stmt()
         assert(s is Stmt.Var)
@@ -53,14 +53,14 @@ class TParser {
     }
     @Test
     fun c03_parser_var () {
-        All_new(PushbackReader(StringReader("var x = ()"), 2))
+        All_restart(null, PushbackReader(StringReader("var x = ()"), 2))
         Lexer.lex()
         val s = XParser().stmt()
         assert(s is Stmt.Seq && s.s1 is Stmt.Var && s.s2 is Stmt.Set)
     }
     @Test
     fun c04_parser_var () {
-        All_new(PushbackReader(StringReader("var x"), 2))
+        All_restart(null, PushbackReader(StringReader("var x"), 2))
         Lexer.lex()
         try {
             XParser().stmt()
