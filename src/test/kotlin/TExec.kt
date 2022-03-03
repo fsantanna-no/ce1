@@ -20,7 +20,6 @@ class TExec {
         check_01_before_tps(s)
         //println(s.xtostr())
         s.xinfTypes(null)
-        //s.xinfTypes2()
         s.setScp2s()
         val ce0 = s.tostr()
         File("out.ce").writeText(ce0)

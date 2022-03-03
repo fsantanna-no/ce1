@@ -20,9 +20,8 @@ class TInfer {
             check_00_after_envs(s)
             s.xinfScp1s()
             check_01_before_tps(s)
-            println(s.xtostr())
+            //println(s.xtostr())
             s.xinfTypes(null)
-            //s.xinfTypes2()
             s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {

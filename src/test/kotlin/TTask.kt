@@ -922,9 +922,9 @@ class TTask {
         val out = all("""
             type Event = <(),_uint64_t,_int>
             var f = task @[]->_int->()->_int {
-                var v = arg
+                --var v = arg
                 await evt?3
-                return v
+                return arg
             }
             var x1: _int
             var x2: _int
