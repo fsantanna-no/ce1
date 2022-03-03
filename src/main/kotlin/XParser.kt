@@ -201,6 +201,9 @@ class XParser: Parser()
                         all.err_expected("type declaration")
                     }
                     Stmt.Var(tk_id, tp, null)
+                } else if (all.accept(TK.VAR)) {
+                    Lexer.lex() // accept any KEY
+                    Stmt.Var(tk_id, null, (all.tk0 as Tk.Key).key)
                 } else {
                     fun tpor (inf: String): String? {
                         return if (tp == null) inf else null

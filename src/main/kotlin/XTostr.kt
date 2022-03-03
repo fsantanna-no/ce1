@@ -43,23 +43,14 @@ class XTostr: Tostr()
     }
 
     override fun tostr (s: Stmt): String {
-        return when (s) {
-            is Stmt.Seq -> s.s1.let {
-                if (it is Stmt.Var && it.xtype==null) {
-                    "var " + it.tk_.id + " = " + when (s.s2) {
-                        is Stmt.Set    -> this.tostr(s.s2.src)
-                        is Stmt.SSpawn -> "spawn " + this.tostr(s.s2.call)
-                        is Stmt.Seq    -> "await " + this.tostr(((((s.s2.s1 as Stmt.Seq).s1 as Stmt.Seq).s1 as Stmt.Seq).s2 as Stmt.SSpawn).call)
-                        else -> TODO(s.s2.toString())
-                    } + "\n"
-                } else {
-                    super.tostr(s)
-                }
+        return when {
+            (s is Stmt.Var && s.xinfer!=null) -> {
+                "var " + s.tk_.id + " = var " + s.xinfer + "\n"
             }
-            is Stmt.Input -> if (s.xtype!=null) super.tostr(s) else {
+            (s is Stmt.Input && s.xtype==null) -> {
                 if (s.dst == null) "" else "set " + this.tostr(s.dst) + " = " + "input " + s.lib.id + " " + this.tostr(s.arg)
             }
-            is Stmt.Typedef -> if (s.xscp1s.first!=null) super.tostr(s) else {
+            (s is Stmt.Typedef && s.xscp1s.first==null) -> {
                 "type " + s.tk_.id + " = " + this.tostr(s.type) + "\n"
             }
             else -> super.tostr(s)

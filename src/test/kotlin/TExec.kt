@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer.Alphanumeric
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
@@ -19,7 +18,9 @@ class TExec {
         check_00_after_envs(s)
         s.xinfScp1s()
         check_01_before_tps(s)
+        //println(s.xtostr())
         s.xinfTypes(null)
+        //s.xinfTypes2()
         s.setScp2s()
         val ce0 = s.tostr()
         File("out.ce").writeText(ce0)

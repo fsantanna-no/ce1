@@ -20,7 +20,9 @@ class TInfer {
             check_00_after_envs(s)
             s.xinfScp1s()
             check_01_before_tps(s)
+            println(s.xtostr())
             s.xinfTypes(null)
+            //s.xinfTypes2()
             s.setScp2s()
             return s.tostr()
         } catch (e: Throwable) {
@@ -1338,19 +1340,21 @@ return
 
 spawn (task @[] -> _ -> _ -> _ {
 var x: _int
-var tsk_38: active task @[] -> _int -> () -> _int
-set tsk_38 = spawn (f @[] (_1: _int))
-var st_38: _int
-set st_38 = (tsk_38.state)
-if (_(${D}st_38 == TASK_AWAITING): _int)
 {
-await tsk_38
+var tsk_14: active task @[] -> _int -> () -> _int
+set tsk_14 = spawn (f @[] (_1: _int))
+var st_14: _int
+set st_14 = (tsk_14.state)
+if (_(${D}st_14 == TASK_AWAITING): _int)
+{
+await tsk_14
 }
 else
 {
 
 }
-set x = (tsk_38.ret)
+set x = (tsk_14.ret)
+}
 output std x
 }
  @[] ())
