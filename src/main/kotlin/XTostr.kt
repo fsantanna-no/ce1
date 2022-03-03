@@ -1,3 +1,13 @@
+fun Tk.lincol (src: String): String {
+    return """
+        
+        ^[${this.lin},${this.col}]
+        $src
+        ^[]
+        
+    """.trimIndent()
+}
+
 fun Type.xtostr(): String {
     return XTostr().tostr(this)
 }
@@ -20,6 +30,8 @@ class XTostr: Tostr()
                 tp.tk_.key + " " + this.tostr(tp.inp) + " -> " + tp.pub.let { if (it == null) "" else this.tostr(it) + " -> " } + this.tostr(tp.out)
             }
             else -> super.tostr(tp)
+        }.let {
+            tp.tk.lincol(it)
         }
     }
 
@@ -39,6 +51,8 @@ class XTostr: Tostr()
                 "(" + this.tostr(e.f) + " " + this.tostr(e.arg) + out + ")"
             }
             else -> super.tostr(e)
+        }.let {
+            e.tk.lincol(it)
         }
     }
 
@@ -54,6 +68,8 @@ class XTostr: Tostr()
                 "type " + s.tk_.id + " = " + this.tostr(s.type) + "\n"
             }
             else -> super.tostr(s)
+        }.let {
+            s.tk.lincol(it)
         }
     }
 }

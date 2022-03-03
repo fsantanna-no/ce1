@@ -17,10 +17,10 @@ class TInfer {
             s.setUps(null)
             s.setScp1s()
             s.setEnvs(null)
+            //println(s.xtostr())
             check_00_after_envs(s)
             s.xinfScp1s()
             check_01_before_tps(s)
-            //println(s.xtostr())
             s.xinfTypes(null)
             s.setScp2s()
             return s.tostr()
@@ -1095,7 +1095,7 @@ class TInfer {
                 var v = ()
             }
         """.trimIndent())
-        assert(out == "(ln 4, col 36): undeclared variable \"v\"") { out }
+        assert(out == "(ln 1, col 12): undeclared variable \"v\"") { out }
     }
 
     @Test
@@ -1279,7 +1279,7 @@ class TInfer {
                 return g ()                                                         
             }                                                                       
         """.trimIndent())
-        assert(out == "(ln 3, col 84): undeclared variable \"g\"") { out }
+        assert(out == "(ln 2, col 12): undeclared variable \"g\"") { out }
     }
     @Test
     fun f08_err_e_not_declared () {

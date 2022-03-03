@@ -274,13 +274,13 @@ class XParser: Parser()
                 if (!all.checkExpr()) {
                     Stmt.Return(all.tk0 as Tk.Key)
                 } else {
+                    val tk0 = all.tk0
                     val e = this.expr()
-                    val old = All_nest("""
+                    val old = All_nest(tk0.lincol("""
                         set ret = ${e.xtostr()}
                         return
                         
-                    """.trimIndent()
-                    )
+                    """.trimIndent()))
                     val ret = this.stmts()
                     all = old
                     ret
